@@ -1,4 +1,4 @@
-![ArkhamHoror Box](https://i.imgur.com/flSfMgM.jpg)
+![ArkhamHoror Box]([https://i.imgur.com/flSfMgM.jpg](https://raw.githubusercontent.com/TragicTheBlathering/Tabletop-Simulator_MageKnight_v3/main/_resources/readnme-cover.jpg))
 # Mage Knight (Tragic Edition v3) - a Tabletop Simulator Mod
 
 This is my github for my Mage Knight Mod, Edition3 for TTS. 
