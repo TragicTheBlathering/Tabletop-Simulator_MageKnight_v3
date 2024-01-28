@@ -1,11 +1,7 @@
-<<<<<<< Updated upstream
-![Mage Knight Cover Art](https://raw.githubusercontent.com/TragicTheBlathering/Tabletop-Simulator_MageKnight_v3/main/_resources/readnme-cover.jpg)
-=======
 ![MageKnight BoxArt](https://raw.githubusercontent.com/TragicTheBlathering/Tabletop-Simulator_MageKnight_v3/main/_resources/readnme-cover.jpg)
->>>>>>> Stashed changes
 # Mage Knight (Tragic Edition v3) - a Tabletop Simulator Mod
 
-This is my github for my Mage Knight Mod, Edition3 for TTS. Your welcome to use it and any code found here as you like. 
+This is my github for my Mage Knight Mod, Edition3 for TTS. Your welcome to use it and any code found here as you like.
 
 This mod uses my growing Library of tools and code snippets extensively. As I am modifying and making my mods it is getting constantly updated. It contains scripts and snips code I use all the time as well as some large form tools like my Trashcans. These files are required for modifying my code. [LINK : [Tabletop-Simulator_Libs-and-Snips](https://github.com/TragicTheBlathering/Tabletop-Simulator_Libs-and-Snips)]
 
