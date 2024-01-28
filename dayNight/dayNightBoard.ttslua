@@ -1,0 +1,203 @@
+nightBMP = 'http://cloud-3.steamusercontent.com/ugc/784120584200217885/4612C8FB6565E6BD05CAE184D83E2949431604AA/'
+nightZone = 'cf9f8c'
+nightTube = 'a11cec'
+nightDie = 'cf508e'
+
+dayBMP = 'http://cloud-3.steamusercontent.com/ugc/784120584200164450/881F973AE775243D24C43ADBD25FC396DF13D5FB/'
+dayZone = '3ac2ea'
+dayTube = '8fbb08'
+dayDie = '86892c'
+
+
+function onLoad()
+    makeButtons()
+end
+
+function f_DayNight()
+
+    local mapTiles = {}
+    local DayCards = {}
+    local NightCards = {}
+    for _, obj in pairs (getAllObjects()) do
+        if obj.getName() == 'MapTile' then table.insert(mapTiles, obj) end
+        if obj.getName() == 'Tatctic (Day)' then table.insert(DayCards, obj) end
+        if obj.getName() == 'Tatctic (Night)' then table.insert(NightCards, obj) end
+    end
+
+
+    if self.getCustomObject().image == nightBMP then -- If it is Night turn to night
+        print("********** Change to DAY **********")
+        TintMap({r=1, g=1, b=1}, mapTiles)
+        changeTexture('day')
+        fetchCards(dayZone)
+        rotateDie('day')
+    elseif  self.getCustomObject().image == dayBMP then -- If it is Day turn to night
+        print("********** Change to NIGHT **********")
+        TintMap({r=0.5, g=0.5, b=0.5}, mapTiles)
+        changeTexture('night')
+        fetchCards(nightZone)
+        rotateDie('night')
+    end
+end
+
+function rotateDie(time)
+    local v = 0
+    if time == "night" then
+        local die = getObjectFromGUID(nightDie)
+        local disPos = die.getPosition()
+        if disPos.y < 0 then
+            die.setLock(false)
+            die.setPosition(Vector(disPos.x, 6, disPos.z))
+        else
+            v = die.getValue()
+            die.setValue(v+1)
+        end
+
+    elseif time == "day" then
+        local die = getObjectFromGUID(dayDie)
+        v = die.getValue()
+        die.setValue(v+1)
+    end
+end
+
+function fetchCards(zone)
+    local deck = nil
+    local key = nil
+    if zone == nightZone then
+        zone = getObjectFromGUID(dayZone)
+        key = "Tatctic (Day)"
+
+    elseif zone == dayZone then
+        zone = getObjectFromGUID(nightZone)
+        key = "Tatctic (Night)"
+    end
+
+    for k,v in pairs (zone.getObjects()) do
+        if v.type == "Deck" or v.type == "Card" then
+            deck = v
+        end
+    end
+
+    --local Y = 2
+    for k,v in pairs(getAllObjects()) do
+        if v.getName() == key then
+            deck.setLock(false)
+            deck.putObject(v)
+        end
+    end
+    Wait.frames(function()
+            deck.shuffle()
+            deck.setLock(true)
+            deck.tooltip = false
+        end, 30)
+end
+
+function changeTexture(time)
+    if time == "night" then
+        --print("Day2Night")
+        local prams = self.getCustomObject()
+        prams.image = nightBMP
+        self.setCustomObject(prams)
+        self.reload()
+
+    elseif time == "day" then
+        --print("Night2Day")
+        local prams = self.getCustomObject()
+        prams.image = dayBMP
+        self.setCustomObject(prams)
+        self.reload()
+    end
+end
+
+function MoveCards(tacticCards, switch)
+    local Y = 2
+    if switch == 'getDayCards' then
+        sSource = nightBMP
+        sZone = getObjectFromGUID(dayZone)
+        sTube = getObjectFromGUID(dayTube)
+        --print('get DAY cards')
+    elseif switch == 'getNightCards' then
+        sSource = dayBMP
+        sZone = getObjectFromGUID(nightZone)
+        sTube = getObjectFromGUID(nightTube)
+        print('get NIGHT cards')
+    end
+
+    if #tacticCards > 0 then
+     -- unlock decks
+        for _, d in pairs(sZone.getObjects()) do
+            if d.tag == 'Deck' then d.setLock(false) end
+        end
+     -- Move Cards
+        for _, c in pairs(tacticCards) do
+            c.setLock(false)
+            c.setRotation({0,180,180})
+            c.setPositionSmooth({sTube.getPosition().x, Y, sTube.getPosition().z})
+            Y = Y + 1
+        end
+    end
+     -- Fix Decks
+     local run = function() waitActivate(sZone) end
+     local wait = function() return waitWatch(sTube) end
+     Wait.time(function() pauseExecute(run, wait) end, 2)
+     --Wait.condition(run, wait)
+
+
+
+    --Change Source Board
+    local objPram = {image=sSource}
+    self.setCustomObject(objPram)
+    self.reload()
+end
+
+function pauseExecute(run, wait)
+    Wait.condition(run, wait)
+end
+
+function waitActivate(sZone)
+    for _, d in pairs(sZone.getObjects()) do
+        if d.tag == 'Deck' then
+            d.shuffle()
+            --d.use_snap_points = true
+            d.tooltip = false
+            d.setLock(true)
+        end
+    end
+end
+
+function waitWatch(sTube)
+    if #sTube.getObjects() == 0 then return true
+    else return false end
+end
+
+function TintMap(colour, mapTiles)
+    for _, map in pairs (mapTiles) do
+        map.setColorTint(colour)
+    end
+end
+
+function makeButtons(set)
+    local buttons = {}
+
+    if set == nil then
+        button = {
+            click_function = 'f_DayNight',
+            function_owner = self,
+            position = {-2.1, 0, -1.65},
+            rotation = {0, 0, 0},
+            width = 700,
+            height = 350,
+            font_size = 200,
+            scale = {0.8,0.8,0.8} }
+            if self.getCustomObject().image == nightBMP then
+                button.label = 'Night'
+            elseif  self.getCustomObject().image == dayBMP then
+                button.label = 'Day'
+            end
+        table.insert(buttons, button)
+    end
+ -- Create Buttons
+    for _, button in ipairs(buttons) do
+        self.createButton(button)
+    end
+end
