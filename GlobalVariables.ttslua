@@ -1,0 +1,11 @@
+local GlobalVariables = {}
+
+GlobalVariables.scaleBags = {
+    maptile_DrawBag={"maptile_Countryside", "maptile_Core", baseScale=Vector(3.10, 3.10, 3.10)}
+}
+
+GlobalVariables.emptyStackImages ={
+    maptile_DrawBag= "http://cloud-3.steamusercontent.com/ugc/2265941315537168720/A0D67752A48BE0DDC1B046FED85236AFAE4D8A40/"
+}
+
+return GlobalVariables
