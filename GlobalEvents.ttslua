@@ -1,15 +1,17 @@
 local tool = {}
         tool.scaleBag=require("/_libs/bagTools/scaleBags").fromContents
-        tool.setBagTexture=require("/_libs/bagTools/setBagImageFromContents").useMeshDifuse
+        tool.setBagTexture=require("/_libs/bagTools/setBagTextureFromContents").simulateTokenStack
         tool.ejectInvalidObjs=require("/_libs/bagTools/ejectInvalidObjects").eject
 
         tool.wait = {}
             tool.wait.dropIntoBox=require("/_libs/waitUtils/waitUtils").dropIntoBox
 
+        tool.findTag = require("/_libs/tagUtils/tagUtils").tagFoundinTagList
+
 local globalVar = {}
-        globalVar.scaleBag = {}
-            globalVar.scaleBag = require("/MageKnightV3/GlobalVariables").scaleBags
-            globalVar.emptyStackImage = require("/MageKnightV3/GlobalVariables").emptyStackImages
+        globalVar.scaleBag = require("/MageKnightV3/GlobalVariables").scaleBagData
+            --globalVar.scaleBag = require("/MageKnightV3/GlobalVariables").scaleBags
+            --globalVar.emptyStackImage = require("/MageKnightV3/GlobalVariables").emptyStackImages
 
 function onLoad(save_state)
 end
@@ -19,30 +21,46 @@ end
 local runExitBag = true
 function processBagScaler(eventType, bag)
     runExitBag = false
-    for key, tags in pairs(globalVar.scaleBag) do
-        local found = "maptile_DrawBag"
-        if key == found then
-            if string.lower(eventType) == string.lower('enter') then
-                tool.ejectInvalidObjs(bag, tags)
+        local bagTag = bag.getTags()
+
+        for tag,v in pairs(globalVar.scaleBag) do
+            if bag.hasTag(tag) then --and tool.findTag(bagTag, tag) then
+                local data = globalVar.scaleBag[tag]
+                --tool.scaleBag(bag, data)
+                tool.setBagTexture(bag, data)
             end
-            tool.scaleBag(bag, tags, true, 3.5)
-            tool.setBagTexture(bag, globalVar.emptyStackImage[found])
         end
-    end
     runExitBag = true
 end
 
 function onObjectEnterContainer(bag, obj)
     if bag.hasTag('event_BagScale') then
-        --print("ENTER : "..bag.getGUID())
         tool.wait.dropIntoBox("enter", bag, processBagScaler, obj, time)
     end
 end
 function onObjectLeaveContainer(bag, obj)
     if runExitBag then
         if bag.hasTag('event_BagScale') then
-            --print("EXIT : "..bag.getGUID())
             tool.wait.dropIntoBox("exit", bag, processBagScaler, obj, time)
         end
     end
 end
+--[[
+for key, tags in pairs(globalVar.scaleBag) do
+--print(bag.getBounds().size.y)
+
+--- Map Draw Bag
+if bag.hasTag(key) and string.lower(key) == string.lower("maptile_DrawBag") then
+    if string.lower(eventType) == string.lower('enter') then
+        tool.ejectInvalidObjs(bag, tags)
+    end
+    tool.scaleBag(bag, tags, 3.5, true) -- true means move UP
+    tool.setBagTexture(bag, globalVar.emptyStackImage[key])
+
+--- Player Command Token Pile
+elseif bag.hasTag(key) and string.lower(key) == string.lower("player_CommandToken") then
+    tool.scaleBag(bag, tags, 1.5)
+    tool.setBagTexture(bag, globalVar.emptyStackImage[key])
+end
+end
+]]
