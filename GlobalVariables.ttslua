@@ -24,13 +24,20 @@ GlobalVariables.scaleBagData = {
                 pivot = 'center',
                 value = {scaleValue=3.5, baseScale=Vector(0, 5.8, 0), basePos=Vector(0, 2.16, 0), origSize=0.2901816},
                 empty = "http://cloud-3.steamusercontent.com/ugc/2265941315537168720/A0D67752A48BE0DDC1B046FED85236AFAE4D8A40/",
-            },
+        },
         monsterDrawBag = {
                  tags  = {'pug_orc', 'pug_Dungeon'},
                  type  = {hex=true, url=false, contents=false},
                  pivot = 'bottom',
                  value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.01, 0), origSize=0.3200011},
                  empty = "#4C4C4C"
+        },
+        monsterDiscardPile = {
+                 tags  = {pug_orc='http://cloud-3.steamusercontent.com/ugc/938341811900383093/5C0B0863A2A684CC86F239B0AFC2B66CDB44281E/', pug_Dungeon='http://cloud-3.steamusercontent.com/ugc/938341811900383421/153D7EE40796F1C8E3F8AFB2826ECB37B1F9664F/'},
+                 type  = {hex=false, url=false, contents=true},
+                 --pivot = 'bottom',
+                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011},
+                 empty = "#808080"
         },
 }
 
