@@ -26,10 +26,11 @@ GlobalVariables.scaleBagData = {
                 empty = "http://cloud-3.steamusercontent.com/ugc/2265941315537168720/A0D67752A48BE0DDC1B046FED85236AFAE4D8A40/",
             },
         monsterDrawBag = {
-                tags = {'pug_orc', 'pug_Dungeon'},
-                type = {hex=true, url=false, contents=false},
-                value = {scaleValue=2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.01, 0), origSize=0.3200011, pivot='bottom'},
-                empty = "#4C4C4C"
+                 tags  = {'pug_orc', 'pug_Dungeon'},
+                 type  = {hex=true, url=false, contents=false},
+                 pivot = 'bottom',
+                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.01, 0), origSize=0.3200011},
+                 empty = "#4C4C4C"
         },
 }
 

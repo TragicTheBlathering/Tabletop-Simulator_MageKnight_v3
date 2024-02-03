@@ -24,10 +24,13 @@ function processBagScaler(bag, objData)
         local bagTag = bag.getTags()
         for t,v in pairs(globalVar.scaleBag) do
             local tag = 'eventID_'..t
-            if bag.hasTag(tag) and tool.findTag(objData.Tags, tag) then
+            if bag.hasTag(tag) then -- and
                 local value = globalVar.scaleBag[t]
-                --tool.scaleBag(bag, tags, 3.5, true) -- true means move UP
                 tool.setBagTexture(bag, value)
+
+                if tool.findTag(objData.Tags, tag) then
+                    tool.scaleBag(bag, value) -- true means move UP
+                end
             end
         end
     runExitBag = true
