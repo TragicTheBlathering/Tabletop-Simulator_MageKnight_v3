@@ -1,5 +1,10 @@
 local tool = {}
         tool.BagScaler = require("/_libs/bagTools/event_BagScaler")
+        tool.TrashCan = require("/_libs/TrashCanUniversal/event_TrashCan")
+
+local globalVar = {}
+      globalVar.TrashSetting = require("/MageKnightV3/GlobalVariables").TrashBagData
+      globalVar.scaleBag = require("/MageKnightV3/GlobalVariables").scaleBagData
 
 function onLoad(save_state)
 end
@@ -8,9 +13,10 @@ end
 --- onObjectEnter : CONTAINER --------------------------------------------------
 
 function onObjectEnterContainer(bag, obj)
-    tool.BagScaler.enterContainer(bag, obj, 'event_BagScale')
+    --tool.BagScaler.enterContainer(bag, obj, 'event_BagScale') -- Global Variable is now here.. needs FIX!
+    tool.TrashCan.enterContainer(bag, obj, globalVar.TrashSetting)
 end
 
 function onObjectLeaveContainer(bag, obj)
-    tool.BagScaler.exitContainer(bag, obj, 'event_BagScale')
+    --tool.BagScaler.exitContainer(bag, obj, 'event_BagScale')  -- Global Variable is now here.. needs FIX!
 end

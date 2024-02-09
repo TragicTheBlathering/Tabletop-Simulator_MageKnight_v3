@@ -1,21 +1,7 @@
 local GlobalVariables = {}
 
---[[
-GlobalVariables.scaleBagsData = {
-    maptile_DrawBag={"maptile_Countryside", "maptile_Core", baseScale=Vector(3.6, 5.8, 3.6), basePos=Vector(-53.9, 2.16, -43.5), origSize=0.2901816}
-   ,player_commandToken={"player_commandToken", baseScale=Vector(1.30, 1.80, 1.30), basePos=Vector(-41.89, 2.52, -65.09)}
+GlobalVariables.TrashBagData = {testing="---== sklahfksdfhdshflshfs ==---"
 }
-
-GlobalVariables.emptyStackImages ={
-    maptile_DrawBag = "http://cloud-3.steamusercontent.com/ugc/2265941315537168720/A0D67752A48BE0DDC1B046FED85236AFAE4D8A40/"
-   ,player_commandToken = "http://cloud-3.steamusercontent.com/ugc/2258056846042316283/5AECDB2ACF9C624D3F962B87316E206B8FDE0B54/"
-}
-
-GlobalVariables.definedImages ={
-    maptile_DrawBag={green='http://cloud-3.steamusercontent.com/ugc/1688270643043406251/A651D5CA5D876C2784761FC27F04CDB14CB7FF19/',
-                    gold = 'http://cloud-3.steamusercontent.com/ugc/1688270643043527253/68E270678D47C66202EAF01B86981ADF5509CE89/'}
-}
-]]
 
 GlobalVariables.scaleBagData = {
         maptile_DrawBag = {
@@ -33,9 +19,9 @@ GlobalVariables.scaleBagData = {
                  empty = "#4C4C4C"
         },
         monsterDiscardPile = {
-                 tags  = {pug_orc='http://cloud-3.steamusercontent.com/ugc/938341811900383093/5C0B0863A2A684CC86F239B0AFC2B66CDB44281E/', pug_Dungeon='http://cloud-3.steamusercontent.com/ugc/938341811900383421/153D7EE40796F1C8E3F8AFB2826ECB37B1F9664F/'},
+                 tags  = {pug_orc='http://cloud-3.steamusercontent.com/ugc/2322236944769318458/7DDF32D648B263283063FDF6CDC3DF1FCFEFDD2C/'},
                  type  = {hex=false, url=false, contents=true},
-                 --pivot = 'bottom',
+                 pivot = 'bottom',
                  value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011},
                  empty = "#808080"
         },
