@@ -1,9 +1,11 @@
 local tool = {}
         tool.BagScaler = require("/_libs/bagTools/event_BagScaler")
         tool.TrashCan = require("/_libs/TrashCanUniversal/event_TrashCan")
+        --tool.TrashSpecialCase = equire("/MageKnightV3/TrashCan").TrashSpecialCase
 
 local globalVar = {}
-      globalVar.TrashSetting = require("/MageKnightV3/GlobalVariables").TrashBagData
+      globalVar.TrashSetting = require("/MageKnightV3/TrashCan")
+      --globalVar.SpecialCaseFunction = require("/MageKnightV3/TrashCan").specialCaseFunc
       globalVar.scaleBag = require("/MageKnightV3/GlobalVariables").scaleBagData
 
 function onLoad(save_state)

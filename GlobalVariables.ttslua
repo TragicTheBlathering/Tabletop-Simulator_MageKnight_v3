@@ -1,8 +1,5 @@
 local GlobalVariables = {}
 
-GlobalVariables.TrashBagData = {testing="---== sklahfksdfhdshflshfs ==---"
-}
-
 GlobalVariables.scaleBagData = {
         maptile_DrawBag = {
                 tags = {maptile_Countryside='http://cloud-3.steamusercontent.com/ugc/1688270643043406251/A651D5CA5D876C2784761FC27F04CDB14CB7FF19/',                        maptile_Core='http://cloud-3.steamusercontent.com/ugc/1688270643043527253/68E270678D47C66202EAF01B86981ADF5509CE89/'},
