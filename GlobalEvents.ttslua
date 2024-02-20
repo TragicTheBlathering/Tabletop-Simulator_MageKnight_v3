@@ -1,5 +1,6 @@
 local tool = {}
         tool.virtualTokenStack = require("/_libs/virtualTokenStacks/event_virtualTokenStacks")
+        tool.setDiscardPileButton = require("/MageKnightV3/pugDiscardPiles/event_pugDiscardButton")
         tool.TrashCan = require("/_libs/TrashCanUniversal/event_TrashCan")
 
 local globalVar = {}
@@ -14,10 +15,12 @@ end
 --- onObjectEnter : CONTAINER --------------------------------------------------
 
 function onObjectEnterContainer(bag, obj)
-    tool.virtualTokenStack.enterContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack')
+    tool.virtualTokenStack.enterContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack', 'F3')
     tool.TrashCan.enterContainer(bag, obj, globalVar.TrashSetting)
+    tool.setDiscardPileButton.enterContainer(bag, obj, obj.getTags())
 end
 
 function onObjectLeaveContainer(bag, obj)
-    tool.virtualTokenStack.exitContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack')
+    tool.virtualTokenStack.exitContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack', 'F3')
+    tool.setDiscardPileButton.enterContainer(bag, obj, obj.getTags())
 end

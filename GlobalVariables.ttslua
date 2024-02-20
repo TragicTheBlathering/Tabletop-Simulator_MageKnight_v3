@@ -9,17 +9,35 @@ GlobalVariables.virtualTokenStackData = {
                 empty = "http://cloud-3.steamusercontent.com/ugc/2265941315537168720/A0D67752A48BE0DDC1B046FED85236AFAE4D8A40/",
         },
         eventID_monsterDrawBag = {
-                 tags  = {'pug_orc', 'pug_Dungeon'},
+                 tags  = {'pug_orc', 'pug_Dungeon', 'pug_Keep', 'pug_MageTower', 'pug_Dragon', '', 'pug_Ruin', 'pug_City',
+                 'pug_Tesla_nOrc', 'pug_Tesla_nDungeon', 'pug_Tesla_nDragon', 'pug_Tesla_nItem',
+                 'pug_Tesla_eOrc', 'pug_Tesla_eDungeon', 'pug_Tesla_eDragon', 'pug_Tesla_eItem'},
                  type  = {hex=true, url=false, contents=false},
                  pivot = 'center',
                  value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011},
                  empty = "#4C4C4C"
         },
         eventID_monsterDiscardPile = {
-                 tags  = {pug_orc='http://cloud-3.steamusercontent.com/ugc/2322236944769318458/7DDF32D648B263283063FDF6CDC3DF1FCFEFDD2C/'},
+                 tags  = {
+                     pug_orc='http://cloud-3.steamusercontent.com/ugc/2322236944769318458/7DDF32D648B263283063FDF6CDC3DF1FCFEFDD2C/',
+                     pug_Dungeon='http://cloud-3.steamusercontent.com/ugc/2322236944769319681/AAD0F49989C58620C5D59FD794E88869CE981B19/',
+                     pug_Keep='http://cloud-3.steamusercontent.com/ugc/2322236944769318980/8C0E30D5C767CB31B5C84C8C2CB7C3EDCC9D6A16/',
+                     pug_MageTower='http://cloud-3.steamusercontent.com/ugc/2322236944769318717/D7D7C3929BE1446D7ADACDC8C341A0351358D8D8/',
+                     pug_Dragon='http://cloud-3.steamusercontent.com/ugc/2322236944769319279/D220B7991F0421D649BCEAB7FC181B604694BC31/',
+                     pug_City='http://cloud-3.steamusercontent.com/ugc/2322236944769320077/C29E5568EC58F733B8ADD807E794F5D3B9C16F04/',
+                     pug_Ruin='http://cloud-3.steamusercontent.com/ugc/775101936467710494/D82A7656519972C81AA6C862143422E605BDA00A/',
+                     pug_Tesla_nOrc='http://cloud-3.steamusercontent.com/ugc/2322236944769321061/72F3D2B750469A7CAA9010C7AE575DE2316A28A5/',
+                     pug_Tesla_nDungeon='http://cloud-3.steamusercontent.com/ugc/2322236944769320613/236D0A7EC933920B63EDE344DEAEB84EFFC59A7E/',
+                     pug_Tesla_nDragon='http://cloud-3.steamusercontent.com/ugc/2322236944769320365/9E618C1D622C2C87D0FB6BD6AFA90336D53E5DB9/',
+                     pug_Tesla_eOrc='http://cloud-3.steamusercontent.com/ugc/2322236944769321325/7AC7DE1E6C75770DB207ECF316F8282DD6AF6380/',
+                     pug_Tesla_eDungeon='http://cloud-3.steamusercontent.com/ugc/2322236944769320824/A8BE51651F078EC4C076A7219E403429758E0AC7/',
+                     pug_Tesla_eDragon='http://cloud-3.steamusercontent.com/ugc/2322236944769321501/57CDC852C5245428BEF833419994685F53AE382C/',
+                     pug_Tesla_nItem='http://cloud-3.steamusercontent.com/ugc/784120584200083226/E0E35CE133D654D020C1E632D15E702C2D81304A/',
+                     pug_Tesla_eItem='http://cloud-3.steamusercontent.com/ugc/784120584200084456/DB5EBB8F597B1FEABC0769307CB07AB0D2F2936F/',
+                 },
                  type  = {hex=false, url=false, contents=true},
                  pivot = 'center',
-                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011},
+                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011}, --origSize=0. 3200006
                  empty = "#333333"
         },
 }

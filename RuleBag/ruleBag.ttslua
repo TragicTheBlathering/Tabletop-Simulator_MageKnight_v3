@@ -1,0 +1,187 @@
+local RuleBags = {}
+
+function onLoad(save_state)
+    makeButtons()
+    buildBagList()
+end
+
+function buildBagList()
+    local tags = {'RuleBag_CoreRules', 'RuleBag_Walkthrough', 'RuleBag_Scenarios', 'RuleBag_Tesla', 'RuleBag_Legion'}
+    for k, tag in pairs(tags) do
+        RuleBags[tag] = getObjectsWithTag(tag)[1]
+    end
+end
+
+function spawnRulesBag(infinBag, type)
+    local openBag = getObjectsWithTag('RuleBag_IsOpen')[1]
+    if openBag and openBag.hasTag(type) then
+        openBag.call('buttonClick_recall')
+        destroyObject(openBag)
+    else
+        if openBag then
+            openBag.call('buttonClick_recall')
+            destroyObject(openBag)
+        end
+        local pos = self.getPosition()
+        local bag = infinBag.takeObject({})
+        bag.setPosition(pos-Vector(0,2.35,0))
+        bag.setLock(true)
+        Wait.frames(function()spawnRules(bag)end, 1)
+    end
+end
+
+function spawnRules(bag)
+    bag.call('buttonClick_place')
+    bag.addTag('RuleBag_IsOpen')
+    bag.addTag('MegaFreeze')
+    bag.interactable=false
+end
+
+function f_Scenarios()
+    local type = 'RuleBag_Scenarios'
+    spawnRulesBag(RuleBags[type], type)
+end
+
+function f_Tezla()
+    local type = 'RuleBag_Tesla'
+    spawnRulesBag(RuleBags[type], type)
+end
+
+function f_LostLegion()
+    local type = 'RuleBag_Legion'
+    spawnRulesBag(RuleBags[type], type)
+end
+
+function f_CoreRules()
+    local type = 'RuleBag_CoreRules'
+    spawnRulesBag(RuleBags[type], type)
+end
+
+function f_Walkthrough()
+    local type = 'RuleBag_Walkthrough'
+    spawnRulesBag(RuleBags[type], type)
+end
+
+function makeButtons(set)
+    --local buttonHeight = 0.1
+    local buttonHeight = 0.0
+    local buttons = {}
+
+ -- DEFAULT START BUTTONS
+    if set == nil then
+        local button = {
+                click_function = 'f_Scenarios',
+                function_owner = self,
+                label = 'Show Scenarios',
+                position = { 0, buttonHeight, -0.75 },
+                rotation = { 0, 0, 0 },
+                width = 1800,
+                height = 650,
+                font_size = 210}
+        table.insert(buttons, button)
+
+        button = {
+                click_function = 'f_Walkthrough',
+                function_owner = self,
+                label = 'WalkThrough',
+                position = { -0.94, buttonHeight, 0.83},
+                rotation = { 0, 0, 0 },
+                width = 800,
+                height = 680,
+                font_size = 100}
+        table.insert(buttons, button)
+
+        button = {
+                click_function = 'f_CoreRules',
+                function_owner = self,
+                label = 'Core Rules',
+                position = { 0.94, buttonHeight, 0.83},
+                rotation = { 0, 0, 0 },
+                width = 800,
+                height = 680,
+                font_size = 100}
+        table.insert(buttons, button)
+
+        button = {
+                click_function = 'f_LostLegion',
+                function_owner = self,
+                label = 'Core Rules',
+                position = { 0.94, buttonHeight, 2.15},
+                rotation = { 0, 0, 0 },
+                width = 800,
+                height = 350,
+                font_size = 100}
+        table.insert(buttons, button)
+
+        button = {
+                click_function = 'f_Tezla',
+                function_owner = self,
+                label = 'Core Rules',
+                position = { -0.94, buttonHeight, 2.15},
+                rotation = { 0, 0, 0 },
+                width = 800,
+                height = 350,
+                font_size = 100}
+        table.insert(buttons, button)
+    end
+ -- Create Buttons
+    for _, button in ipairs(buttons) do
+        self.createButton(button)
+    end
+end
+
+--[[
+RulesZone = '6ad2ed'
+bagList = {}
+ruleBag = nil
+lastBag = nil
+
+function f_Scenarios()   getRules('RULES : Scenarios') end
+function f_Walkthrough() getRules('RULES : Walkthrough') end
+function f_CoreRules()   getRules('RULES : Core Rules') end
+function f_LostLegion()  getRules('RULES : Lost Legion') end
+function f_Tezla()       getRules('RULES : Shades of Tezla') end
+
+function getRules(RuleSet)
+    FindBags(RuleSet)
+    if lastBag ~= nil then
+        if lastBag.getName() ~= RuleSet then
+            print('******************')
+            print(lastBag.getName())
+            print(ruleBag.getName())
+            print(RuleSet)
+            lastBag.call('buttonClick_recall')
+            --ruleBag.call('buttonClick_place')
+            Wait.time(function() ruleBag.call('buttonClick_place') end, 0.5)
+        elseif lastBag.getName() == RuleSet then
+            ruleBag.call('buttonClick_recall')
+        end
+    else
+        ruleBag.call('buttonClick_place')
+    end
+end
+
+function FindBags(title)
+    ruleBag = nil
+    lastBag = nil
+    for _, bag in pairs(bagList) do
+        if bag.getName() == title then ruleBag = bag print('FoundBag') end
+        if #bag.getObjects() == 0 then lastBag = bag print('Found EMPTY') end
+    end
+end
+
+function BuildBagList()
+    for _, bag in pairs(getObjectFromGUID(RulesZone).getObjects()) do
+        table.insert(bagList, bag)
+    end
+end
+
+function onLoad(save_state)
+    makeButtons()
+    BuildBagList()
+end
+
+---------------------- MAKE BUTTON CODE -----------------------------
+
+
+]]

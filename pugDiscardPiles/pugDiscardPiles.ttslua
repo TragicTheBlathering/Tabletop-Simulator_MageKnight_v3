@@ -1,0 +1,347 @@
+local tool = {}
+      tool.hasTag = require("/_libs/tagUtils/tagUtils").allTagsInListFoundinTagList
+      tool.findObj = require("/_libs/tagUtils/tagUtils").getObjectsWithAllTags_FromTagLists
+
+local bagsList = {}
+--local drawBagTags = {'eventID_monsterDrawBag', 'event_virtualTokenStack'}
+--local discardBagTags = {'trash_DiscardTarget', 'eventID_monsterDiscardPile'}
+
+function onload()
+    buildVariables()
+    makeButtons()
+    --Wait.time(function()makeButtons()end, 30, -1)
+end
+
+function buildVariables()
+    local tagList  = {  'pug_orc', 'pug_Dungeon', 'pug_Keep', 'pug_MageTower', 'pug_Dragon', '', 'pug_Ruin', 'pug_City',
+                        'pug_Tesla_nOrc', 'pug_Tesla_nDungeon', 'pug_Tesla_nDragon', 'pug_Tesla_nItem',
+                        'pug_Tesla_eOrc', 'pug_Tesla_eDungeon', 'pug_Tesla_eDragon', 'pug_Tesla_eItem'}
+
+    local findTagList = {'trashID_', 'DiscardTarget', 'monsterDiscardPile'}
+
+    for k, tag in pairs(tagList) do
+        local objList = getObjectsWithTag(tag)
+        for k,obj in pairs(objList) do
+            if tool.hasTag(obj.getTags(), findTagList, true) then
+                bagsList[tag] = obj
+            end
+        end
+    end
+    --print(logString(bagsList, '--- bagsList'))
+end
+
+function _blank()end
+
+function returnPugsToDrawBags(draw, discard)
+    local target = draw
+    local tContent = target.getObjects()
+
+    local source = discard
+    local sContent = source.getObjects()
+
+    local Y = 3
+
+    if #tContent == 0 then
+        for _, o in pairs(sContent) do
+            pug = source.takeObject({position={target.getPosition().x, Y, target.getPosition().z}})
+            pug.setRotation({0,180,180})
+            Y = Y + pug.getBounds().size.y + 0.5
+        end
+    elseif #sContent == 0 then
+        broadcastToAll('The '..target.getName()..' discard pile is empty!', 'Orange')
+    elseif #sContent > 0 then broadcastToAll('There are are still tokens in the '..source.getName()..'Pool', 'Orange') end
+    makeButtons()
+end
+
+function pug_orc()
+    local drawBag = tool.findObj('pug_Orc', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Orc', 'eventID_monsterDiscardPile')
+    returnPugsToDrawBags(drawBag, discardBag)
+end
+
+function pug_Dungeon()
+    local drawBag = tool.findObj('pug_Dungeon', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Dungeon', 'eventID_monsterDiscardPile')
+end
+
+function pug_Keep()
+    local drawBag = tool.findObj('pug_Keep', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Keep', 'eventID_monsterDiscardPile')
+end
+
+function pug_MageTower()
+    local drawBag = tool.findObj('pug_MageTower', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_MageTower', 'eventID_monsterDiscardPile')
+end
+
+function pug_Dragon()
+    local drawBag = tool.findObj('pug_Dragon', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Dragon', 'eventID_monsterDiscardPile')
+end
+
+function pug_Ruin()
+    local drawBag = tool.findObj('pug_Ruin', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Ruin', 'eventID_monsterDiscardPile')
+end
+
+function pug_City()
+    local drawBag = tool.findObj('pug_City', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_City', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_nOrc()
+    local drawBag = tool.findObj('pug_Tesla_nOrc', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_nOrc', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_nDungeon()
+    local drawBag = tool.findObj('pug_Tesla_nDungeon', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_nDungeon', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_nDragon()
+    local drawBag = tool.findObj('pug_Tesla_nDragon', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_nDragon', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_nItem()
+    local drawBag = tool.findObj('pug_Tesla_nItem', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_nItem', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_eOrc()
+    local drawBag = tool.findObj('pug_Tesla_eOrc', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_eOrc', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_eDungeon()
+    local drawBag = tool.findObj('pug_Tesla_eDungeon', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_eDungeon', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_eDragon()
+    local drawBag = tool.findObj('pug_Tesla_eDragon', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_eDragon', 'eventID_monsterDiscardPile')
+end
+
+function pug_Tesla_eItem()
+    local drawBag = tool.findObj('pug_Tesla_eItem', 'eventID_monsterDrawBag')
+    local discardBag = tool.findObj('pug_Tesla_eItem', 'eventID_monsterDiscardPile')
+end
+
+function rebuildButtons()
+    print('REBUILD BUTTONS')
+    --buildVariables()
+    --local drawBag = tool.findObj('pug_Tesla_eItem', 'eventID_monsterDrawBag')
+    --makeButtons()
+
+    --print(logString(bagsList))
+    --print(bagsList.pug_orc.getName())
+    --print(bagsList.pug_orc.getGUID())
+    --local test = getObjectFromGUID('829f98')
+    --print(#test.getObjects())
+end
+function makeButtons(set)
+    self.clearButtons()
+    print(bagsList.pug_orc.getQuantity())
+    local buttons = {}
+    if bagsList.pug_orc.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_orc',
+            function_owner = self,
+            label = 'Return',
+            position = {22.75, 2, -11},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Dungeon.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Dungeon',
+            function_owner = self,
+            label = 'Return',
+            position = {22.75, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Keep.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Keep',
+            function_owner = self,
+            label = 'Return',
+            position = {19, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_MageTower.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_MageTower',
+            function_owner = self,
+            label = 'Return',
+            position = {15.25, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Dragon.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Dragon',
+            function_owner = self,
+            label = 'Return',
+            position = {11.4, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_City.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_City',
+            function_owner = self,
+            label = 'Return',
+            position = {7.65, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Ruin.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Ruin',
+            function_owner = self,
+            label = 'Return',
+            position = {3.85, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_eItem.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_eItem',
+            function_owner = self,
+            label = 'Return',
+            position = {0, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_eOrc.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_eOrc',
+            function_owner = self,
+            label = 'Return',
+            position = {-3.8, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_eDungeon.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_eDungeon',
+            function_owner = self,
+            label = 'Return',
+            position = {-7.55, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_eDragon.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_eDragon',
+            function_owner = self,
+            label = 'Return',
+            position = {-11.4, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_nItem.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_nItem',
+            function_owner = self,
+            label = 'Return',
+            position = {-15.15, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_nOrc.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_nOrc',
+            function_owner = self,
+            label = 'Return',
+            position = {-19, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_nDungeon.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_nDungeon',
+            function_owner = self,
+            label = 'Return',
+            position = {-22.8, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+    if bagsList.pug_Tesla_nDragon.getQuantity() > 0 then
+        button = {
+            click_function = 'pug_Tesla_nDragon',
+            function_owner = self,
+            label = 'Return',
+            position = {-26.6, 2, -2.8},
+            rotation = {0, 180, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+            table.insert(buttons, button)
+    end
+ -- Create Buttons
+    for _, button in ipairs(buttons) do
+        self.createButton(button)
+    end
+end
