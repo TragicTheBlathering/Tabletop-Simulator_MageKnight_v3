@@ -15,7 +15,7 @@ end
 --- onObjectEnter : CONTAINER --------------------------------------------------
 
 function onObjectEnterContainer(bag, obj)
-    tool.virtualTokenStack.enterContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack', 'F3')
+    tool.virtualTokenStack.enterContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack', 0.5)
     tool.TrashCan.enterContainer(bag, obj, globalVar.TrashSetting)
     tool.setDiscardPileButton.enterContainer(bag, obj, obj.getTags())
 end

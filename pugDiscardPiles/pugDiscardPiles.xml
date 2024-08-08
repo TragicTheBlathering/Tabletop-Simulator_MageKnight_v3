@@ -1,0 +1,9 @@
+<Defaults>
+  <Text color='White' fontSize='18'/>
+  <ToggleButton textAlignment="MiddleLeft" fontSize='24' preferredHeight='40' colors='#ffcc33|#ffffff|#808080|#606060' selectedBackgroundColor='#dddddd' deselectedBackgroundColor='#999999' onValueChanged="toggle"/>
+  <Button fontSize='32' preferredHeight='40' colors='#dddddd|#ffffff|#808080|#606060' />
+</Defaults>
+
+<Panel height='90' width='240' position="-2280 -1180 0">
+    <Button text="Create Bag" onClick="doit"/>
+</Panel>

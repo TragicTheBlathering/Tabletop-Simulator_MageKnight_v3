@@ -6,20 +6,22 @@ local event_pugDiscardButton = {}
 
     function event_pugDiscardButton.enterContainer(bag, obj, objTags)
         if tool.objHasAllTags(bag.getTags(), {returnTag(objTags), 'eventID_monsterDiscardPile', 'trash_DiscardTarget'}) then
-            tool.wait.drop('event_pugDiscardButton', bag, obj, wait_setButton, 'F5')
+            --tool.wait.drop('event_pugDiscardButton', bag, obj, wait_setButton, 'F5')
         end
     end
 
     function event_pugDiscardButton.exitContainer(bag, obj, variableData, idTag, time)
         if tool.objHasAllTags(bag.getTags(), {returnTag(objTags), 'eventID_monsterDiscardPile', 'trash_DiscardTarget'}) then
-            tool.wait.drop('event_pugDiscardButton', bag, obj, wait_setButton, 'f5')
+            --tool.wait.drop('event_pugDiscardButton', bag, obj, wait_setButton, 'f5')
         end
     end
 
     function wait_setButton(args)
+        --print(logString(args))
         --local bag = getObjectFromGUID(args.bag.getGUID())
         local buttonsObj = getObjectsWithTag('buttons_DiscardBags')[1]
-        buttonsObj.call('rebuildButtons')
+        print(buttonsObj.getName())
+        --buttonsObj.call('rebuildButtons', args)
     end
 
     function returnTag(objTags)
