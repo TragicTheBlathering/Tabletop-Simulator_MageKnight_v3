@@ -1,0 +1,23 @@
+local event = {}
+local MonesteryDiscovered_block = true
+
+function event.MonesteryDiscovered(zone, enter_object)
+    if MonesteryDiscovered_block then
+        MonesteryDiscovered_block = false
+        enter_object.setName('Discovered Monasteries')
+        testTokenStack(zone)
+    end
+end
+
+function testTokenStack(zone)
+    for k,v in pairs(zone.getObjects()) do
+        if v.getData().Name == "Custom_Token_Stack" then
+            print(v.getData().Name)
+            print(v.getData().Number)
+            print(v.getQuantity())
+        end
+    end
+    MonesteryDiscovered_block = false
+end
+
+return event

@@ -1,0 +1,123 @@
+local ShowCast = true
+local wait_ids = {}
+local button = {label="Art Offerr WIP", click_function="b_Function", function_owner=self,
+                position={0,0.5,1}, rotation={0,180,0}, height=500, width=2800, font_size=250}
+
+function onload()
+    self.createButton(button)
+end
+
+function b_Function(obj, color, alt_click)
+    local artCards, artDraw, artDiscard = findGameState()
+
+    if not alt_click then
+        countClicks(self,function()dealArt(artCards, artDraw, artDiscard)end,0.4)
+    else
+        discardCards(artCards, artDraw, artDiscard)
+    end
+
+end
+
+function discardCards(artCards, artDraw, artDiscard)
+    local delay = 0
+    if artDraw.deck == false then
+        artDraw.deck = artDiscard.deck
+        artDiscard.deck = false
+        delay = 0.5
+        resetDeck(artDraw, artDiscard)
+    end
+    Wait.condition(function()
+        Wait.time(function() clearOffer(artCards, artDiscard) end, delay)
+    end, function() return not artDraw.deck.isSmoothMoving() end)
+end
+
+function clearOffer(artCards, artDiscard)
+    print('function clearOffer(artCards, artDiscard)')
+    for k,v in pairs(artCards) do
+        if v.deck then
+            v.deck.setPositionSmooth(artDiscard.pos+Vector(0,2,0))
+        end
+    end
+end
+
+--Wait.condition(function()end, function()end)
+function resetDeck(artDraw, artDiscard)
+    local discard = artDraw.deck
+    local draw = artDiscard.deck
+    local delay = 0
+    if draw == false then
+        discard.setPositionSmooth(artDraw.pos+Vector(0,1,0))
+        discard.setRotationSmooth(Vector(0,180,180))
+        Wait.condition(function()
+            discard.setPositionSmooth(artDraw.pos)
+            Wait.condition(function()
+                discard.shuffle()
+            end, function() return not discard.isSmoothMoving() end)
+        end, function() return not discard.isSmoothMoving() end)
+    end
+end
+
+function findGameState()
+    local artCards = {{deck=false, pos=Vector(56.51, 2.02, -48.82)},
+                      {deck=false, pos=Vector(49.51, 2.02, -48.82)},
+                      {deck=false, pos=Vector(42.51, 2.02, -48.82)},
+                      {deck=false, pos=Vector(35.51, 2.02, -48.82)}}
+    local artDraw = {deck=false, pos=Vector(63.50, 2.13, -48.82)}
+    local artDiscard = {deck=false, pos=Vector(70.50, 2.01, -48.82)}
+
+    -- artCards
+    for k,v in pairs(artCards) do
+        v.deck = cast(v.pos)
+    end
+    artDraw.deck = cast(artDraw.pos)
+    artDiscard.deck = cast(artDiscard.pos)
+
+    return artCards, artDraw, artDiscard
+end
+
+function cast(castOrigin)
+    local zone = Physics.cast({ origin=castOrigin + Vector(0,1,0),
+                                direction={0,1,0},
+                                type=3,
+                                max_distance=0,
+                                size=Vector(2,2,2),
+                                debug=ShowCast})
+    return processCast(zone)
+end
+
+function processCast(zone)
+    local object = false
+    for k,v in pairs(zone) do
+      if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
+        object = v.hit_object
+      end
+    end
+    return object
+end
+
+function dealArt(artCards, artDraw, artDiscard)
+    local count = wait_ids[self].count + 1
+    if count > 4 then count = 4 end
+    print("deal")
+    --print(logString(artCards, '\n---- artCards'))
+    --print(logString(artDraw, '\n---- artDraw'))
+    --print(logString(artDiscard, '\n---- artDiscard'))
+end
+
+function countClicks(obj,func,delay)
+    local delay = delay or 0.8 -- better way of setting default parameters
+    wait_ids[obj] = wait_ids[obj] or { -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+      count = 0, -- We set the count to 0 here when the table is made
+    }
+
+    function delayCall()
+        func(wait_ids[obj].count)
+        wait_ids[obj].waitID = nil -- remove the wait id when the function is called
+        wait_ids[obj].count = 0  -- We set the count to 0 here when the wait has ended due to timeout
+    end
+
+    if wait_ids[obj].waitID then Wait.stop(wait_ids[obj].waitID); wait_ids[obj].waitID = nil end -- end the previous wait if it exists
+    wait_ids[obj].waitID = Wait.time(delayCall, delay) -- make a new wait, but with _no_ count
+
+    wait_ids[obj].count = wait_ids[obj].count + 1 -- finally increment the click amount.
+end

@@ -17,6 +17,13 @@ GlobalVariables.virtualTokenStackData = {
                  value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011},
                  empty = "#4C4C4C"
         },
+        eventID_commandToken = {
+                 tags  = {'player_commandToken'},
+                 type  = {hex=false, url=false, contents=true},
+                 pivot = 'bottom',
+                 value = {scaleValue=2.2, baseScale=Vector(0, 2.52, 0), basePos=Vector(0, 2.52, 0), origSize=0.2016006},
+                 empty = "https://steamusercontent-a.akamaihd.net/ugc/771734893749845381/3F74E429C36D51E1BF2F201D33D5734F1F8C69DC/"
+        },
         eventID_monsterDiscardPile = {
                  tags  = {
                      pug_orc='http://cloud-3.steamusercontent.com/ugc/2322236944769318458/7DDF32D648B263283063FDF6CDC3DF1FCFEFDD2C/',
