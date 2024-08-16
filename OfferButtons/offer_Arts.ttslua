@@ -1,78 +1,190 @@
-local ShowCast = true
+local ShowCast = false
+local printBug = false
+
+cardData = {
+    cardOfferPos = {Vector(56.51, 2.02, -48.82),
+                    Vector(49.51, 2.02, -48.82),
+                    Vector(42.51, 2.02, -48.82),
+                    Vector(35.51, 2.02, -48.82),
+                    Vector(28.51, 2.02, -48.82)
+                },
+    face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
+    drawDeckPos = Vector({63.50, 2.01, -48.82}),
+    discardPilePos = Vector(70.50, 2.01, -48.82),
+
+    drawCount = false,
+    currentOffer = {false, false, false, false, false},
+    draw    = false,
+    discard = false
+}
 local wait_ids = {}
-local button = {label="Art Offerr WIP", click_function="b_Function", function_owner=self,
-                position={0,0.5,1}, rotation={0,180,0}, height=500, width=2800, font_size=250}
+local functionStopped = {resetDeck = false, drawCards = false, clearOffer = false} --functionStopped.clearOffer
 
 function onload()
-    self.createButton(button)
+    setButtonReady()
 end
 
-function b_Function(obj, color, alt_click)
-    local artCards, artDraw, artDiscard = findGameState()
-
-    if not alt_click then
-        countClicks(self,function()dealArt(artCards, artDraw, artDiscard)end,0.4)
+function b_Function(obj, color, rightClick)
+    if not rightClick then
+        countClicks(self,processOffer,0.4)
     else
-        discardCards(artCards, artDraw, artDiscard)
+        setButtonDisabled()
+        setGameState()
+        clearOffer()
+        waitFunc(setButtonReady, 'clearOffer')
     end
-
 end
 
-function discardCards(artCards, artDraw, artDiscard)
-    local delay = 0
-    if artDraw.deck == false then
-        artDraw.deck = artDiscard.deck
-        artDiscard.deck = false
-        delay = 0.5
-        resetDeck(artDraw, artDiscard)
-    end
-    Wait.condition(function()
-        Wait.time(function() clearOffer(artCards, artDiscard) end, delay)
-    end, function() return not artDraw.deck.isSmoothMoving() end)
+function processOffer(count)
+    setButtonDisabled()
+    count = count+1; if count < 2 then count = 2 elseif count > 5 then count = 5 end
+    cardData.drawCount = count
+    setGameState() --print(logString(cardData, '\n---- cardData'))
+
+    clearOffer()
+    waitFunc(resetDeck, 'clearOffer')
+    waitFunc(drawCards, 'resetDeck')
+    waitFunc(setButtonReady, 'drawCards')
 end
 
-function clearOffer(artCards, artDiscard)
-    print('function clearOffer(artCards, artDiscard)')
-    for k,v in pairs(artCards) do
-        if v.deck then
-            v.deck.setPositionSmooth(artDiscard.pos+Vector(0,2,0))
+function drawCards()
+    waitForFunction('allStop')
+    setGameState('draw')
+    local count = cardData.drawCount
+    local draw = cardData.draw
+    local countLeftOver = false
+
+    --for k,pos in pairs(cardData.cardOfferPos)
+    local drawnCards = {}
+    for i = 1, count do
+        local card = draw.takeObject({position=cardData.cardOfferPos[i]+Vector(0,2,0), rotation=cardData.face.up})
+        table.insert(drawnCards, card)
+        Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i])end, function() return isSmooth(card) end)
+    end
+
+    Wait.condition(function() functionStopped.drawCards = true end, function() return objectsAreMoving(drawnCards) end)
+end
+
+function resetDeck()
+ -- Function Called by Deck Test ---
+    function dropDiscardUnderDraw(draw, discard)
+        --print(logString(draw, '\n--- draw'))
+        --print(logString(discard, '\n--- discard'))
+        if not draw then
+            discard.setPositionSmooth(cardData.drawDeckPos+Vector(0,2,0))
+            discard.setRotationSmooth(cardData.face.down)
+            Wait.condition(function()
+                local pos = Vector(cardData.drawDeckPos.x, cardData.drawDeckPos.y+discard.getBounds().size.y/2, cardData.drawDeckPos.z)
+                discard.setPositionSmooth(pos)
+                Wait.condition(function()
+                    functionStopped.resetDeck = true
+                end, function() return isSmooth(discard) end)
+            end, function() return isSmooth(discard) end)
+        else
+            discard.setPositionSmooth(cardData.drawDeckPos+Vector(0,2,0))
+            discard.setRotationSmooth(cardData.face.down)
+            Wait.condition(function()
+                local pos = Vector(cardData.drawDeckPos.x, cardData.drawDeckPos.y+draw.getBounds().size.y/2+0.25, cardData.drawDeckPos.z)
+                discard.setPositionSmooth(pos)
+                Wait.condition(function()
+                    discard.setPosition(cardData.drawDeckPos+Vector(0,-10,0))
+                    draw.putObject(discard)
+                    functionStopped.resetDeck = true
+                end, function() return isSmooth(discard) end)
+            end, function() return isSmooth(discard) end)
         end
     end
-end
+ -- Roor Function
+    waitForFunction('allStop')
+    setGameState('discard')
+    setGameState('draw')
+    local count = cardData.drawCount --print(logString(count, '\n--- count'))
+    local draw = cardData.draw --print(logString(draw, '\n--- draw'))
+    local discard = cardData.discard --print(logString(discard, '\n--- discard'))
 
---Wait.condition(function()end, function()end)
-function resetDeck(artDraw, artDiscard)
-    local discard = artDraw.deck
-    local draw = artDiscard.deck
-    local delay = 0
-    if draw == false then
-        discard.setPositionSmooth(artDraw.pos+Vector(0,1,0))
-        discard.setRotationSmooth(Vector(0,180,180))
-        Wait.condition(function()
-            discard.setPositionSmooth(artDraw.pos)
-            Wait.condition(function()
-                discard.shuffle()
-            end, function() return not discard.isSmoothMoving() end)
-        end, function() return not discard.isSmoothMoving() end)
+    if draw then
+        if draw.getQuantity() >= count then--print('\n--- No Reset')
+            functionStopped.resetDeck = true
+        else--print('\n--- Reset')
+            dropDiscardUnderDraw(draw, discard)
+        end
+    else
+        dropDiscardUnderDraw(draw, discard)
     end
 end
 
-function findGameState()
-    local artCards = {{deck=false, pos=Vector(56.51, 2.02, -48.82)},
-                      {deck=false, pos=Vector(49.51, 2.02, -48.82)},
-                      {deck=false, pos=Vector(42.51, 2.02, -48.82)},
-                      {deck=false, pos=Vector(35.51, 2.02, -48.82)}}
-    local artDraw = {deck=false, pos=Vector(63.50, 2.13, -48.82)}
-    local artDiscard = {deck=false, pos=Vector(70.50, 2.01, -48.82)}
-
-    -- artCards
-    for k,v in pairs(artCards) do
-        v.deck = cast(v.pos)
+function clearOffer()
+    waitForFunction('allStop')
+    local currentOffer = cardData.currentOffer
+    local discardPilePos = cardData.discardPilePos
+    local discard = cardData.discard
+    local offset = nil
+    if discard then
+        --print('Set OffSet for Deck or single Card')
+        offset = discard.getBounds().size.y/2+0.2
+        discardPilePos = discard.getPosition()+Vector(0,offset,0)
     end
-    artDraw.deck = cast(artDraw.pos)
-    artDiscard.deck = cast(artDiscard.pos)
 
-    return artCards, artDraw, artDiscard
+    --print('TODO : If there is a deck, you need to use PUT-object')
+    local Y = 0
+    for k,card in ipairs(currentOffer) do
+        if card then
+            card.setPositionSmooth(discardPilePos+Vector(0,Y,0))
+            Y = Y + 0.5
+            if not discard then
+                discard = card
+                Wait.condition(function()
+                    discard.setPosition(discardPilePos)--cardData.discardPilePos 32.92, 2.02, -31.23
+                end, function() return isSmooth(card) end)
+            else
+                Wait.condition(function()
+                    discard = discard.putObject(card)
+                end, function() return isSmooth(card) end)
+            end
+        end
+    end
+    Wait.condition(function() functionStopped.clearOffer = true end, function() return objectsAreMoving(currentOffer) end)
+end
+
+--******************************************************************************
+-- ***** TOOLS *****************************************************************
+--******************************************************************************
+function debug()
+    getObjectFromGUID('2eb8d0').setPositionSmooth({49.51, 4, -21.98})
+end
+-- FindGate State --------------------------------------------------------------
+function setGameState(...)
+    local keys = {...}
+    if tableSize(keys) == 0 then
+        keys = false
+    end
+    if keys == false then
+        setState('currentOffer')
+        setState('draw')
+        setState('discard')
+    else
+        for k, key in pairs(keys) do
+            setState(key)
+        end
+    end
+    return cardData
+end
+
+function setState(key)
+    if key == 'currentOffer' then
+     --- Find Offer Cards
+        for k,castOrigin in ipairs(cardData.cardOfferPos) do
+            cardData.currentOffer[k] = cast(castOrigin)
+        end
+
+    elseif key == 'draw' then
+     --- Find Draw Deck
+        cardData.draw = cast(cardData.drawDeckPos)
+
+    elseif key == 'discard' then
+     --- Find Draw Deck
+        cardData.discard = cast(cardData.discardPilePos)
+    end
 end
 
 function cast(castOrigin)
@@ -88,36 +200,137 @@ end
 function processCast(zone)
     local object = false
     for k,v in pairs(zone) do
-      if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
-        object = v.hit_object
-      end
+        if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
+          object = v.hit_object
+          --print(object.getName())
+        end
     end
-    return object
+    if object then
+        return object
+    else
+        return false
+    end
 end
-
-function dealArt(artCards, artDraw, artDiscard)
-    local count = wait_ids[self].count + 1
-    if count > 4 then count = 4 end
-    print("deal")
-    --print(logString(artCards, '\n---- artCards'))
-    --print(logString(artDraw, '\n---- artDraw'))
-    --print(logString(artDiscard, '\n---- artDiscard'))
+--- Wait Stuff -----------------------------------------------------------------
+function clearWait(obj)
+    --print('IN : waitUtils.countClicks')
+    wait_ids[obj] = wait_ids[obj] or { -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+      count = 0, waitID_time = nil -- SetDefaults
+    }
+    if wait_ids[self].waitID_time then
+        Wait.stop(wait_ids[self].waitID_time)
+    end
 end
 
 function countClicks(obj,func,delay)
     local delay = delay or 0.8 -- better way of setting default parameters
-    wait_ids[obj] = wait_ids[obj] or { -- just to be sure there's no attempt to index a nil value later we set an empty table first.
-      count = 0, -- We set the count to 0 here when the table is made
-    }
-
+    clearWait(obj)
     function delayCall()
         func(wait_ids[obj].count)
-        wait_ids[obj].waitID = nil -- remove the wait id when the function is called
+        wait_ids[obj].waitID_click = nil -- remove the wait id when the function is called
         wait_ids[obj].count = 0  -- We set the count to 0 here when the wait has ended due to timeout
     end
 
-    if wait_ids[obj].waitID then Wait.stop(wait_ids[obj].waitID); wait_ids[obj].waitID = nil end -- end the previous wait if it exists
-    wait_ids[obj].waitID = Wait.time(delayCall, delay) -- make a new wait, but with _no_ count
+    if wait_ids[obj].waitID_click then Wait.stop(wait_ids[obj].waitID_click); wait_ids[obj].waitID_click = nil end -- end the previous wait if it exists
+    wait_ids[obj].waitID_click = Wait.time(delayCall, delay) -- make a new wait, but with _no_ count
 
     wait_ids[obj].count = wait_ids[obj].count + 1 -- finally increment the click amount.
+end
+-- Button Code  ----------------------------------------------------------------
+function b_disabled()end -- This is for when the button is disabled. --print('<disabled>')end
+
+function setButtonReady()
+    self.clearButtons()
+    local button = {label="Draw\nArtefact Cards", click_function="b_Function", function_owner=self,
+                    position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
+                   , scale={0.75,0.75,0.75}
+                   --, color='Green', font_color='White',
+                    }
+    self.createButton(button)
+end
+
+function setButtonDisabled()
+    waitForFunction('allStop')
+    self.clearButtons()
+    local button = {label="Draw\nArtefact Cards", click_function="b_disabled", function_owner=self,
+                    position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
+                    , scale={0.75,0.75,0.75}
+                    , color='Red', font_color='White',
+                    }
+    self.createButton(button)
+end
+-- Table Size ------------------------------------------------------------------
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end
+
+--***** Wait Functions *********************************************************
+-- Is Function Running ---------------------------------------------------------
+function waitForFunction(key) -- true == function runs, flase == function dose not run
+    key = key or false
+    if key then
+        if key =='allStop' then
+            if printBug then print('waitFunction ('..key..')') end
+            for k,v in pairs(functionStopped) do
+                functionStopped[k] = false
+            end
+        elseif key == 'resetWaitIDs' then
+            if printBug then print('waitFunction ('..key..')') end
+            -- Set Wait_ids fail safes
+            wait_ids[self] = wait_ids[self] -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+            or {waitCleanUP = false, waitID = nil}-- We set wait variables to start state (all diffrent waits go here)
+            if wait_ids[self].waitCleanUP ~= false then
+                Wait.stop(wait_ids[self].waitCleanUP)
+                wait_ids[self].waitCleanUP = false
+            end
+        else
+            if printBug then print('waitFunction ('..key..') : '..tostring(functionStopped[key])) end
+            return functionStopped[key]
+        end
+    else
+        print("waitForFunction(key) ERROR")
+        return true
+    end
+end
+-- Wait.condition Wrapper for isSmoothMove -------------------------------------
+function waitFunc(func, waitKey)
+    Wait.condition(function() func() end, function() return waitForFunction(waitKey) end)
+end
+-- slideIsMoving(newOffer) shorthand -------------------------------------------
+function objectsAreMoving(...)
+    local args = {...}
+    local objList = {}
+    for k,var in pairs(args) do
+        if type(var) == "table" then
+            for k,v in pairs(var) do
+                if v then
+                    table.insert(objList, v)
+                end
+            end
+        else
+            if var then
+                table.insert(objList, var)
+            end
+        end
+    end
+    --print(logString(objList, '\n---- objList'))
+    for k, obj in pairs(objList) do
+        if obj then
+            if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+        end
+    end
+    return true
+end
+-- obj.isSmoothMoving() shorthand ----------------------------------------------
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
 end

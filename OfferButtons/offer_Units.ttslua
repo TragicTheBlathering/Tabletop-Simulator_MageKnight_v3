@@ -1,0 +1,201 @@
+local ShowCast = true
+local printBug = false
+
+local cardData = {
+        cardOfferPos = {Vector(56.50, 2.02, -13.98),
+                        Vector(49.50, 2.02, -13.98),
+                        Vector(42.50, 2.02, -13.98),
+                        Vector(35.50, 2.02, -13.99),
+                        Vector(28.50, 2.02, -13.99),
+                        Vector(21.50, 2.02, -13.99),
+                        Vector(14.50, 2.02, -13.99)
+                    },
+        face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
+
+        drawDecks = {silver={deck=false, pos=Vector(70.50, 2.01, -13.97)},
+                     gold  ={deck=false, pos=Vector(63.50, 2.02, -21.97)}},
+        discardDecks = {silver={deck=false, pos=Vector(70.50, 2.01, -13.97)},
+                        gold  ={deck=false, pos=Vector(70.50, 2.01, -21.97)}},
+
+        dropOffSet = Vector(0, 2, 0),
+        currentOffer = {false, false, false, false, false, false, false},
+        drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'},
+        manualGold = false
+}
+
+local useGold = {yes = false,
+                 ticked={char='9673', pos=Vector(-2.6,0.5,-0.115)},
+                 unticked={char='9678', pos=Vector(-2.6,0.5,-0.14)}
+}
+local wait_ids = {}
+local functionStopped = {resetSilverDeck = false, resetGoldDeck = false, clearOffer = false, dealOffer = false} --functionStopped.clearOffer
+
+--- Save and Load Code ---------------------------------------------------------
+function updateSave()
+    local data_to_save = {["manualGold"]=cardData.manualGold}
+    local saved_data = JSON.encode(data_to_save)
+    self.script_state = saved_data
+end
+
+function onload()
+    local saved_data = {}
+    if self.script_state ~= "" then--
+        print(logString(self.script_state, 'self.script_state'))
+        saved_data = JSON.decode(self.script_state)
+        --Set up information off of loaded_data
+    end
+
+    for k, v in pairs(saved_data) do
+        cardData[k] = v
+    end
+
+
+    setButtons_ready()
+end
+
+--[[
+function onSave()
+    local data_to_save = {b=BlitzCount, p=PlayerCount, o=ButtonOption}
+    saved_data = JSON.encode(data_to_save)
+    --saved_data = "" --Remove -- at start & save to clear save data
+    return saved_data
+end
+
+function onLoad(saved_data)
+    -- Loads the tracking for if the game has started yet
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        BlitzCount = loaded_data.b
+        PlayerCount = loaded_data.p
+        ButtonOption = loaded_data.o
+    else
+        PlayerCount = 4
+        BlitzCount = 2
+        ButtonOption = 9678
+    end
+
+    ButtonOptionPos = {-1.5, 0.3, 1.855}
+
+    SilverDrawZone = '4fa2f2'
+    GoldDrawZone = '715b48'
+
+    MonDrawZone = '7ce69e'
+    MonCountZone = 'b7cb3b'
+
+    makeButtons()
+end
+]]
+
+function b_Function(obj, color, rightClick)
+    if not rightClick then
+        print(logString(cardData.drawType, '\n---- drawType'))
+    else
+        print(logString(self.script_state, 'self.script_state'))
+    end
+end
+
+--******************************************************************************
+--******************************************************************************
+-- Button Code -----------------------------------------------------------------
+function autoSetTicked()
+    if not cardData.manualGold then
+        print('<---- AUTO')
+        for k, o in pairs(getObjectsWithTag('maptile_Core')) do
+            if o.type ~= 'Bag' and o.type == 'Generic' then
+                useGold.yes = true
+                break
+            end
+        end
+    else print('<---- MANUAL')
+    end
+
+    if useGold.yes then
+        cardData.drawType = {'gold', 'silver', 'gold', 'silver', 'gold', 'silver', 'gold'}
+    else
+        cardData.drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'}
+    end
+end
+
+function b_manualSetTicked()
+    if useGold.yes then
+        cardData.manualGold = false
+        useGold.yes = false
+    else
+        cardData.manualGold = true
+        useGold.yes = true
+    end
+    updateSave()
+    setButtons_ready()
+end
+
+function setButtons_ready()
+    local pos = useGold.unticked.pos
+    local char = useGold.unticked.char
+
+    if useGold.yes then
+        pos = useGold.ticked.pos
+        char = useGold.ticked.char
+    end
+    local buttons = {}
+
+    local button = {label="Draw\nUnit Cards", click_function="b_Function", function_owner=self,
+                    position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
+                   , scale={0.75,0.75,0.75}
+                   --, color='Green', font_color='White',
+                    }
+        table.insert(buttons, button)
+
+        button = {label='', click_function="b_manualSetTicked", function_owner=self,
+                        position={-2.6,0.5,0}, rotation={0,180,0}, height=500, width=500, font_size=250
+                       , scale={0.75,0.75,0.75}
+                       --, color='Green', font_color='White',
+                   }
+        table.insert(buttons, button)
+
+        button = {label=string.char(char), click_function="b_disabled", function_owner=self,
+                        position=pos, rotation={0,180,0}, height=0, width=0, font_size=600
+                       , scale={1,1,1}
+                       --, color='Green', font_color='White',
+                   }
+       table.insert(buttons, button)
+   setButtons(buttons)
+end
+
+function setButtons(buttons)
+    self.clearButtons()
+    autoSetTicked()
+    for k,button in pairs(buttons) do
+        self.createButton(button)
+    end
+end
+
+function setButtons_disabled()
+    local pos = useGold.unticked.pos
+    local char = useGold.unticked.char
+    if useGold.yes then
+        pos = useGold.ticked.pos
+        char = useGold.ticked.char
+    end
+    local buttons = {}
+        local button = {label="Draw\nUnit Cards", click_function="b_Function", function_owner=self,
+                        position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
+                       , scale={0.75,0.75,0.75}
+                       , color='Red', font_color='White',
+                        }
+        table.insert(buttons, button)
+
+        button = {label='', click_function="b_TickBox", function_owner=self,
+                        position={-2.6,0.5,0}, rotation={0,180,0}, height=500, width=500, font_size=250
+                       , scale={0.75,0.75,0.75}
+                       , color='Red', font_color='White',
+                   }
+        table.insert(buttons, button)
+
+        button = {label=string.char(char), click_function="b_disabled", function_owner=self,
+                        position=pos, rotation={0,180,0}, height=0, width=0, font_size=600
+                       , scale={1,1,1}
+                       , color='Red', font_color='White',
+                   }
+       table.insert(buttons, button)
+    setButtons(buttons)
+end

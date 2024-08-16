@@ -1,223 +1,344 @@
-local ShowCast = true
-local button = {label="AA Offerr WIP", click_function="b_Function", function_owner=self,
-                position={0,0.5,1}, rotation={0,180,0}, height=500, width=2800, font_size=250}
+local ShowCast = false
+local printBug = false
+local wait_ids = {}
+local functionStopped = {slideOffer = false, resetDeck = false, drawCards = false, discard_last = false}
+local cardData = {}
 
 function onload()
+    setButtonReady()
+end
+
+function b_Function(obj, color, rightClick)
+    if not rightClick then
+        processOffer()
+    else
+        setButtonDisabled()
+        discard_last()
+        waitFunc(processOffer, 'discard_last')
+    end
+end
+
+function processOffer()
+    setGameState()--print(logString(cardData, '\n--- cardData'))
+    if offerRequiresCards(cardData.currentOffer) then
+        setButtonDisabled()
+        slideOffer()
+        waitFunc(resetDeck, 'slideOffer')
+        waitFunc(drawCards, 'resetDeck')
+        waitFunc(resetDeck, 'drawCards')
+        waitFunc(drawCards, 'resetDeck')
+        waitFunc(setButtonReady, 'drawCards')
+    end
+end
+--[[
+cardData = {
+    cardOfferPos = {Vector(56.51, 2.02, -29.98),
+                    Vector(49.51, 2.02, -29.98),
+                    Vector(42.51, 2.02, -29.98)},
+    face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
+    drawDeckPos = Vector(63.51, 2.02, -29.97),
+    discardPilePos = Vector(70.50, 2.01, -30.00),
+
+    currentOffer = {false, false, false},
+    newOffer = {count = false, slide = {}},
+    discardCard = false,
+    draw    = false,
+    discard = false
+}]]
+
+function findDummyBoard()
+    local dummy = getObjectsWithTag('Dummy_PlayerBoard')--print(logString(dummy, '\n--- dummy'))
+    if dummy[1] then
+        return true
+    end
+    return false
+end
+
+function discard_last()
+    setGameState()--print(logString(cardData, '\n--- cardData'))
+    waitForFunction('allStop')
+    --setGameState('discardDeck')
+    local discard = cardData.discard
+    local rot = cardData.face.up
+    local offSet = cardData.offsetY
+    local pos = cardData.discardPilePos
+
+    if discard then
+        pos = pos + Vector(0, discard.getBounds().size.y+0.1, 0)
+    end
+
+    local dummy = findDummyBoard() --print(logString(dummy, '\n--- dummy'))
+    if dummy then
+        pos = Vector(89.07, 2.03, -30.00)
+        cardData.discardPilePos = pos end
+
+    for i = tableSize(cardData.currentOffer), 1, -1 do
+        if cardData.currentOffer[i] then
+            card = cardData.currentOffer[i]
+            card.setPositionSmooth(pos+offSet)
+            Wait.condition(function()
+                card.setPositionSmooth(pos)
+                Wait.condition(function()
+                    Wait.time(function()
+                        functionStopped.discard_last = true
+                    end, 0.2)
+                end, function() return not card.isSmoothMoving() end)
+            end, function() return not card.isSmoothMoving() end)
+            break
+        end
+    end
+
+end
+
+function resetDeck()
+    waitForFunction('allStop')
+    setGameState('drawDeck')
+    setGameState('discardDeck')
+    local discard = cardData.discard
+    local draw = cardData.draw
+    local pos = cardData.drawDeckPos
+    local rot = cardData.face.down
+    local offSet = cardData.offsetY
+
+    if not draw then
+        cardData.draw, draw = discard, discard
+        draw.setPositionSmooth(pos+offSet)
+        draw.setRotationSmooth(rot)
+        Wait.condition(function()
+            draw.setPositionSmooth(pos)
+            Wait.condition(function()
+                draw.shuffle()
+                Wait.time(function() functionStopped.resetDeck = true end, 0.5)
+            end, function() return not draw.isSmoothMoving() end)
+        end, function() return not draw.isSmoothMoving() end)
+    else
+        functionStopped.resetDeck = true
+    end
+end
+
+function drawCards()
+    waitForFunction('allStop')
+    setGameState('newOffer')
+    local drawDeck = cardData.draw
+    local drawCount = cardData.newOffer.count
+
+    --print(logString(cardData.draw, '\n---- cardData.draw'))
+    --print(logString(cardData.newOffer.count, '\n---- cardData.newOffer.count'))
+    if drawDeck then
+        if drawDeck.type == 'Card' then
+            --print('Card')
+            deal(1, true)
+        elseif drawDeck.type == 'Deck' then
+            local deckSize = drawDeck.getQuantity()
+            if drawCount > deckSize then
+                --print('Deck : Small : '..deckSize)
+                deal(deckSize)
+            else
+                deal(drawCount)
+                --print('------ '..drawCount)
+            end
+        end
+    --else
+    --    print('No Deck')
+    end
+end
+
+function offerRequiresCards(tbl)
+    for _, v in pairs(tbl) do
+        if not v then
+            return true
+        end
+    end
+    return false
+end
+
+function reverseNumber(n)
+    return ({[1] = 3, [2] = 2, [3] = 1})[n]
+end
+
+function deal(drawcount, card)
+    waitForFunction('allStop')
+    setGameState('currentOffer')
+    local drawDeck = cardData.draw
+    local rot = cardData.face.up
+    local offSet = cardData.offsetY
+    --print(logString(cardData.currentOffer,'\n--- cardData.currentOffer'))
+    --print(logString(offerRequiresCards(cardData.currentOffer),'\n--- offerRequiresCards()'))
+
+    if offerRequiresCards(cardData.currentOffer) then
+        if card then
+            for i = tableSize(cardData.currentOffer), 1, -1 do
+                if cardData.currentOffer[i] == false then
+                    local card = drawDeck
+                    local pos = cardData.cardOfferPos[i]
+                    cardData.currentOffer[i] = card
+                    card.setPositionSmooth(pos+offSet)
+                    card.setRotationSmooth(rot)
+                    Wait.condition(function() card.setPositionSmooth(pos) end, function() return not card.isSmoothMoving() end)
+                    break
+                end
+            end
+        else
+            --print(logString(cardData.currentOffer, '\n---- cardData.currentOffer'))
+            --for i = 1, tableSize(cardData.currentOffer) do
+            local cardDrawnCount = 0
+            for i = tableSize(cardData.currentOffer), 1, -1 do
+                if cardData.currentOffer[i] == false then
+                    cardDrawnCount = cardDrawnCount + 1
+                    local pos = cardData.cardOfferPos[i]
+                    local card = drawDeck.takeObject({position=pos+offSet, rotation=rot})
+                    cardData.currentOffer[i] = card
+                    Wait.condition(function() card.setPositionSmooth(pos) end, function() return not card.isSmoothMoving() end)
+                end
+                if cardDrawnCount >= drawcount then break end
+            end
+        end
+    --else print('------------------- 005 Debug : You should never see this')
+    end
+    Wait.condition(function() functionStopped.drawCards = true end, function() return objectsAreMoving(cardData.currentOffer) end)
+end
+
+function slideOffer()
+    waitForFunction('allStop')
+    setGameState('currentOffer')
+    setGameState('newOffer')
+
+    local newOffer = cardData.newOffer --print(logString(newOffer, '\n---- newOffer'))
+    if newOffer.count == 3 then
+        functionStopped.slideOffer = true
+    else
+        for i, card in pairs(newOffer.slide) do
+            if card then
+                if card ~= cardData.currentOffer[i] then
+                    card.setPositionSmooth(cardData.cardOfferPos[i]+Vector(0,2,0))
+                    Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i]) end, function() return isSmooth(card) end)
+                end
+            end
+        end
+        Wait.condition(function() functionStopped.slideOffer = true end, function() return objectsAreMoving(newOffer.slide) end)
+    end
+end
+
+--******************************************************************************
+-- ***** TOOLS *****************************************************************
+--******************************************************************************
+function debug()
+    getObjectFromGUID('2eb8d0').setPositionSmooth({49.51, 4, -21.98})
+end
+-- Button Code  ----------------------------------------------------------------
+function b_disabled()end -- This is for when the button is disabled. --print('<disabled>')end
+
+function setButtonReady()
+    waitForFunction('allStop')
+    self.clearButtons()
+    local button = {label="Slide\nAdvanced Actions", click_function="b_Function", function_owner=self,
+                    position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
+                   , scale={0.75,0.75,0.75}
+                   --, color='Green', font_color='White',
+                    }
     self.createButton(button)
 end
 
-function b_Function()
+function setButtonDisabled()
     self.clearButtons()
-  local cardData = {
-        cardOfferPos = {Vector(56.51, 2.02, -29.98),
-                        Vector(49.51, 2.02, -29.98),
-                        Vector(42.51, 2.02, -29.98)},
-        newOffer = {},
-        cardRotation   = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
-        drawDeckPos    = Vector(63.51, 2.21, -29.97),
-        discardPilePos = Vector(70.50, 2.04, -30.00),
-        discardCard = false,
-        found = {offer   = {false, false, false},
-                 draw    = false,
-                 discard = false}
-  }
-  cardData = setCardData(cardData)
-  cardData.newOffer = processCardData(cardData)
-  --print(logString(cardData, "\n---- cardData"))
-  processOffer(cardData)
+    local button = {label="Slide\nAdvanced Action Offer", click_function="b_disabled", function_owner=self,
+                    position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
+                    , scale={0.75,0.75,0.75}
+                    , color='Red', font_color='White',
+                    }
+    self.createButton(button)
 end
 
---[[
-local OfferPos = cardData.cardOfferPos --print(logString(OfferPos, "\n---- OfferPos"))
-local newOffer = cardData.newOffer --print(logString(newOffer, "\n---- newOffer"))
-local oldOffer = cardData.found.offer --print(logString(oldOffer, "\n---- oldOffer"))
-local cardRotation = cardData.cardRotation --print(logString(cardRotation, "\n---- cardRotation"))
-local discardPilePos = cardData.discardPilePos --print(logString(discardPilePos, "\n---- discardPilePos"))
-local drawPilePos = cardData.drawDeckPos --print(logString(drawPilePos, "\n---- drawPilePos"))
-local discardLast = cardData.discardCard --print(logString(discardLast, "\n---- discardLast"))
-local discard = cardData.found.discard --print(logString(discard, "\n---- discard"))
-local draw = cardData.found.draw --print(logString(draw, "\n---- draw"))
-local Yoffset = Vector(0,1,0)
-]]
+-- FindGate State --------------------------------------------------------------
+function setGameState(...)
+    local keys = {...}
+    if tableSize(keys) == 0 then
+        keys = false
+    end
+    --print('------------------------------ ??????????')
 
-function processOffer(cardData)
-    local OfferPos = cardData.cardOfferPos --print(logString(OfferPos, "\n---- OfferPos"))
-    local newOffer = cardData.newOffer --print(logString(newOffer, "\n---- newOffer"))
-    local oldOffer = cardData.found.offer --print(logString(oldOffer, "\n---- oldOffer"))
-    local cardRotation = cardData.cardRotation --print(logString(cardRotation, "\n---- cardRotation"))
-    local discardPilePos = cardData.discardPilePos --print(logString(discardPilePos, "\n---- discardPilePos"))
-    local drawPilePos = cardData.drawDeckPos --print(logString(drawPilePos, "\n---- drawPilePos"))
-    local discardLast = cardData.discardCard --print(logString(discardLast, "\n---- discardLast"))
-    local discard = cardData.found.discard --print(logString(discard, "\n---- discard"))
-    local draw = cardData.found.draw --print(logString(draw, "\n---- draw"))
-    local Yoffset = Vector(0,1,0)
-    -- Discard the last card, if offer is full.
-    if discardLast then
-        discardLast.setPositionSmooth(discardPilePos+Yoffset)
-        if discard then
-            Wait.condition(function() discard.putObject(discardLast) resetDeck(cardData) end, function() return not discardLast.isSmoothMoving() end)
-        else
-            Wait.condition(function()
-                discardLast.setPositionSmooth(discardPilePos)
-                Wait.condition(function() slideOffer(cardData) end, function() return not discardLast.isSmoothMoving() end)
-            end, function() return not discardLast.isSmoothMoving() end)
-        end
+    if keys == false then
+        cardData = {
+            cardOfferPos = {Vector(56.51, 2.02, -29.98),
+                            Vector(49.51, 2.02, -29.98),
+                            Vector(42.51, 2.02, -29.98)},
+            face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
+            drawDeckPos = Vector(63.51, 2.02, -29.97),
+            discardPilePos = Vector(70.50, 2.01, -30.00),
+            offsetY = Vector(0, 2, 0),
+
+            currentOffer = {false, false, false},
+            newOffer = {count = false, slide = {}},
+            discardCard = false,
+            draw    = false,
+            discard = false
+        }
+        setState('currentOffer')
+        setState('discardCard')
+        setState('drawDeck')
+        setState('discardDeck')
     else
-        resetDeck(cardData, true)
-    end
-end
-
-function resetDeck(cardData, noWaitforDiscard)
-    local OfferPos = cardData.cardOfferPos --print(logString(OfferPos, "\n---- OfferPos"))
-    local newOffer = cardData.newOffer --print(logString(newOffer, "\n---- newOffer"))
-    local oldOffer = cardData.found.offer --print(logString(oldOffer, "\n---- oldOffer"))
-    local cardRotation = cardData.cardRotation --print(logString(cardRotation, "\n---- cardRotation"))
-    local discardPilePos = cardData.discardPilePos --print(logString(discardPilePos, "\n---- discardPilePos"))
-    local drawPilePos = cardData.drawDeckPos --print(logString(drawPilePos, "\n---- drawPilePos"))
-    local discardLast = cardData.discardCard --print(logString(discardLast, "\n---- discardLast"))
-    local discard = cardData.found.discard --print(logString(discard, "\n---- discard"))
-    local draw = cardData.found.draw --print(logString(draw, "\n---- draw"))
-    local Yoffset = Vector(0,1,0)
-    --[[Wait.time(function() discard.shuffle() end, 0.8)]]
-
-    if not draw then
-        if noWaitforDiscard then
-            discard.setPositionSmooth(drawPilePos+Yoffset)
-            discard.setRotationSmooth(cardRotation.down)
-            cardData.found.draw = discard
-            cardData.found.discard = false
-            -- 2 move smoothmove, ending in a shuffle
-            Wait.condition(function()
-                discard.setPositionSmooth(drawPilePos)
-                Wait.condition(function()
-                    discard.shuffle()
-                    Wait.time(function() slideOffer(cardData)  end, 0.8)
-                end, function() return not discard.isSmoothMoving() end)
-            end, function() return not discard.isSmoothMoving() end)
-
-        else
-            Wait.time(function()
-                discard.setPositionSmooth(drawPilePos+Yoffset)
-                discard.setRotationSmooth(cardRotation.down)
-                cardData.found.draw = discard
-                cardData.found.discard = false
-                -- 2 move smoothmove, ending in a shuffle
-                Wait.condition(function()
-                    discard.setPositionSmooth(drawPilePos)
-                    Wait.condition(function()
-                        discard.shuffle()
-                        Wait.time(function() slideOffer(cardData)  end, 0.8)
-                    end, function() return not discard.isSmoothMoving() end)
-                end, function() return not discard.isSmoothMoving() end)
-            end, 0.8)
-        end
-    else
-        slideOffer(cardData)
-    end
-end
-
-function slideOffer(cardData)
-    local OfferPos = cardData.cardOfferPos --print(logString(OfferPos, "\n---- OfferPos"))
-    local newOffer = cardData.newOffer --print(logString(newOffer, "\n---- newOffer"))
-    local oldOffer = cardData.found.offer --print(logString(oldOffer, "\n---- oldOffer"))
-    local cardRotation = cardData.cardRotation --print(logString(cardRotation, "\n---- cardRotation"))
-    local discardPilePos = cardData.discardPilePos --print(logString(discardPilePos, "\n---- discardPilePos"))
-    local drawPilePos = cardData.drawDeckPos --print(logString(drawPilePos, "\n---- drawPilePos"))
-    local discardLast = cardData.discardCard --print(logString(discardLast, "\n---- discardLast"))
-    local discard = cardData.found.discard --print(logString(discard, "\n---- discard"))
-    local draw = cardData.found.draw --print(logString(draw, "\n---- draw"))
-    local Yoffset = Vector(0,1,0)
-
-    local allStoppedMoving = {true, false, false}
-
-    for i = #newOffer, 1, -1 do
-        if newOffer[i] == 'deal' then
-            draw.takeObject({position=OfferPos[i]+Yoffset, rotation=cardRotation.up})
-        else
-            if newOffer[i] == oldOffer[i] then
-            else
-                newOffer[i].setPositionSmooth(OfferPos[i]+Yoffset)
-                Wait.condition(function()
-                    newOffer[i].setPositionSmooth(OfferPos[i])
-                    Wait.condition(function() allStoppedMoving[i] = true end, function() return not newOffer[i].isSmoothMoving() end)
-                end, function() return not newOffer[i].isSmoothMoving() end)
-            end
+        for k, key in pairs(keys) do
+            setState(key)
         end
     end
-    Wait.condition(function() self.createButton(button) end, function() return allStopped(allStoppedMoving) end)
+
+    return cardData
 end
 
-function allStopped(allStoppedMoving)
-    --print(logString(allStoppedMoving, '\n--- allStoppedMoving'))
-    for k,v in pairs(allStoppedMoving) do
-        if v == false then return false end
+function setState(key)
+    if key == 'currentOffer' then
+     --- Find Offer Cards
+        for k,castOrigin in ipairs(cardData.cardOfferPos) do
+            cardData.currentOffer[k] = cast(castOrigin)
+        end
+
+    elseif key == 'discardCard' then
+     --- Find Discard card, if the offer is full. Discard Card is the last card in the offer
+        for k, card in ipairs(cardData.currentOffer) do
+            cardData.discardCard = cardData.currentOffer[3]
+            if card == false then
+                cardData.discardCard = false
+                break
+            end
+        end
+
+    elseif key == 'drawDeck' then
+     --- Find Draw Deck
+        cardData.draw = cast(cardData.drawDeckPos)
+
+    elseif key == 'discardDeck' then
+     --- Find Draw Deck
+        cardData.discard = cast(cardData.discardPilePos)
+
+    elseif key == 'newOffer' then
+        local count = 0
+        local newTbl = {false, false, false}  -- Start with a table filled with false values
+        local insertIndex = 3  -- Start filling from the end of the table
+
+        -- Iterate through the original table in reverse order
+        for i = tableSize(cardData.currentOffer), 1, -1 do
+            if cardData.currentOffer[i] ~= false then
+                newTbl[insertIndex] = cardData.currentOffer[i]
+                insertIndex = insertIndex - 1
+            end
+        end
+
+        for k,v in ipairs(cardData.currentOffer) do
+            if v == false then
+                count = count + 1
+            end
+        end
+
+        if count == 0 then
+            count = 3
+        end
+
+        cardData.newOffer.count = count --print(count)
+        cardData.newOffer.slide = newTbl --print(logString(newTbl, '\n--- newTbl'))
+        --print(logString(cardData.newOffer, '\n--- cardData.newOffer'))
     end
-    return true
 end
-
-function processCardData(cardData)
-    local found = cardData.found.offer
-    --print(logString(cardData.found.offer, "\n---- cardData.found.offer"))
-
-    --- Find all the cards needed to be moved and add them to a list... 1:1,1:nil,1:2 becomes 1:1,1:2 listOld
-    --- Find all the cards needed to add to a list... so if I add 1 card to the offer, listNew[1] is that card
-    --- add the new cards to the front of the other list.. so listNew + listOld... 1:new 2:1, 3:2
-    local cardsInOffer = {}
-        for k,card in ipairs(found) do
-            if card then
-                table.insert(cardsInOffer, card)
-            end
-        end
-    local newOffer = {}
-        if #cardsInOffer < 3 then
-            local size = 3 - #cardsInOffer
-            for i = 1, size do
-                table.insert(newOffer, 'deal')
-            end
-            for k,card in ipairs(cardsInOffer) do
-                table.insert(newOffer, card)
-            end
-        elseif #cardsInOffer == 3 then
-            for k,card in ipairs(cardsInOffer) do
-              if k == 3 then
-                table.insert(newOffer, 1, 'deal')
-                discardLast = card
-              else
-                table.insert(newOffer, card)
-              end
-            end
-        end
-    --print(logString(cardData.found.offer, "\n---- cardData.found.offer"))
-    --print(logString(newOffer,'\n--- newOffer'))
-    return newOffer
-end
-
-function setCardData(cardData)
-  local value = cardData
-
-  --- Find Offer Cards
-  for k,castOrigin in ipairs(value.cardOfferPos) do
-    value.found.offer[k] = cast(castOrigin)
-  end
-
-  -- Find Discard card, if the offer is full.
-  for k, card in ipairs(value.found.offer) do
-      value.discardCard = value.found.offer[3]
-      if card == false then
-          value.discardCard = false
-          break
-      end
-  end
-
-  --- Find Draw and Discard Decks
-  value.found.draw = cast(value.drawDeckPos)
-  value.found.discard = cast(value.discardPilePos)
-
-    --print(logString(value, '/n--- value'))
-
-  return value
-end
-
 
 function cast(castOrigin)
     local zone = Physics.cast({ origin=castOrigin + Vector(0,1,0),
@@ -230,15 +351,90 @@ function cast(castOrigin)
 end
 
 function processCast(zone)
-  local object = false
-  for k,v in pairs(zone) do
-    if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
-      object = v.hit_object
+    local object = false
+    for k,v in pairs(zone) do
+        if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
+          object = v.hit_object
+        end
     end
-  end
-  if object then
-    return object
-  else
+    if object then
+        return object
+    else
+        return false
+    end
+end
+
+-- Table Size ------------------------------------------------------------------
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end
+
+-- Is Function Running ---------------------------------------------------------
+function waitForFunction(key) -- true == function runs, flase == function dose not run
+    key = key or false
+    if key then
+        if key =='allStop' then
+            if printBug then print('waitFunction ('..key..')') end
+            for k,v in pairs(functionStopped) do
+                functionStopped[k] = false
+            end
+        elseif key == 'resetWaitIDs' then
+            if printBug then print('waitFunction ('..key..')') end
+            -- Set Wait_ids fail safes
+            wait_ids[self] = wait_ids[self] -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+            or {waitCleanUP = false, waitID = nil}-- We set wait variables to start state (all diffrent waits go here)
+            if wait_ids[self].waitCleanUP ~= false then
+                Wait.stop(wait_ids[self].waitCleanUP)
+                wait_ids[self].waitCleanUP = false
+            end
+        else
+            if printBug then print('waitFunction ('..key..') : '..tostring(functionStopped[key])) end
+            return functionStopped[key]
+        end
+    else
+        print("waitForFunction(key) ERROR")
+        return true
+    end
+end
+-- Wait.condition Wrapper for isSmoothMove -------------------------------------
+function waitFunc(func, waitKey)
+    Wait.condition(function() func() end, function() return waitForFunction(waitKey) end)
+end
+-- slideIsMoving(newOffer) shorthand -------------------------------------------
+function objectsAreMoving(...)
+    local args = {...}
+    local objList = {}
+    for k,var in pairs(args) do
+        if type(var) == "table" then
+            for k,v in pairs(var) do
+                if v then
+                    table.insert(objList, v)
+                end
+            end
+        else
+            if var then
+                table.insert(objList, var)
+            end
+        end
+    end
+    --print(logString(objList, '\n---- objList'))
+    for k, obj in pairs(objList) do
+        if obj then
+            if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+        end
+    end
+    return true
+end
+-- obj.isSmoothMoving() shorthand ----------------------------------------------
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
     return false
-  end
 end

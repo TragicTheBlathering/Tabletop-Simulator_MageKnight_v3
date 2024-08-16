@@ -1,5 +1,5 @@
 local eventDrop = {}
-local ShowCast = true
+local ShowCast = false
 local dropPos = {draw = Vector(56.50, 0, -21.98), stack = Vector(70.95, 0, -6.00)}
 
     function eventDrop.MonesteryDrop(obj)

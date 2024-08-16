@@ -1,0 +1,41 @@
+local varaibles = {}
+
+--obj.call('set',{'key',value}) key as string, value
+function set(var)
+    --print(var)
+    if var[1] ~= nil and var[2] ~= nil then
+        varaibles[var[1]] = var[2]
+        updateSave()
+    else
+        print('------------------ ERROR In call SET function')
+    end
+end
+
+--obj.call('get', 'key') - key as string
+function get(key)
+    return varaibles[key]
+end
+
+--- Save and Load Code ---------------------------------------------------------
+function updateSave()
+    local data_to_save = {["data"]=varaibles}
+    saved_data = JSON.encode(data_to_save)
+    self.script_state = saved_data
+end
+
+function onload(saved_data)
+    if saved_data ~= "" then
+        local loaded = JSON.decode(saved_data)
+        --Set up information off of loaded_data
+        varaibles = loaded.data
+    else
+        --Set up information for if there is no saved saved data
+        varaibles = {}
+    end
+
+    if next(varaibles) == nil then
+        --print(logString(varaibles, '\n---- NO SAVE'))
+    else
+        --print(logString(varaibles, '\n---- SAVE'))
+    end
+end
