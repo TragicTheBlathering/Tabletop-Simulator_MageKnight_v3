@@ -1,4 +1,6 @@
-local ShowCast = true
+local ShowCast = false
+local printBug = false
+local functionStopped = {resetDeck = false, drawCards = false, clearOffer = false}
 function setScriptGlobal()
     cardData = {
         cardOfferPos = {Vector(56.50, 2.02, -13.98),
@@ -7,29 +9,32 @@ function setScriptGlobal()
                         Vector(35.50, 2.02, -13.99),
                         Vector(28.50, 2.02, -13.99),
                         Vector(21.50, 2.02, -13.99),
-                        Vector(14.50, 2.02, -13.99)
+                        Vector(14.50, 2.02, -13.99),
+                        vector(7.50, 2.02, -13.99)
                     },
         face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
 
-        drawDecks = {silver={deck=false, pos=Vector(70.50, 2.01, -13.97)},
+        drawDecks = {silver={deck=false, pos=Vector(63.50, 2.02, -13.97)},
                      gold  ={deck=false, pos=Vector(63.50, 2.02, -21.97)}},
         discardDecks = {silver={deck=false, pos=Vector(70.50, 2.01, -13.97)},
                         gold  ={deck=false, pos=Vector(70.50, 2.01, -21.97)}},
 
         dropOffSet = Vector(0, 2, 0),
-        currentOffer = {false, false, false, false, false, false, false},
-        drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'},
+        currentOffer = {false, false, false, false, false, false, false, false}
     }
 
     unitOffer = {
-        current = {gold = false, char='9678', pos=Vector(-2.6,0.5,-0.14), blitz=0, playerCount=4},
+        current = {gold = false, char='9678', pos=Vector(-2.6,0.5,-0.14)},
+        blitz=1, playerCount=2, plus=2,
         automatic = {active=true, tooltip='Automatic Gold Units', col='White', destroyed=false},
         ticked={char='9673', pos=Vector(-2.6,0.5,-0.115)},
         unticked={char='9678', pos=Vector(-2.6,0.5,-0.14)},
-        char='9678', pos=Vector(-2.6,0.5,-0.14)
+        char='9678', pos=Vector(-2.6,0.5,-0.14),
+        drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'},
+        drawCount = {total=0, silver=0, gold=0, overflow=false}
     }
 end
---******************************************************************************
+--****************************************************************************** unitOffer.current.blitz
 ---- Save Code -----------------------------------------------------------------
 function onLoad(saved_data)
     setScriptGlobal()
@@ -38,13 +43,10 @@ function onLoad(saved_data)
         local loaded_data = JSON.decode(saved_data)
         unitOffer = loaded_data
     end
-
     setButtons_AutoTicked()
+    setGameState()
     setButtons_ready()
-
-    print(logString(unitOffer, '\n--- unitOffer'))
 end
-
 function onSave()
     local data_to_save = unitOffer
     saved_data = JSON.encode(data_to_save)
@@ -53,17 +55,331 @@ function onSave()
     return saved_data
 end
 --******************************************************************************
---- Button Code ----------------------------------------------------------------
-function b_MainFunction(obj, color, alt_click)
+---- Process Offer -------------------------------------------------------------
+--[[
+cardData = {
+    cardOfferPos = {Vector(56.50, 2.02, -13.98),
+                    Vector(49.50, 2.02, -13.98),
+                    Vector(42.50, 2.02, -13.98),
+                    Vector(35.50, 2.02, -13.99),
+                    Vector(28.50, 2.02, -13.99),
+                    Vector(21.50, 2.02, -13.99),
+                    Vector(14.50, 2.02, -13.99),
+                    vector(7.50, 2.02, -13.99)
+                },
+    face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
+
+    drawDecks = {silver={deck=false, pos=Vector(70.50, 2.01, -13.97)},
+                 gold  ={deck=false, pos=Vector(63.50, 2.02, -21.97)}},
+    discardDecks = {silver={deck=false, pos=Vector(70.50, 2.01, -13.97)},
+                    gold  ={deck=false, pos=Vector(70.50, 2.01, -21.97)}},
+
+    dropOffSet = Vector(0, 2, 0),
+    currentOffer = {false, false, false, false, false, false, false, false}
+}
+
+unitOffer = {
+    current = {gold = false, char='9678', pos=Vector(-2.6,0.5,-0.14)},
+    blitz=1, playerCount=2, plus=2,
+    automatic = {active=true, tooltip='Automatic Gold Units', col='White', destroyed=false},
+    ticked={char='9673', pos=Vector(-2.6,0.5,-0.115)},
+    unticked={char='9678', pos=Vector(-2.6,0.5,-0.14)},
+    char='9678', pos=Vector(-2.6,0.5,-0.14),
+    drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'},
+    drawCount = {total=0, silver=0, gold=0, overflow=false}
+}
+
+functionStopped = {resetDeck = false, drawCards = false, clearOffer = false}
+]]
+function b_MainFunction(obj, color, alt_click) --cardData.discardDecks unitOffer.drawTotal.gold
+    setGameState() --print(logString(cardData, '\n--- cardData'))
     if not alt_click then
-        print('Left')
         setButtons_disabled()
-    else
-        print('Right')
-        setButtons_ready()
+        clearOffer()
+        waitFunc(drawCards, 'clearOffer')
+        waitFunc(resetDecks, 'drawCards')
+        waitFunc(drawCards, 'resetDeck')
+        waitFunc(setButtons_ready, 'drawCards')
     end
 end
 
+function resetDecks()
+    waitForFunction('allStop')
+    setGameState('decks')
+
+    local discard = {silver=cardData.discardDecks.silver.deck, gold=cardData.discardDecks.gold.deck}
+    local draw = {silver=cardData.drawDecks.silver.deck, gold=cardData.drawDecks.gold.deck}
+    local pos = {silver=cardData.drawDecks.silver.pos, gold=cardData.drawDecks.gold.pos}
+    local rot = cardData.face
+    local offset = cardData.dropOffSet
+    local size = {silver=Vector(0,0,0), gold=Vector(0,0,0)}
+    if discard.silver then size.silver = Vector(0,discard.silver.getBounds().size.y/2,0) end
+    if discard.gold then size.gold = Vector(0,discard.gold.getBounds().size.y/2,0) end
+    --print(logString(discard, '---\n dicard'))
+    --print(logString(pos, '---\n dicard'))
+
+    for k, deck in pairs(discard) do
+        --print(deck)
+        if deck and not draw[k] then
+            deck.setPositionSmooth(pos[k]+offset)
+            deck.setRotationSmooth(rot.down)
+            Wait.condition(function()
+                deck.setPositionSmooth(pos[k]+size[k])
+                Wait.condition(function()
+                    deck.shuffle()
+                    Wait.time(function() functionStopped.resetDeck = true end, 0.5)
+                end, function() return isSmooth(deck) end)
+            end, function() return isSmooth(deck) end)
+        else
+            functionStopped.resetDeck = true
+        end
+    end
+end
+
+function drawCards() --unitOffer.drawCount {total=0, silver=0, gold=0, overflow=false} / drawType {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'}
+    --print('Draw')
+    waitForFunction('allStop')
+    setGameState('decks')
+    setGameState('drawType')
+    setGameState('currentOffer')
+    local currentOffer = cardData.currentOffer
+    local pos = cardData.cardOfferPos
+    local rot = cardData.face
+    local offset = cardData.dropOffSet
+    local drawDeck = {silver=cardData.drawDecks.silver.deck, gold=cardData.drawDecks.gold.deck}
+    local drawCountTracker = {silver=0, gold=0}
+    local drawLimit = {silver=0, gold=0, total=unitOffer.drawCount.total}
+        if drawDeck.silver then drawLimit.silver = drawDeck.silver.getQuantity(); if drawLimit.silver == -1 then drawLimit.silver = 1 end end
+        if drawDeck.gold   then drawLimit.gold   = drawDeck.gold.getQuantity();   if drawLimit.gold == -1   then drawLimit.gold = 1 end end
+
+    local waitCardList = {}
+    for k,type in pairs(unitOffer.drawType) do
+        if drawLimit.total >= k then
+            if drawDeck[type] and not currentOffer[k] then
+                drawCountTracker[type] = drawCountTracker[type] + 1
+                if drawLimit[type] >= drawCountTracker[type] then
+                    if drawDeck[type].type == 'Card' then
+                        local card = drawDeck[type]
+                        card.setPositionSmooth(pos[k]+offset)
+                        card.setRotationSmooth(rot.up)
+                        table.insert(waitCardList, card)
+                        Wait.condition(function() card.setPositionSmooth(pos[k]) end, function() return isSmooth(card) end)
+                    else
+                        local card = drawDeck[type].takeObject({position=pos[k]+offset, rotation=rot.up})
+                        table.insert(waitCardList, card)
+                        Wait.condition(function() card.setPositionSmooth(pos[k]) end, function() return isSmooth(card) end)
+                    end
+                end
+            end
+        end
+    end
+    --print(tableSize(waitCardList))
+    Wait.condition(function() functionStopped.drawCards = true end, function() return objectsAreMoving(waitCardList) end)
+
+    --print(logString(unitOffer.drawCount, '\n--- unitOffer.drawCount'))
+
+    -- check if there is an overflow draw, if so draw without refreshing counts.
+    -- loop thorugh drawType
+    -- if colour then draw form that colour deck
+    -- at some time count how manuy times each colour is used and subtract it from draw count for that colour.
+
+
+end
+
+function clearOffer()
+    waitForFunction('allStop')
+
+    local currentOffer = cardData.currentOffer
+    local discardDecks = cardData.discardDecks
+    local discard = {silver=discardDecks.silver.deck, gold=discardDecks.gold.deck}
+    local offset = {silver=Vector(0,0,0), gold=Vector(0,0,0),}
+        for k,deck in pairs(discard) do
+            if deck then
+                offset[k] = Vector(0,deck.getBounds().size.y/2+0.2,0)
+            end
+        end
+    local pos = {silver=discardDecks.silver.pos+offset.silver, gold=discardDecks.gold.pos+offset.gold}
+
+    local Y ={silver=0, gold=0}
+    for k,card in ipairs(currentOffer) do
+        if card then
+            local type = setGoldSilver(card)
+            if type then
+                card.setPositionSmooth(pos[type]+Vector(0,Y[type],0))
+                Y[type] = Y[type] + 0.5
+                if not discard[type] then
+                    discard[type] = card
+                    Wait.condition(function()
+                        discard[type].setPosition(pos[type])--cardData.discardPilePos 32.92, 2.02, -31.23
+                    end, function() return isSmooth(card) end)
+                else
+                    Wait.condition(function()
+                        discard[type] = discard[type].putObject(card)
+                    end, function() return isSmooth(card) end)
+                end
+            end
+        end
+    end
+    Wait.condition(function() functionStopped.clearOffer = true end, function() return objectsAreMoving(currentOffer) end)
+end
+
+function setGoldSilver(card)
+    if card.hasTag('Cards_UnitSilver') then return 'silver'
+    elseif card.hasTag('Cards_UnitGold') then return 'gold'
+    else return false end
+end
+
+function debug()
+    getObjectFromGUID('2eb8e3').setPositionSmooth({44.77, 7, -23.08})
+end
+-- FindGate State --------------------------------------------------------------
+function setGameState(...)
+    local keys = {...}
+    if tableSize(keys) == 0 then
+        keys = false
+    end
+    if keys == false then
+        setState('currentOffer')
+        setState('decks')
+        setState('drawType')
+        setState('drawCount')
+        --print('------------------------------ ??????????')
+    else
+        for k, key in pairs(keys) do
+            setState(key)
+        end
+    end
+    return cardData
+end
+
+function setState(key)
+    if key == 'currentOffer' then
+     --- Find Offer Cards
+        for k,castOrigin in ipairs(cardData.cardOfferPos) do
+            cardData.currentOffer[k] = cast(castOrigin)
+        end
+
+    elseif key == 'decks' then --drawDecks.silver.pos drawDecks.silver.deck
+        cardData.drawDecks.silver.deck = cast(cardData.drawDecks.silver.pos)
+        cardData.drawDecks.gold.deck = cast(cardData.drawDecks.gold.pos)
+
+        cardData.discardDecks.silver.deck = cast(cardData.discardDecks.silver.pos)
+        cardData.discardDecks.gold.deck = cast(cardData.discardDecks.gold.pos)
+    elseif key == 'drawType' then
+        --print(unitOffer.current.gold)
+        if unitOffer.current.gold then
+            unitOffer.drawType = {'gold', 'silver', 'gold', 'silver', 'gold', 'silver', 'gold', 'silver'}
+        else
+            unitOffer.drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'}
+        end
+    elseif key == 'drawCount' then
+        unitOffer.drawCount.total = unitOffer.blitz + unitOffer.playerCount + unitOffer.plus
+        unitOffer.drawCount.silver = 0
+        unitOffer.drawCount.gold = 0
+        for i = 1, unitOffer.drawCount.total do
+            if unitOffer.drawType[i] == 'silver' then
+                unitOffer.drawCount.silver = unitOffer.drawCount.silver + 1
+            elseif unitOffer.drawType[i] == 'gold' then
+                unitOffer.drawCount.gold = unitOffer.drawCount.gold + 1
+            end
+        end
+    end
+end
+
+function cast(castOrigin)
+    local zone = Physics.cast({ origin=castOrigin + Vector(0,1,0),
+                                direction={0,1,0},
+                                type=3,
+                                max_distance=0,
+                                size=Vector(2,2,2),
+                                debug=ShowCast})
+    return processCast(zone)
+end
+
+function processCast(zone)
+    local object = false
+    for k,v in pairs(zone) do
+        if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
+          object = v.hit_object
+          --print(object.getName())
+        end
+    end
+    if object then
+        return object
+    else
+        return false
+    end
+end
+
+--***** Wait Functions *********************************************************
+-- Is Function Running ---------------------------------------------------------
+function waitForFunction(key) -- true == function runs, flase == function dose not run
+    key = key or false
+    if key then
+        if key =='allStop' then
+            if printBug then print('waitFunction ('..key..')') end
+            for k,v in pairs(functionStopped) do
+                functionStopped[k] = false
+            end
+        elseif key == 'resetWaitIDs' then
+            if printBug then print('waitFunction ('..key..')') end
+            -- Set Wait_ids fail safes
+            wait_ids[self] = wait_ids[self] -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+            or {waitCleanUP = false, waitID = nil}-- We set wait variables to start state (all diffrent waits go here)
+            if wait_ids[self].waitCleanUP ~= false then
+                Wait.stop(wait_ids[self].waitCleanUP)
+                wait_ids[self].waitCleanUP = false
+            end
+        else
+            if printBug then print('waitFunction ('..key..') : '..tostring(functionStopped[key])) end
+            return functionStopped[key]
+        end
+    else
+        print("waitForFunction(key) ERROR")
+        return true
+    end
+end
+-- Wait.condition Wrapper for isSmoothMove -------------------------------------
+function waitFunc(func, waitKey)
+    Wait.condition(function() func() end, function() return waitForFunction(waitKey) end)
+end
+-- slideIsMoving(newOffer) shorthand -------------------------------------------
+function objectsAreMoving(...)
+    local args = {...}
+    local objList = {}
+    for k,var in pairs(args) do
+        if type(var) == "table" then
+            for k,v in pairs(var) do
+                if v then
+                    table.insert(objList, v)
+                end
+            end
+        else
+            if var then
+                table.insert(objList, var)
+            end
+        end
+    end
+    --print(logString(objList, '\n---- objList'))
+    for k, obj in pairs(objList) do
+        if obj then
+            if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+        end
+    end
+    return true
+end
+-- obj.isSmoothMoving() shorthand ----------------------------------------------
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+--******************************************************************************
+--- Button Code ----------------------------------------------------------------
 function b_disabled() end
 
 function setButtons_ready()
@@ -196,4 +512,13 @@ function createButtons(buttons)
     for k,button in ipairs(buttons) do
         self.createButton(button)
     end
+end
+
+-- Table Size ------------------------------------------------------------------
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
 end

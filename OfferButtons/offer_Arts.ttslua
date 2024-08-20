@@ -81,14 +81,20 @@ function resetDeck()
                 end, function() return isSmooth(discard) end)
             end, function() return isSmooth(discard) end)
         else
+            local cardDeck = false; if draw.type == 'Card' then cardDeck = true end
             discard.setPositionSmooth(cardData.drawDeckPos+Vector(0,2,0))
             discard.setRotationSmooth(cardData.face.down)
             Wait.condition(function()
                 local pos = Vector(cardData.drawDeckPos.x, cardData.drawDeckPos.y+draw.getBounds().size.y/2+0.25, cardData.drawDeckPos.z)
                 discard.setPositionSmooth(pos)
                 Wait.condition(function()
-                    discard.setPosition(cardData.drawDeckPos+Vector(0,-10,0))
-                    draw.putObject(discard)
+                    if cardDeck then
+                        discard.setPosition(cardData.drawDeckPos+Vector(0,discard.getBounds().size.y/2+0.25,0))
+                        draw.setPosition(cardData.drawDeckPos+Vector(0,0.5,0))
+                    else
+                        discard.setPosition(cardData.drawDeckPos+Vector(0,-10,0))
+                        draw.putObject(discard)
+                    end
                     functionStopped.resetDeck = true
                 end, function() return isSmooth(discard) end)
             end, function() return isSmooth(discard) end)
