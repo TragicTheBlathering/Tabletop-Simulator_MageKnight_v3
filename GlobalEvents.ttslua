@@ -1,14 +1,20 @@
 local tool = {}
         tool.virtualTokenStack = require("/_libs/virtualTokenStacks/event_virtualTokenStacks")
-        tool.TrashCan = require("/_libs/TrashCanUniversal/event_TrashCan")
+        tool.TrashCan = require("/MageKnightV3/TrashBags/trashCan_CoreSystem")
 
 local MKevent = {}
-    MKevent.setDiscardPileButton = require("/MageKnightV3/pugDiscardPiles/event_pugDiscardButton")
-    MKevent.MonesteryDrop = require("/MageKnightV3/events/event_onObjectDrop").MonesteryDrop
+    --MKevent.setDiscardPileButton = require("/MageKnightV3/pugDiscardPiles/event_pugDiscardButton")
+    MKevent.OnDrop_monestery = require("/MageKnightV3/events/event_onObjectDrop_Monastery").dropTest
+
+    --MKevent.DiceInHand = require("/MageKnightV3/events/event_DiceInHand").DiceInHand
+    -- Discard Decal on Card
+    MKevent.OnFlip_cardDecal = require("/MageKnightV3/events/event_onPlayerAction_CardDecal").setDecal
+    MKevent.OnDrop_cardDecal = require("/MageKnightV3/events/event_onObjectDrop_CardDecal").chnageDiscardDecal
+
+    MKevent.OnSpawn_PlayerCard = require("/MageKnightV3/events/event_SpawnEvents").onPlayerCardSpawn
 
 local globalVar = {}
-      globalVar.TrashSetting = require("/MageKnightV3/TrashCan")
-      --globalVar.SpecialCaseFunction = require("/MageKnightV3/TrashCan").specialCaseFunc
+      globalVar.TrashSetting = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
       globalVar.vStackData = require("/MageKnightV3/GlobalVariables").virtualTokenStackData
 
 function onLoad(save_state)
@@ -28,14 +34,26 @@ function onObjectLeaveContainer(bag, obj)
     --MKevent.setDiscardPileButton.enterContainer(bag, obj, obj.getTags())
 end
 
---[[function onObjectEnterScriptingZone(zone, object)
-    if zone.hasTag('MonasteryDiscoverToken') and object.hasTag('MonasteryDiscoverToken') then
-        MKevent.MonesteryDiscovered(zone, object)
-    end
-end]]
-
 function onObjectDrop(colorName, object)
     if object.hasTag('MonasteryDiscoverToken')then
-        MKevent.MonesteryDrop(object)
+        MKevent.OnDrop_monestery(object)
+    elseif object.type == 'Card' then
+        MKevent.OnDrop_cardDecal(object)
+    else
+        --print(object.type)
+    end
+end
+
+function onObjectSpawn(object)
+    if object.type == 'Card' then
+        object.setDecals({})
+        object.memo = ''
+        print('Spawn : '..object.memo)
+    end
+end
+
+function onPlayerAction(player, action, targets)
+    if action == Player.Action.FlipOver then
+        MKevent.OnFlip_cardDecal(player, action, targets)
     end
 end

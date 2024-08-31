@@ -1,4 +1,4 @@
-local ShowCast = false
+local ShowCast = true
 local printBug = false
 
 cardData = {
@@ -8,10 +8,9 @@ cardData = {
                     Vector(35.51, 2.02, -48.82),
                     Vector(28.51, 2.02, -48.82)
                 },
-    face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
-    drawDeckPos = Vector({63.50, 2.01, -48.82}),
+    face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)}, --cardData.discardPilePos.drawPilePos
     discardPilePos = Vector(70.50, 2.01, -48.82),
-
+    drawDeckPos = Vector(63.50, 2.02, -48.82),
     drawCount = false,
     currentOffer = {false, false, false, false, false},
     draw    = false,
@@ -28,6 +27,7 @@ function b_Function(obj, color, rightClick) --
     if not rightClick then
         countClicks(self,processOffer,0.4)
     else
+        --resetDeck() -- Test Reset
         setButtonDisabled()
         clearOffer()
         waitFunc(setButtonReady, 'clearOffer')
@@ -64,6 +64,73 @@ function drawCards()
     Wait.condition(function() functionStopped.drawCards = true end, function() return objectsAreMoving(drawnCards) end)
 end
 
+function resetDeck()
+    waitForFunction('allStop')
+    setGameState('discard')
+    setGameState('draw')
+    local count = cardData.drawCount --print(logString(count, '\n--- count'))
+    local draw = cardData.draw --print(logString(draw, '\n--- draw'))
+    local discard = cardData.discard --print(logString(discard, '\n--- discard'))
+
+    --count = 4
+
+    if draw then
+        if draw.getQuantity() >= count then--print('\n--- No Reset')
+            functionStopped.resetDeck = true
+        else--print('\n--- Reset')
+            dropDiscardUnderDraw(draw, discard)
+        end
+    else
+        dropDiscardUnderDraw(draw, discard)
+    end
+end
+
+function dropDiscardUnderDraw(draw, discard)
+    waitForFunction('allStop')
+    setGameState('discard')
+    setGameState('draw')
+    local draw = cardData.draw --print(logString(draw, '\n--- draw'))
+    local discard = cardData.discard --print(logString(discard, '\n--- discard'))
+    local discardOffset = Vector(0,discard.getBounds().size.y/2,0)
+    local discardPos = cardData.discardPilePos
+    local drawPos = cardData.drawDeckPos
+    local face = cardData.face
+
+    discard.setPositionSmooth(discardPos+Vector(0,1,0))
+    discard.setRotationSmooth(face.down)
+
+    if draw then
+        Wait.condition(function()
+            discard.setPositionSmooth(discardPos+discardOffset)
+            Wait.condition(function()
+                draw.setPositionSmooth(discardPos+discardOffset+Vector(0,1,0))
+                Wait.condition(function()
+                    draw.setPositionSmooth(discardPos+discardOffset)
+                    Wait.condition(function()
+                        discard.setPositionSmooth(drawPos+Vector(0,2,0))
+                        Wait.condition(function()
+                            discardOffset = Vector(0,discard.getBounds().size.y/2,0)
+                            discard.setPositionSmooth(drawPos+discardOffset)
+                            Wait.condition(function()
+                                functionStopped.resetDeck = true
+                            end, function() return isSmooth(discard) end)
+                        end, function() return isSmooth(discard) end)
+                    end, function() return isSmooth(draw) end)
+                end, function() return isSmooth(draw) end)
+            end, function() return isSmooth(discard) end)
+        end, function() return isSmooth(discard) end)
+    else
+        discard.setPositionSmooth(drawPos+Vector(0,2,0))
+        Wait.condition(function()
+            discard.setPositionSmooth(drawPos+discardOffset)
+            Wait.condition(function()
+                functionStopped.resetDeck = true
+            end, function() return isSmooth(discard) end)
+        end, function() return isSmooth(discard) end)
+    end
+end
+
+--[[
 function resetDeck()
     waitForFunction('allStop')
     setGameState('discard')
@@ -151,65 +218,8 @@ function dropDiscardUnderDraw(draw, discard)
 
         end, function() return isSmooth(discard) end)
     end
-
-    --draw.setPositionSmooth(drawPos+Vector(0,2.2,0))
-    --draw.setLock(true)
-    --draw.setRotationSmooth(cardData.face.up)
-    --discard.setPositionSmooth(drawPos, bool, bool)
-
-    --[[
-
-    discard.setPositionSmooth(drawPos+Vector(0,3,0))
-    discard.setRotationSmooth(cardData.face.up)
-
-    Wait.condition(function()
-    draw.setPositionSmooth(drawPos)
-    draw.setLock(true)
-    discard.setPositionSmooth(drawPos+Vector(0,2,0))
-    Wait.condition(function()
-
-
-end, function() return isSmooth(discard) end)
-end, function() return isSmooth(discard) end)
-    local newData = discardData
-    table.insert(newData.ContainedObjects, 1, drawData)
-    table.insert(newData.DeckIDs, 1, drawData.CardID)
-
-    discard.destruct()
-    draw.destruct()
-
-    local params = {
-        data = newData,
-        position = drawPos+Vector(0,2.5,0),
-        rotation = cardData.face.up
-    }
-    local obj = spawnObjectData(params)
-    obj.setRotationSmooth(cardData.face.down)
-    obj.setPositionSmooth(drawPos)
-    ]]
-
-
-    --print(data.DeckIDs)
-
-    --[[
-
-    table.insert(data.ContainedObjects, test) -- inster object 22 at the end of ContainedObjects
-    table.insert(data.DeckIDs, test.CardID)
-
-    local params = {
-        data = data,
-        position = Vector(35.51, 2.02, -48.82),
-        rotation = Vector(0, 180, 180)
-    }
-    local obj = spawnObjectData({data=data})
-    ]]
---deck.destruct() -- Remove the old deck
---card.destruct() -- Remove the old card
-
---spawnObjectData(params)
-
 end
-
+]]
 
 function collider_EnableDisabel(obj, action) -- fasle or true
     if obj.getComponent("Rigidbody") then
@@ -275,7 +285,7 @@ end
 -- ***** TOOLS *****************************************************************
 --******************************************************************************
 function debug()
-    getObjectFromGUID('2eb8e4').setPositionSmooth({70.50, 5, -38.00})
+    getObjectFromGUID('8907d7').setPositionSmooth({70.50, 5, -38.00})
 end
 -- FindGate State --------------------------------------------------------------
 function setGameState(...)

@@ -1,0 +1,97 @@
+local showDebug = false
+
+function onLoad(save_state)
+
+end
+
+function slideOffer(heldList)
+    heldList = heldList or false
+    --print(logString(heldList, '\n--- heldList'))
+
+    local diePositions = {
+        Vector(8.87, 3.66, -50.94),
+        Vector(5.07, 3.66, -50.94),
+        Vector(1.27, 3.66, -50.94),
+        Vector(-2.53, 3.66, -50.94),
+        Vector(-6.33, 3.66, -50.94),
+        Vector(-10.13, 3.66, -50.94),
+        Vector(-13.93, 3.66, -50.94),
+        Vector(-17.73, 3.66, -50.94)
+    }
+
+    local values = {
+            Black = Vector(270, 0, 0),
+            Blue = Vector(0, 0, 0),
+            White = Vector(0, 0, 270),
+            Green = Vector(0, 0, 90),
+            Red = Vector(0, 0, 180),
+            Gold = Vector(90, 0, 0)
+        }
+
+    local dice = cast(getObjectsWithTag('Board_Source')[1].getPosition(), heldList)
+    for k, data in ipairs(dice) do
+        local die = data.die
+        die.setPositionSmooth(diePositions[k], false)
+        die.setScale(Vector(5,5,5))
+        if rotData then
+            if die == rotData.d then
+                die.setRotationSmooth(values[rotData.v])
+            else
+                die.setRotationSmooth(values[data.value])
+            end
+        else
+            die.setRotationSmooth(values[data.value])
+        end
+    end
+end
+
+function cast(castOrigin, heldList)
+    local zone = Physics.cast({ origin=castOrigin + Vector(0,0,2),
+                                direction={0,1,0},
+                                type=3,
+                                max_distance=0,
+                                size=Vector(33,30,20),
+                                debug=showDebug})
+    return processCast(zone, heldList)
+end
+
+function processCast(zone, heldList)
+    --local object = false
+    local found = {}
+    for k,v in pairs(zone) do
+        if v.hit_object.type == "Dice" then
+            obj = v.hit_object
+            if obj.hasTag('Dice_ManaDie') then
+                local rotValue = obj.getRotationValue()
+                if heldList then
+                    --print(logString(heldList, '\n---- heldList'))
+                    for k, d in pairs(heldList) do
+                        if obj == d.obj then
+                            rotValue = d.rotValue
+                        end
+                    end
+
+                end
+                if rotValue == 'Gold' then
+                    rotValue='yGold'
+                elseif rotValue == 'Black' then
+                    rotValue='zBlack'
+                end
+                table.insert(found, {die = obj, value=rotValue})
+            end
+        end
+    end
+
+    table.sort(found, function(a, b)
+    return a.value < b.value
+    end)
+
+    for k,v in pairs(found) do
+        if v.value == 'yGold' then
+            v.value='Gold'
+        elseif v.value == 'zBlack' then
+            v.value='Black'
+        end
+    end
+    return found
+end

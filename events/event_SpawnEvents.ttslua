@@ -1,0 +1,7 @@
+local eventSpawnEvents = {}
+
+function eventSpawnEvents.onPlayerCardSpawn()
+    print('SpawnEvent')
+end
+
+return  eventSpawnEvents

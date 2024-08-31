@@ -1,0 +1,87 @@
+local cardDecal = {}
+
+    function cardDecal.setDecal(player, action, targets)
+        local cardList = setOnlyCards(targets)
+        if tableSize(cardList) > 0 then
+            checkDecals(cardList)
+        end
+    end
+
+    function checkDecals(cardList)
+        local playerArea_cutOffPoint = -56.29
+        local playerHandZone_cutOffPoint = -85.85
+
+        local testLine = { -- mat1-4 (player board 1 - 4)
+            m1=false, m3=false, m4=false,
+            m2={p1=-59.21, p2=-42.22}
+        }
+
+        local decal = {
+            name = 'decal_DelMe',
+            url = 'https://steamusercontent-a.akamaihd.net/ugc/2389809851029247051/A8A53C0304AD49E7730D881B6ABA6FC0BA7D9F5A/',
+            position=Vector(0.5614782, -0.363152, -0.9249038),
+            rotation=Vector(270, 0, 0),
+            scale=Vector(0.7646711, 0.952381, 30.76923),
+            }
+
+        for k, card in pairs(cardList) do
+            local pos = card.getPosition()
+            local rot = card.getRotation()
+            if pos.z < playerArea_cutOffPoint and pos.z > playerHandZone_cutOffPoint then --and pos.z > -56.29 then
+                for k,v in pairs(testLine) do
+                    if v then
+                        if not isBetween(v.p1, v.p2, pos.x) then
+                            if rot.z > 10 then
+                                card.setDecals({}) --print('Remove Decal')
+                                card.memo = ''
+                                --print('New Memo (clear) :'..card.memo)
+                            else
+                                --print('------- WTF -------------')
+                                card.setDecals({decal}) --print('Add Decal')
+                                card.memo = setMemo(card)
+                                --print('New Memo (set) : '..card.memo)
+                            end
+                        end
+                    end
+                end
+            end
+            --print('set : '..card.memo)
+        end
+    end
+
+    function setMemo(card)
+        if card.hasTag('PlayerCard_Wound') then
+            return 'trash_forceDelete'
+        elseif card.hasTag('PlayerCard_ThrowAway') then
+            return 'trash_removedFromGame'
+        else
+            return ''
+        end
+    end
+
+--if isBetween(v.p1, v.p2, pos.x) then
+function setOnlyCards(targets)
+    local z = {}
+    for k,v in pairs(targets) do
+        if v.type == 'Card' then
+            table.insert(z, v)
+        end
+    end
+    return z
+end
+
+function isBetween(n1, n2, test)
+    local min, max = math.min(n1, n2), math.max(n1, n2)
+    return test > min and test < max
+end
+
+-- Table Size ------------------------------------------------------------------
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end
+
+return cardDecal

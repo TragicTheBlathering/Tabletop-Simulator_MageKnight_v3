@@ -1,25 +1,36 @@
-local eventDrop = {}
+local MonesteryDrop = {}
 local ShowCast = false
 local dropPos = {draw = Vector(56.50, 0, -21.98), stack = Vector(70.95, 0, -6.00)}
 
-    function eventDrop.MonesteryDrop(obj)
+    function MonesteryDrop.dropTest(obj)
         local vec1 = Vector(obj.getPosition().x, 0, obj.getPosition().z)
-        local ammount = 0
-
         for k, vec2 in pairs(dropPos) do
             if vec1:equals(vec2, 5) then
-                if k == 'draw' then
-                    obj.setName('Discovered Monasteries')
-                    Wait.condition(function()
-                        Wait.frames(function()processMonistaryStack()end, 1)
-                    end, function() return objectHasDropped(obj) end)
-                elseif k == 'stack' then
-                    obj.setName('Monasteries')
-                end
+                print('Dropped')
             end
         end
-
     end
+
+return MonesteryDrop
+--[[
+
+function eventDrop.MonesteryDrop(obj)
+    local vec1 = Vector(obj.getPosition().x, 0, obj.getPosition().z)
+    local ammount = 0
+
+    for k, vec2 in pairs(dropPos) do
+        if vec1:equals(vec2, 5) then
+            if k == 'draw' then
+                obj.setName('Discovered Monasteries')
+                Wait.condition(function()
+                    Wait.frames(function()processMonistaryStack()end, 1)
+                end, function() return objectHasDropped(obj) end)
+            elseif k == 'stack' then
+                obj.setName('Monasteries')
+            end
+        end
+    end
+end
 
     function objectHasDropped(obj)
         if obj.isDestroyed() then return true end
@@ -150,10 +161,4 @@ local dropPos = {draw = Vector(56.50, 0, -21.98), stack = Vector(70.95, 0, -6.00
         end
         return count
     end
-
-    --[[
-    if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
-        object = v.hit_object
-    end
-    ]]
-return eventDrop
+]]

@@ -1,0 +1,101 @@
+local DiceInHand = {}
+    local crossPoint = -60
+    local heldList = {}
+    local justDroppedList = {}
+    local waitID = {}
+
+    function DiceInHand.startTiemr()
+        waitID['checkHeld'] = Wait.time(positionTest, 0.1, -1)
+    end
+
+    function onObjectPickUp(colorName, object)
+        if object.hasTag('Dice_ManaDie') then
+            table.insert(heldList, {obj=object, rot=object.getRotation(), rotValue=object.getRotationValue()})
+        end
+    end
+
+    function onObjectDrop(colorName, droppedObject)
+        if droppedObject.hasTag('Dice_ManaDie') then
+            justDroppedList = heldList
+            droppedObject.setLock(true)
+            local obj, rot, value = nil, nil, nil
+            for k, objList in pairs(heldList) do
+                obj, rot, value, pos = objList.obj, objList.rot, objList.rotValue, droppedObject.getPosition()
+                if obj == droppedObject then
+                    setDieRotation(droppedObject, rot)
+                    local slide = getObjectFromGUID('a16e5d')
+                    slide.call('slideOffer', justDroppedList)
+                    break
+                end
+            end
+            Wait.frames(function()
+                droppedObject.setLock(false)
+                justDroppedList = {}
+                heldList = {}
+            end, 1)
+        end
+    end
+
+    function positionTest()
+        for k, v in pairs(heldList) do
+            --print('---')
+            if v ~= nil then
+                local obj = v.obj
+                local currentScale = obj.getScale()
+                if obj.getPosition().z < crossPoint then
+
+                    if currentScale.x > 2 then
+                        local slide = getObjectFromGUID('a16e5d')
+                        slide.call('slideOffer')
+                        obj.setScale(Vector(2,2,2))
+                    end
+                elseif obj.getPosition().z > crossPoint then
+
+                    if currentScale.x < 5 then
+                        --local slide = getObjectFromGUID('a16e5d')
+                        --slide.call('slideOffer')
+                        obj.setScale(Vector(5,5,5))
+                    end
+                end
+            end
+        end
+    end
+
+    function setDieRotation(die, rot)
+        local values = {
+                black = Vector(270, 0, 0),
+                blue = Vector(0, 0, 0),
+                white = Vector(0, 0, 270),
+                green = Vector(0, 0, 90),
+                red = Vector(0, 0, 180),
+                gold = Vector(90, 0, 0)
+            }
+
+        function check(num1, target, range) -- num1 = Number to Test, target = number to test against, rnage = range
+            range = range or 10
+            return num1 >= (target - range) and num1 <= (target + range)
+        end
+
+        local adjust = Vector(0,0,0)
+
+        if check(rot.x, values.blue.x, 3) and  check(rot.y, values.blue.y, 3) and check(rot.z, values.blue.z, 3) then
+            adjust = values.blue
+        end
+
+        if check(rot.x, values.black.x, 3) then
+            adjust = values.black
+        elseif check(rot.z, values.white.z, 3) then
+            adjust = values.white
+        elseif check(rot.z, values.green.z, 3) then
+            adjust = values.green
+        elseif check(rot.z, values.red.z, 3) then
+            adjust = values.red
+        elseif check(rot.x, values.gold.x, 3) then
+            adjust = values.gold
+        end
+
+        die.setRotationSmooth(adjust)
+
+    end
+
+return DiceInHand
