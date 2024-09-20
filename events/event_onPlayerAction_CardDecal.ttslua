@@ -1,69 +1,73 @@
 local cardDecal = {}
+local ShowDebug = false
 
     function cardDecal.setDecal(player, action, targets)
-        local cardList = setOnlyCards(targets)
+        local cardList = setOnlyCardsDecks(targets)
         if tableSize(cardList) > 0 then
             checkDecals(cardList)
         end
     end
 
+    function addDecalOnObject(obj, rot, decal)
+        --print('Inside WTF?!')
+        local faceDown = true
+        if rot.z < 350 and rot.z > 5 then
+            faceDown = false
+        end
+
+        if faceDown then
+            --print('!!!')
+            obj.setDecals({decal})
+            obj.memo = setDiscardFlag(obj, true) -- true means "Add" memo, flase means clear memo
+        else
+            obj.setDecals({})
+            obj.memo = setDiscardFlag(obj)
+        end
+    end
+
     function checkDecals(cardList)
-        local playerArea_cutOffPoint = -56.29
-        local playerHandZone_cutOffPoint = -85.85
+        local testLines = require("/MageKnightV3/GlobalVariables").testDropPositions
+        local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
 
-        local testLine = { -- mat1-4 (player board 1 - 4)
-            m1=false, m3=false, m4=false,
-            m2={p1=-59.21, p2=-42.22}
-        }
+        for k, obj in pairs(cardList) do
+            local pos = obj.getPosition()
+            local rot = obj.getRotation()
+            if isPositionBetween(pos, testLines) then
+                --print('FLIP : INSIDE')
+                addDecalOnObject(obj, rot, decal)
+            else
+                --print('FLIP : OUTSIDE')
+                obj.setDecals({})
+                obj.memo = setDiscardFlag(obj)
+            end
+        end
+    end
 
-        local decal = {
-            name = 'decal_DelMe',
-            url = 'https://steamusercontent-a.akamaihd.net/ugc/2389809851029247051/A8A53C0304AD49E7730D881B6ABA6FC0BA7D9F5A/',
-            position=Vector(0.5614782, -0.363152, -0.9249038),
-            rotation=Vector(270, 0, 0),
-            scale=Vector(0.7646711, 0.952381, 30.76923),
-            }
-
-        for k, card in pairs(cardList) do
-            local pos = card.getPosition()
-            local rot = card.getRotation()
-            if pos.z < playerArea_cutOffPoint and pos.z > playerHandZone_cutOffPoint then --and pos.z > -56.29 then
-                for k,v in pairs(testLine) do
-                    if v then
-                        if not isBetween(v.p1, v.p2, pos.x) then
-                            if rot.z > 10 then
-                                card.setDecals({}) --print('Remove Decal')
-                                card.memo = ''
-                                --print('New Memo (clear) :'..card.memo)
-                            else
-                                --print('------- WTF -------------')
-                                card.setDecals({decal}) --print('Add Decal')
-                                card.memo = setMemo(card)
-                                --print('New Memo (set) : '..card.memo)
-                            end
+    function isPositionBetween(pos, testLines)
+        local allFalse = false
+        if pos.z < testLines.height.h1 and pos.z > testLines.height.h2 then
+            for _, points in pairs(testLines) do
+                if points and type(points) == "table" then
+                    if points.p1 and points.p2 then
+                        allFalse = true
+                        if (pos.x > points.p1 and pos.x < points.p2) or
+                        (pos.x > points.p2 and pos.x < points.p1) then
+                            return false
                         end
                     end
                 end
             end
-            --print('set : '..card.memo)
-        end
-    end
-
-    function setMemo(card)
-        if card.hasTag('PlayerCard_Wound') then
-            return 'trash_forceDelete'
-        elseif card.hasTag('PlayerCard_ThrowAway') then
-            return 'trash_removedFromGame'
         else
-            return ''
+            return false
         end
+        return allFalse
     end
 
 --if isBetween(v.p1, v.p2, pos.x) then
-function setOnlyCards(targets)
+function setOnlyCardsDecks(targets)
     local z = {}
     for k,v in pairs(targets) do
-        if v.type == 'Card' then
+        if v.type == 'Card' or v.type == 'Deck' then
             table.insert(z, v)
         end
     end

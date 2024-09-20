@@ -49,6 +49,32 @@ GlobalVariables.virtualTokenStackData = {
         },
 }
 
+GlobalVariables.ThrowAwayDecals = {
+    name = 'decal_ThrowAway',
+    url = 'https://steamusercontent-a.akamaihd.net/ugc/2407824359581070407/2813428A9547F9716D2DBDEDB0911EAEF8E7A61C/',
+    position=Vector(0.03095254, -0.3631536, -0.005958159),
+    rotation=Vector(270, 0, 0),
+    scale=Vector(0.4829904, 0.4761907, 15.38463)
+}
+
+GlobalVariables.testDropPositions = { -- mat1-4 (player board 1 - 4) -- left sideof PlayerBoard
+    height = {h1=-56.29, h2=-85.85},
+    m1={p1=-83.42, p2=-65.25},
+    m2={p1=-59.21, p2=-42.22},
+    m3={p1=8.41, p2=20.53},
+    m4={p1=36.85, p2=50.12}
+}
+
+
+--[[
+local testLines = { -- mat1-4 (player board 1 - 4) -- left sideof PlayerBoard
+    height = {h1=-56.29, h2=-85.96},
+    m1={p1=-83.42, p2=-65.25},
+    m2={p1=-59.21, p2=-42.22},
+    m3={p1=8.41, p2=20.53},
+    m4={p1=36.85, p2=50.12},
+}
+]]
 --local GlobalVariables = require( "GlobalVariables" )
 
 return GlobalVariables

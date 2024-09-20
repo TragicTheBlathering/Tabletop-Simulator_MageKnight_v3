@@ -1,80 +1,130 @@
 local CardDrop = {}
 
-    function CardDrop.chnageDiscardDecal(card)
-        local playerArea_cutOffPoint = -56.29
-        local playerHandZone_cutOffPoint = -85.85
-        local pos = card.getPosition()
-        local rot = card.getRotation()
-        local decals = card.getDecals()
-
-        local testLine = { -- mat1-4 (player board 1 - 4)
-            m1=false, m3=false, m4=false,
-            m2={p1=-59.21, p2=-42.22}
-        }
-
-        local decal = {
-            name = 'decal_DelMe',
-            url = 'https://steamusercontent-a.akamaihd.net/ugc/2389809851029247051/A8A53C0304AD49E7730D881B6ABA6FC0BA7D9F5A/',
-            position=Vector(0.5614782, -0.363152, -0.9249038),
-            rotation=Vector(270, 0, 0),
-            scale=Vector(0.7646711, 0.952381, 30.76923),
-            }
-
-        if pos.z > playerArea_cutOffPoint then
-            if tableSize(decals) > 0 then
-                card.setDecals({})
-                card.memo = ''
-                --print('Drop 01 : '..card.memo)
+    function CardDrop.changeDiscardDecal(obj)
+        --print('Drop Deck or Card')
+        local testLines = require("/MageKnightV3/GlobalVariables").testDropPositions
+        local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
+            local pos = obj.getPosition()
+            local rot = obj.getRotation()
+            if isPositionBetween(pos, testLines) then
+                --print('DROP : INSIDE')
+                setDiscardDecal(obj, rot, decal)
+            else
+                --print('DROP : OUTSIDE')
+                obj.setDecals({})
+                obj.memo = setDiscardFlag(obj)
             end
+    end
+
+    function setDiscardDecal(obj, rot, decal)
+        local faceDown = false
+        if rot.z < 350 and rot.z > 5 then
+            faceDown = true
+        end
+
+        if faceDown then
+            obj.setDecals({decal})
+            obj.memo = setDiscardFlag(obj, true) -- true means "Add" memo, flase means clear memo
         else
-            for k, v in pairs(testLine) do
-                if v then
-                    if isBetween(v.p1, v.p2, pos.x) then ---85.85
-                        local decals = card.getDecals()
-                        if tableSize(decals) > 0 then
-                            card.setDecals({})
-                            card.memo = ''
-                            --print('Drop 02 : '..card.memo)
-                        end
-                    elseif v.p2 < pos.x and pos.z > playerHandZone_cutOffPoint then
-                        if rot.z > 10 then
-                            local decals = card.getDecals()
-                            if tableSize(decals) == 0 then
-                                --print('-----------------------------------------------------------------------')
-                                card.setDecals({decal})
-                                --print(setMemo(card))
-                                card.memo = setMemo(card) --'???? WTF ????'--setMemo(card)
-                                --print('Drop Set : '..card.memo)
-                            end
-                        end
-                    else
-                        local decals = card.getDecals()
-                        if tableSize(decals) > 0 then
-                            card.setDecals({})
-                            card.memo = ''
-                            --print('Drop 03   : '..card.memo)
+            obj.setDecals({})
+            obj.memo = setDiscardFlag(obj)
+        end
+
+    end
+
+    function isPositionBetween(pos, testLines)
+        local allFalse = false
+        if pos.z < testLines.height.h1 and pos.z > testLines.height.h2 then
+            for _, points in pairs(testLines) do
+                if points and type(points) == "table" then
+                    if points.p1 and points.p2 then
+                        allFalse = true
+                        if (pos.x > points.p1 and pos.x < points.p2) or
+                        (pos.x > points.p2 and pos.x < points.p1) then
+                            return false
                         end
                     end
                 end
             end
+        else
+            return false
         end
-        --print('set as : '..tostring(card.memo))
+        return allFalse
     end
 
-    function setMemo(card)
-        if card.hasTag('PlayerCard_Wound') then
-            return 'trash_forceDelete'
-        elseif card.hasTag('PlayerCard_ThrowAway') then
-            return 'trash_removedFromGame'
+    function setDiscardFlag(card, add)
+        if add then
+            if card.hasTag('Cards_Wound') then
+                return 'trash_forceDelete'
+            elseif card.hasTag('Cards_DeedDeckCard') then
+                return 'trash_removedFromGame'
+            else
+                return ''
+            end
         else
             return ''
         end
     end
+--[[
+local playerArea_cutOffPoint = -56.29
+local playerHandZone_cutOffPoint = -85.85
+local pos = card.getPosition()
+local rot = card.getRotation()
+local decals = card.getDecals()
 
-    function isBetween(n1, n2, test)
-        local min, max = math.min(n1, n2), math.max(n1, n2)
-        return test > min and test < max
+local testLine = { -- mat1-4 (player board 1 - 4)
+    m1=false, m3=false, m4=false,
+    m2={p1=-59.21, p2=-42.22}
+}
+
+local decal = {
+    name = 'decal_DelMe',
+    url = 'https://steamusercontent-a.akamaihd.net/ugc/2389809851029247051/A8A53C0304AD49E7730D881B6ABA6FC0BA7D9F5A/',
+    position=Vector(0.5614782, -0.363152, -0.9249038),
+    rotation=Vector(270, 0, 0),
+    scale=Vector(0.7646711, 0.952381, 30.76923),
+    }
+
+if pos.z > playerArea_cutOffPoint then
+    if tableSize(decals) > 0 then
+        card.setDecals({})
+        card.memo = ''
+        --print('Drop 01 : '..card.memo)
     end
+else
+    for k, v in pairs(testLine) do
+        if v then
+            if isBetween(v.p1, v.p2, pos.x) then ---85.85
+                local decals = card.getDecals()
+                if tableSize(decals) > 0 then
+                    card.setDecals({})
+                    card.memo = ''
+                    --print('Drop 02 : '..card.memo)
+                end
+            elseif v.p2 < pos.x and pos.z > playerHandZone_cutOffPoint then
+                if rot.z > 10 then
+                    local decals = card.getDecals()
+                    if tableSize(decals) == 0 then
+                        --print('-----------------------------------------------------------------------')
+                        card.setDecals({decal})
+                        --print(setMemo(card))
+                        card.memo = setMemo(card) --'???? WTF ????'--setMemo(card)
+                        --print('Drop Set : '..card.memo)
+                    end
+                end
+            else
+                local decals = card.getDecals()
+                if tableSize(decals) > 0 then
+                    card.setDecals({})
+                    card.memo = ''
+                    --print('Drop 03   : '..card.memo)
+                end
+            end
+        end
+    end
+end
+--print('set as : '..tostring(card.memo))
+]]
 
     -- Table Size ------------------------------------------------------------------
     function tableSize(t)

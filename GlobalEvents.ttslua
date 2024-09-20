@@ -9,9 +9,11 @@ local MKevent = {}
     --MKevent.DiceInHand = require("/MageKnightV3/events/event_DiceInHand").DiceInHand
     -- Discard Decal on Card
     MKevent.OnFlip_cardDecal = require("/MageKnightV3/events/event_onPlayerAction_CardDecal").setDecal
-    MKevent.OnDrop_cardDecal = require("/MageKnightV3/events/event_onObjectDrop_CardDecal").chnageDiscardDecal
+    MKevent.OnDrop_cardDecal = require("/MageKnightV3/events/event_onObjectDrop_CardDecal").changeDiscardDecal
 
     MKevent.OnSpawn_PlayerCard = require("/MageKnightV3/events/event_SpawnEvents").onPlayerCardSpawn
+
+    MKevent.OnDrop_Mana = require("/MageKnightV3/events/event_OnDrop_Mana").DropMana
 
 local globalVar = {}
       globalVar.TrashSetting = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
@@ -37,10 +39,10 @@ end
 function onObjectDrop(colorName, object)
     if object.hasTag('MonasteryDiscoverToken')then
         MKevent.OnDrop_monestery(object)
-    elseif object.type == 'Card' then
+    elseif object.type == 'Card' or object.type == 'Deck' then
         MKevent.OnDrop_cardDecal(object)
-    else
-        --print(object.type)
+    elseif object.hasTag('ManaCrystal') or object.hasTag('ManaToken') then
+        MKevent.OnDrop_Mana(object)
     end
 end
 
@@ -48,7 +50,7 @@ function onObjectSpawn(object)
     if object.type == 'Card' then
         object.setDecals({})
         object.memo = ''
-        print('Spawn : '..object.memo)
+        object.setGMNotes('')
     end
 end
 

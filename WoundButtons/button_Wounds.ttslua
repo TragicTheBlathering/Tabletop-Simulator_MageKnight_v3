@@ -1,0 +1,100 @@
+local wait_ids = {}
+local pos = {
+    p1 = {hand = Vector(-44.11, 5, -88.94), poison = Vector(-45.03, 5, -81.93)},
+    p2 = {hand = Vector(-44, 5, -88.94), poison = Vector(-45.03, 5, -81.93)},
+    p3 = {hand = Vector(-44.11, 5, -88.94), poison = Vector(-45.03, 5, -81.93)},
+    p4 = {hand = Vector(-44.11, 5, -88.94), poison = Vector(-45.03, 5, -81.93)}
+}
+local poison = false
+
+function onLoad(save_state)
+    makeButtons()
+    setVariables()
+end
+
+function button_AddWounds()
+    --local card = self.takeObject({position=Vector(-45.03, 5, -81.93)}, false)
+    --card.use_hands = false
+    countClicks(self,countedClicks,0.5)
+end
+
+function countedClicks(count)
+    local Y = {hand = 0, poison=0, offset=0.3}
+    for i = 1, count do
+        local prams = {position=pos.hand+Vector(0,Y.hand,0), rotation=Vector(0,180,0)}
+        local card = self.takeObject(prams)
+        card.use_hands = false
+        Y.hand = Y.hand + Y.offset
+        Wait.condition(function() card.use_hands = true end, function() return isSmooth(card) end)
+
+        if poison then
+            local prams = {position=pos.poison+Vector(0,Y.poison,0), rotation=Vector(0,180,0)}
+            local poison = self.takeObject(prams)
+            poison.use_hands = false
+            Y.poison = Y.poison + Y.offset
+            Wait.condition(function() poison.use_hands = true end, function() return isSmooth(poison) end)
+        end
+    end
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+function countClicks(obj,func,delay)
+    --print('IN : waitUtils.countClicks')
+    local delay = delay or 0.8 -- better way of setting default parameters
+    wait_ids[obj] = wait_ids[obj] or { -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+      count = 0, -- We set the count to 0 here when the table is made
+    }
+
+    function delayCall()
+        func(wait_ids[obj].count)
+        wait_ids[obj].waitID = nil -- remove the wait id when the function is called
+        wait_ids[obj].count = 0  -- We set the count to 0 here when the wait has ended due to timeout
+    end
+
+    if wait_ids[obj].waitID then Wait.stop(wait_ids[obj].waitID); wait_ids[obj].waitID = nil end -- end the previous wait if it exists
+    wait_ids[obj].waitID = Wait.time(delayCall, delay) -- make a new wait, but with _no_ count
+
+    wait_ids[obj].count = wait_ids[obj].count + 1 -- finally increment the click amount.
+end
+
+function setVariables()
+    local tags = self.getTags()
+    --print(logString(tags, '\n--- tags'))
+    --local result = string.sub(string.lower('WoundBag_P2'), 10)
+    --print(result)
+
+    for k,t in pairs(tags) do
+        local tag = string.lower(t)
+        if string.find(tag, 'woundbag_') then
+            if string.find(tag, 'poison') then
+                poison = true
+            end
+            if #tag == 11 then
+                local p = string.sub(string.lower(tag), 10)
+                pos = pos[p]
+            end
+        end
+    end
+end
+
+
+function makeButtons()
+    local button = {}
+            button.click_function = 'button_AddWounds'
+            button.function_owner = self
+            button.position = {0,0.1,0}
+            button.rotation = {0,180,0}
+            button.label =  '@'
+            button.width = 1600
+            button.height = 2300
+            button.font_size = 250
+    self.createButton(button)
+end

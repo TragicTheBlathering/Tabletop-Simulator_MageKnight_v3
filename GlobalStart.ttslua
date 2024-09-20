@@ -1,8 +1,8 @@
 local tool = {}
       tool.onModLoad=require("/_libs/onModLoad/onModLoad")
-      tool.setupZone=require("/_libs/setUpZones/setUpZones")
-
+      --tool.setupZone=require("/_libs/setUpZones/setUpZones")
       tool.DiceEffect=require("/MageKnightV3/events/event_DiceInHand").startTiemr
+
 
 local setupObjects = nil
 
@@ -13,6 +13,7 @@ function onLoad()
     tool.DiceEffect()
 end
 
+--[[
 function getSetupObj(find)
     if setupObjects == nil then
         setupObjects = tool.setupZone.setSetupObjvariable()
@@ -21,3 +22,4 @@ function getSetupObj(find)
         return tool.setupZone.getSetupObject(find, setupObjects)
     end
 end
+]]

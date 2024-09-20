@@ -44,7 +44,6 @@ end
 function processObjectsInList(uniqueCast, container, TrashBag)
     --print('\n------ processObjectsInList')
     --print(logString(uniqueCast,'\n------ uniqueCast'))
-    --print(logString(moveList,'\n------ moveList'))
     local containedObjs = container.getObjects()
     local idex = tool.takeObj.reverseIndex(containedObjs)
     for k,dex in ipairs(idex) do
@@ -57,6 +56,7 @@ function processObjectsInList(uniqueCast, container, TrashBag)
                 if id.action == trashSetting.specialCase then
                     tool.specialCase(container.takeObject({index = dex}), TrashBag, uniqueCast[trashSetting.specialCase], id)
                 elseif id.action == trashSetting.discardObject then
+                    --print(id.id)
                     moveObject(container.takeObject({index = dex}), TrashBag, uniqueCast[id.id], id)
                 end
             end
@@ -154,48 +154,6 @@ function foundUniqueTag(tagList)
     return v
 end
 
---[[
-local tag2 = string.lower(t)
-if string.find(tag2, trashSetting.trashID_, 1, true) then
-    if foundUniqueTag(tagList) then
-        if obj.memo == 'trash_removedFromGame' then
-            print('This should be THROW AWAY')
-            local adjustedID = 'trashid_'..string.lower('RemovedFromGame')
-            --print('-----------'..adjustedID)
-            id.id = adjustedID
-            breakAll = true
-        else
-
-        end
-    else
-        if tag2 == 'trashid_playercard' then
-            for k, t in ipairs(uniqueDiscrard) do
-                if TrashBag.hasTag(t) then
-                    --print('-----------'..'trashid_'..string.lower(t))
-                    local adjustedID = 'trashid_'..string.lower(t)
-                    --print('-----------'..adjustedID)
-                    id.id = adjustedID
-                    break
-                end
-            end
-            breakAll = true
-        else
-            id.id = tag2
-            breakAll = true
-        end
-    end
-
-elseif tag2 == trashSetting.specialCase then
-    print('=========='..tag2)
-    id.id = tag2
-    breakAll = true
-end
-]]
-
---[[
-
-]]
-
 --moveObject(container.takeObject({index = dex}), container, uniqueCast[id.id], id)
 function moveObject(obj, container, uniqueCastID, id)
         uniqueCastID.Y = positionObject(obj, container, uniqueCastID)
@@ -241,9 +199,90 @@ function removeDecksFormTrash(TrashBag)
     local containedObjects = TrashBag.getData().ContainedObjects
     local indexesToRemove = tool.takeObj.reverseIndex_TagedOnly(tag, containedObjects, 'Deck')
 
-    return removeDecks_SetPosition(indexesToRemove, TrashBag)--, 'debug') -- debug will move decks to a visible locaiton before running code
+    return removeDecks_SetPosition(indexesToRemove, TrashBag, true)--, 'debug') -- debug will move decks to a visible locaiton before running code
 end
 
+function removeDecks_SetPosition(indexesToRemove, TrashBag, debug)
+    debug = debug or false; local count = 0
+    local z = {}
+    local posAbove = tool.takeObj.placeTopOrBot_ofObject(TrashBag,'top')
+    for i,indexToRemove in ipairs (indexesToRemove) do
+        local obj = TrashBag.takeObject({ index = indexToRemove })
+            if debug then
+                --print('debug')
+                local sizeCard = obj.getBounds().size
+                local trashSize = TrashBag.getBounds().size
+                local offset = Vector(count,0,0-trashSize.z-2.8)
+                obj.setPosition(posAbove+offset)
+                count = count + sizeCard.x + 0.6
+            else
+                obj.setPosition(posAbove+Vector(0,-70,0))
+            end
+        obj.setRotation(Vector(0,180,0))
+        obj.setLock(true)
+        local newDeck = adjustDeckViaSpawn(obj)
+        table.insert(z, newDeck)
+    end
+    if z[1] then return z else return {} end
+end
+
+function adjustDeckViaSpawn(deck)
+    local decals = deck.getDecals()
+    local throwAwayDeck = false
+    if decals then
+        for k,v in pairs(decals) do
+            if v.name == 'decal_ThrowAway' then
+                throwAwayDeck = true
+                break
+            end
+        end
+    end
+
+    if throwAwayDeck then -- Hack to handle Decks Facing... I need to rebuild this entire library!
+        deckData = deck.getData()
+        local containedObjs = deckData.ContainedObjects
+
+        --print(logString(containedObjs, 'containedObjs'))
+        for k,card in ipairs(containedObjs) do
+            for q, tag in ipairs(card.Tags) do
+                if tag == 'Cards_DeedDeckCard' then -- '' ''
+                    containedObjs[k].Memo = 'trash_removedFromGame'
+                    break
+                elseif tag == 'Cards_Wound' then
+                    containedObjs[k].Memo = 'trash_forceDelete'
+                    break
+                end
+            end
+        end
+        deckData.ContainedObjects = containedObjs
+        deck.destruct()
+        local data = {data = deckData,
+                      callback_function = function(spawned_object) spawned_object.setLock(true) end
+        }
+
+        local newDeck = spawnObjectData(data)
+
+        return newDeck
+    else
+        return deck
+    end
+end
+
+--[[
+local decals = deck.getDecals()
+local throwAwayDeck = false
+if decals then
+    for k,v in pairs(decals) do
+        if v.name == 'decal_ThrowAway' then
+            throwAwayDeck = true
+            break
+        end
+    end
+end
+]]
+
+---- Working OLD : removeDecks_SetPosition(indexesToRemove, TrashBag, debug)
+--[[
 function removeDecks_SetPosition(indexesToRemove, TrashBag, debug)
     debug = debug or false; local count = 0
     local z = {}
@@ -266,7 +305,7 @@ function removeDecks_SetPosition(indexesToRemove, TrashBag, debug)
     end
     if z[1] then return z else return {} end
 end
-
+]]
 --------------------------------------------------------------------------------
 --- UniqueCastLocations(TrashBag, removedDeckList) -----------------------------
 --- Build a list from trash and find the unique locations for each discard, then cast at that location and return found data.
@@ -325,6 +364,18 @@ function setSpecialCase(TrashBag, removedDeckList, location)
     --print(logString(location, '\n--- location'))
     return location
 end
+--[[
+local decals = deck.getDecals()
+local throwAwayDeck = false
+if decals then
+    for k,v in pairs(decals) do
+        if v.name == 'decal_ThrowAway' then
+            throwAwayDeck = true
+            break
+        end
+    end
+end
+]]
 ----------------------------------------------------------------------------------------------- EDIT HERE
 function setDiscardLocations(obj, TrashBag)
     local tagList = obj.tags
@@ -343,14 +394,14 @@ function setDiscardLocations(obj, TrashBag)
                             if TrashBag.hasTag(utag) then
                                 local adjustedID = 'trashid_'..string.lower(utag)
                                 id.id = adjustedID
+                                --print('==='..id.id)
                                 break
                             end
                         end
-                        --print(obj.memo)
                         if obj.memo == 'trash_removedFromGame' then
-                            --print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                             local adjustedID = 'trashid_removedfromgame'
                             id.id = adjustedID
+                            --print('---'..id.id)
                             break
                         end
                     else
@@ -363,22 +414,5 @@ function setDiscardLocations(obj, TrashBag)
     end
     return id
 end
-
---[[
-if tag == 'trashid_playercard' then
-    for k, t in ipairs(uniqueDiscrard) do
-        if TrashBag.hasTag(t) then
-            --print('-----------'..'trashid_'..string.lower(t))
-            local adjustedID = 'trashid_'..string.lower(t)
-            print('-----------'..adjustedID)
-            id.id = adjustedID
-            break
-        end
-    end
-else
-    id.id = tag2
-    break
-end
-]]
 
 return trashCan_Universal

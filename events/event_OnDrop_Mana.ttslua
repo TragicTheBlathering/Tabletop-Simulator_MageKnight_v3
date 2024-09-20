@@ -1,0 +1,178 @@
+local ManaDrop = {}
+    local ShowDebug = false
+    local tool = {}
+        tool.setupZone=require("/_libs/setUpZones/setUpZones")
+    local setupObjects = nil
+    local manaColours = {'blue', 'green', 'red', 'white', 'black', 'gold'}
+
+    local objecIntersect = nil
+
+    function ManaDrop.DropMana(dropped)
+        local platform = cast_findPlatform(dropped)
+        if platform then
+            local transformObjs = getCrystalObjects_Data()
+            local switch = isDroppedArea(platform, dropped)
+            if switch then
+                changeObj(switch, dropped, transformObjs)
+            end
+            --print(logString(platformLocation, '\n--- platformLocation'))
+        else
+            --print('not inside any areas')
+        end
+    end
+
+    function changeObj(switch, dropped, transformObjs)
+        local droppedCol = findDroppedManaColour(dropped) -- {colour = c, pos=dropped.getPosition(), rot=dropped.getRotation()}
+        if switch == 'crystal' then
+            --print('--- Crystal')--; print(logString(transformObjs['red'].Transform, '\n--- transformObjs[red].Transform'))
+            if droppedCol then
+                local spawnData = transformObjs.crystals[droppedCol.colour]
+                spawnData.Transform.posX = droppedCol.pos.x
+                spawnData.Transform.posY = droppedCol.pos.y
+                spawnData.Transform.posZ = droppedCol.pos.z
+                dropped.destroy()
+                local newObject = spawnObjectData({data=spawnData})
+                newObject.interactable = true
+                newObject.setLock(false)
+            end
+
+        elseif switch == 'token' then
+            if droppedCol then
+                if dropped.hasTag('Crystal_'..droppedCol.colour) then
+                    local spawnData = transformObjs.tokens[droppedCol.colour]
+                    spawnData.Transform.posX = droppedCol.pos.x
+                    spawnData.Transform.posY = droppedCol.pos.y
+                    spawnData.Transform.posZ = droppedCol.pos.z
+                    dropped.destroy()
+                    local newObject = spawnObjectData({data=spawnData})
+                    newObject.interactable = true
+                    newObject.setLock(false)
+                end
+            end
+        else
+            print('--- Do Nothing')
+        end
+    end
+
+    function findDroppedManaColour(dropped)
+        local z = {}
+            for k, c in pairs(manaColours) do
+                if dropped.hasTag('ManaToken_'..c) then
+                    return {colour = c, pos=dropped.getPosition(), rot=dropped.getRotation()}
+                elseif dropped.hasTag('Crystal_'..c) then
+                    return {colour = c, pos=dropped.getPosition(), rot=dropped.getRotation()}
+                end
+            end
+        return false
+    end
+
+    function getCrystalObjects_Data()
+        local z = {crystals={}, tokens={}}
+        if setupObjects == nil then
+            setupObjects = tool.setupZone.allSetUpObjects()
+        end
+        for k,colour in ipairs(manaColours) do
+            --print('Crystal_'..colour)
+            z.crystals[colour] = tool.setupZone.getByTag('Crystal_'..colour, setupObjects).getData()
+            z.tokens[colour] = tool.setupZone.getByTag('ManaToken_'..colour, setupObjects).getData()
+        end
+        return z
+    end
+
+    function isDroppedArea(platform, dropped)
+        local locationData = { -- This os the zero'd out positions of the sectors on the playerboard
+            pos1 = {pos=Vector(-20.66, 0, 8.06), size=Vector(14.98586, 20, 7.149429)},
+            pos2 = {pos=Vector(-20.84, 0, 3.55), size=Vector(14.62798, 20, 1.850037)},
+            pos3 = {pos=Vector(-19.94, 0, 1.40), size=Vector(16.43763, 20, 2.425354)},
+            pos4 = {pos=Vector(-18.94, 0, -1.96), size=Vector(18.46918, 20, 4.263077)},
+            pos5 = {pos=Vector(-11.12, 0, -7.89), size=Vector(2.844604, 20, 7.530258)},
+            posToken = {pos=Vector(-10.99, 0, 9.71), size=Vector(6.126419, 20, 3.827606)}
+        }
+        locationData = adjustPositionData(locationData, platform.getPosition())
+        locationData = setAreas(locationData)
+        return locationSwitch(dropped.getPosition(), locationData)
+    end
+
+    -- Determine the location of the point
+    function locationSwitch(point, locationData)
+        for k, area in pairs(locationData) do
+            if k ~= 'posToken' then
+                if isPointInArea(point, area) then return 'crystal' end
+            end
+        end
+        if isPointInArea(point, locationData.posToken) then return 'token' end
+        return false
+    end
+
+    function isPointInArea(point, area)
+        -- Extract the coordinates from the area
+        local topLeft = area.topLeft
+        local topRight = area.topRight
+        local botLeft = area.botLeft
+        local botRight = area.botRight
+
+        -- Extract the coordinates of the point
+        local px, pz = point.x, point.z
+
+        -- Define helper function to check if a point is within the bounds of a rectangle
+        local function isWithinBounds(px, pz, x1, z1, x2, z2)
+                return px >= math.min(x1, x2) and px <= math.max(x1, x2) and
+                pz >= math.min(z1, z2) and pz <= math.max(z1, z2)
+            end
+
+        -- Check if the point is within the bounds of the rectangle defined by the corners
+        return isWithinBounds(px, pz, topLeft.x, topLeft.z, botRight.x, botRight.z)
+    end
+
+    function adjustPositionData(locationData, platformPos)
+        local data = locationData
+        for key, p in pairs(locationData) do
+            data[key].pos.x = p.pos.x + platformPos.x
+            data[key].pos.y = 0
+            data[key].pos.z = p.pos.z + platformPos.z
+        end
+        return data
+    end
+
+    function setAreas(locationData)
+        local posData = {}
+        for key, data in pairs(locationData) do
+            local pos = data.pos
+            local size = data.size
+
+            -- Calculate half sizes for x and z
+            local halfX = size.x / 2
+            local halfZ = size.z / 2
+
+            -- Define the four corners based on the center (pos) and size
+            posData[key] = {
+                topLeft = {x = pos.x - halfX, z = pos.z + halfZ},
+                topRight = {x = pos.x + halfX, z = pos.z + halfZ},
+                botLeft = {x = pos.x - halfX, z = pos.z - halfZ},
+                botRight = {x = pos.x + halfX, z = pos.z - halfZ}
+            }
+        end
+        return posData
+    end
+
+    function cast_findPlatform(platform)
+        local castOrigin = platform.getPosition()
+        local offset=Vector(0,-5,0)
+        local sizeVec=Vector(1,15,1)
+
+        local zone = Physics.cast({ origin=castOrigin + offset,
+                                    direction={0,1,0},
+                                    type=3,
+                                    max_distance=0,
+                                    size=sizeVec,
+                                    debug=ShowDebug})
+        for k,o in pairs(zone) do
+            local obj = o.hit_object
+            if obj.hasTag('PlayerBoard_DropManaCrystal') then
+                return obj
+            end
+        end
+        return false
+    end
+
+return ManaDrop
