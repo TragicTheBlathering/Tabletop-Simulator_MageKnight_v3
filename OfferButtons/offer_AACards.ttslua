@@ -30,21 +30,6 @@ function processOffer()
         waitFunc(setButtonReady, 'drawCards')
     end
 end
---[[
-cardData = {
-    cardOfferPos = {Vector(56.51, 2.02, -29.98),
-                    Vector(49.51, 2.02, -29.98),
-                    Vector(42.51, 2.02, -29.98)},
-    face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
-    drawDeckPos = Vector(63.51, 2.02, -29.97),
-    discardPilePos = Vector(70.50, 2.01, -30.00),
-
-    currentOffer = {false, false, false},
-    newOffer = {count = false, slide = {}},
-    discardCard = false,
-    draw    = false,
-    discard = false
-}]]
 
 function findDummyBoard()
     local dummy = getObjectsWithTag('Dummy_PlayerBoard')--print(logString(dummy, '\n--- dummy'))

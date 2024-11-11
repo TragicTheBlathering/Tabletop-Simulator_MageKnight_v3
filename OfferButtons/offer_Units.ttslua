@@ -44,7 +44,7 @@ local cardData = { --cardData.cardOfferPos
 } -- End cardData = {}
 
 function onLoad(saved_data)
-    print('New Version')
+    print(' -- Code : Unit Offer Round Reset [W.I.P]')
     setButtons.init()
 end
 

@@ -1,0 +1,213 @@
+local cardData = {}
+local wait_ids = {}
+local functionStopped = {resetDeck = false}
+local ShowCast = true
+function process()
+    print(' -- Code : Monstaries Drop [W.I.P]')
+    setGameState()
+    resetDeck()
+    waitFunc(drawCard, 'resetDeck')
+end
+
+function drawCard()
+    waitForFunction('allStop')
+    setGameState('drawDeck')
+    setState('currentOffer')
+    local deck, currentOffer, rot, offset = cardData.draw, cardData.currentOffer, cardData.face.up, cardData.offsetY
+    local pos = findNextDrawPos(currentOffer)
+    if pos then
+        if deck.type == 'Card' then
+            local card = deck
+            card.setPositionSmooth(pos+offset, false, false)
+            card.setRotationSmooth(rot, false, false)
+            Wait.condition(function() card.setPositionSmooth(pos) end, function() return isSmooth(card) end)
+        elseif deck.type == 'Deck' then
+            local card = deck.takeObject({position=pos+offset, rotation=rot})
+            Wait.condition(function() card.setPositionSmooth(pos) end, function() return isSmooth(card) end)
+        end
+    end
+end
+
+function findNextDrawPos(currentOffer)
+    local valid = false
+    for k, v in ipairs(currentOffer) do
+        if not v then
+            valid = true
+        end
+    end
+    if valid then
+        for i = tableSize(currentOffer), 1, -1 do
+            if currentOffer[i] then
+                local key = i+1;
+                if key > 5 then
+                    for k,v in ipairs(currentOffer) do
+                        if not v then
+                            return cardData.cardOfferPos[k]
+                        end
+                    end
+                else
+                    return cardData.cardOfferPos[i+1]
+                end
+            end
+        end
+        return cardData.cardOfferPos[1]
+    else
+        printToAll('ERROR : There are only 5 Monasteries in the entire game; you should never have more than 5 AA cards in the monastery offer!', 'Red')
+        return false
+    end
+end
+
+function resetDeck()
+    waitForFunction('allStop')
+    setGameState('drawDeck')
+    setGameState('discardDeck')
+
+    if not cardData.draw then
+        if cardData.discard then
+            local pos, rot, offset = cardData.drawDeckPos, cardData.face.down, cardData.offsetY
+            local deck = cardData.discard
+            local deckBounds = Vector(0,deck.getBounds().size.y/2,0)--print(logString(deckBounds, '\n--- deckBounds'))
+            deck.setPositionSmooth(pos+offset)
+            deck.setRotationSmooth(rot)
+            Wait.condition(function()
+                deck.setPositionSmooth(pos+deckBounds)
+
+                Wait.condition(function()
+                    deck.shuffle()
+                    Wait.time(function() functionStopped.resetDeck = true end, 0.5)
+                end, function() return isSmooth(deck) end)
+
+            end, function() return isSmooth(deck) end)
+        else
+            printToAll("Error : Um.. I can not find a AA Draw or Discard Deck?!", 'Red')
+        end
+    else
+        functionStopped.resetDeck = true
+    end
+end
+
+function setGameState(...)
+    local keys = {...}
+    if tableSize(keys) == 0 then
+        keys = false
+    end
+    if keys == false then
+        cardData = {
+            cardOfferPos = {Vector(49.51, 2.02, -21.98),
+                            Vector(42.51, 2.02, -21.98),
+                            Vector(35.51, 2.02, -21.99),
+                            Vector(28.51, 2.02, -21.99),
+                            Vector(21.51, 2.02, -21.99)
+                        },
+            face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
+            drawDeckPos = Vector(63.51, 2.02, -29.97),
+            discardPilePos = Vector(70.50, 2.01, -30.00),
+            offsetY = Vector(0, 2, 0),
+            stackPos = Vector(56.50, 1.93, -22.00),
+            currentOffer = {false, false, false, false, false},
+        }
+        setState('currentOffer')
+        setState('drawDeck')
+        setState('discardDeck')
+    else
+        for k, key in pairs(keys) do
+            setState(key)
+        end
+    end
+    return cardData
+end
+
+function setState(key)
+    if key == 'currentOffer' then
+     --- Find Offer Cards
+        for k,castOrigin in ipairs(cardData.cardOfferPos) do
+            cardData.currentOffer[k] = cast(castOrigin)
+        end
+
+    elseif key == 'drawDeck' then
+     --- Find Draw Deck
+        cardData.draw = cast(cardData.drawDeckPos)
+
+    elseif key == 'discardDeck' then
+     --- Find Draw Deck
+        cardData.discard = cast(cardData.discardPilePos)
+
+    end
+end
+
+function cast(castOrigin)
+    local zone = Physics.cast({ origin=castOrigin + Vector(0,1,0),
+                                direction={0,1,0},
+                                type=3,
+                                max_distance=0,
+                                size=Vector(2,2,2),
+                                debug=ShowCast})
+    return processCast(zone)
+end
+
+function processCast(zone)
+    local object = false
+    for k,v in pairs(zone) do
+        if v.hit_object.hasTag('MonasteryDiscoverToken') then
+            object = v.hit_object
+        end
+        if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
+          object = v.hit_object
+        end
+    end
+    if object then
+        return object
+    else
+        return false
+    end
+end
+
+-- Is Function Running ---------------------------------------------------------
+function waitForFunction(key) -- true == function runs, flase == function dose not run
+    key = key or false
+    if key then
+        if key =='allStop' then
+            if printBug then print('waitFunction ('..key..')') end
+            for k,v in pairs(functionStopped) do
+                functionStopped[k] = false
+            end
+        elseif key == 'resetWaitIDs' then
+            if printBug then print('waitFunction ('..key..')') end
+            -- Set Wait_ids fail safes
+            wait_ids[self] = wait_ids[self] -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+            or {waitCleanUP = false, waitID = nil}-- We set wait variables to start state (all diffrent waits go here)
+            if wait_ids[self].waitCleanUP ~= false then
+                Wait.stop(wait_ids[self].waitCleanUP)
+                wait_ids[self].waitCleanUP = false
+            end
+        else
+            if printBug then print('waitFunction ('..key..') : '..tostring(functionStopped[key])) end
+            return functionStopped[key]
+        end
+    else
+        print("waitForFunction(key) ERROR")
+        return true
+    end
+end
+-- Wait.condition Wrapper for isSmoothMove -------------------------------------
+function waitFunc(func, waitKey)
+    Wait.condition(function() func() end, function() return waitForFunction(waitKey) end)
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+-- Table Size ------------------------------------------------------------------
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end
