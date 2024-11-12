@@ -3,7 +3,7 @@ local wait_ids = {}
 local functionStopped = {resetDeck = false}
 local ShowCast = true
 function process()
-    print(' -- Code : Monstaries Drop [W.I.P]')
+    --print(' -- Code : Monstaries Drop [W.I.P]')
     setGameState()
     resetDeck()
     waitFunc(drawCard, 'resetDeck')

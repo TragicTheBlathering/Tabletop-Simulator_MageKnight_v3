@@ -4,7 +4,7 @@ local setButtons = {} -- SetButton Functionsd
 local tool = {} -- Various Tools (definitions at bottom of script)
 --******************************************************************************
 -- Variables : Script Wide -----------------------------------------------------
-local ShowCast = true
+local ShowCast = false
 local printBug = false
 local functionStopped = {resetDecks = false, drawCards = false, clearOffer = false}
 local gameSettings = {
@@ -30,17 +30,29 @@ local cardData = { --cardData.cardOfferPos
             Vector(14.50, 2.02, -13.99),
             vector(7.50, 2.02, -13.99)
         },
+    cardOfferPos_AA = {
+        Vector(49.51, 2.02, -21.98),
+        Vector(42.51, 2.02, -21.98),
+        Vector(35.51, 2.02, -21.99),
+        Vector(28.50, 2.02, -21.99),
+        Vector(21.51, 2.02, -21.99)
+    },
      face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)}, -- alias for flipping cards face up or down
      drawDecks = { -- drawDeck positon to search and if the deck if found or not
             silver={deck=false, pos=Vector(63.50, 2.02, -13.97)},
-            gold  ={deck=false, pos=Vector(63.50, 2.02, -21.97)}
+            gold  ={deck=false, pos=Vector(63.50, 2.02, -21.97)},
+            aa    ={deck=false, pos=Vector(63.51, 2.02, -29.97)}
         },
     discardDecks = { -- discardDeck positon to search and if the deck if found or not
             silver={deck=false, pos=Vector(70.50, 2.01, -13.97)},
-            gold  ={deck=false, pos=Vector(70.50, 2.01, -21.97)}
+            gold  ={deck=false, pos=Vector(70.50, 2.01, -21.97)},
+            aa  ={deck=false, pos=Vector(70.50, 2.01, -30.00)}
         },
     dropOffSet = Vector(0, 2, 0), -- value for vertical offset when dealing cards
-    currentOffer = {false, false, false, false, false, false, false, false} -- the offer itself.
+    currentOffer = {false, false, false, false, false, false, false, false}, -- the offer itself.
+    currentOffer_AA = {false, false, false, false, false},
+    stackPos_AA = Vector(56.50, 1.93, -22.00),
+    stack_AA = 0,
 } -- End cardData = {}
 
 function onLoad(saved_data)
@@ -62,15 +74,6 @@ function b_mainDrawFunction(obj, color, alt_click)
 end
 
 function setGameState(...)
-
-    --local coreTiles = getObjectsWithTag('maptile_Core')
-    --coreTiles = tool.tableSize(coreTiles)
-    --print(coreTiles)
-    if tool.tableSize(getObjectsWithTag('maptile_Core')) > 1 then
-        print('!!!')
-    end
-
-
     if not gameSettings.set or not unitOffer then gameSettings.init() end
     local keys = {...}
     if tool.tableSize(keys) == 0 then
@@ -80,6 +83,7 @@ function setGameState(...)
         setState('currentOffer')
         setState('decks')
         setState('drawType')
+        setState('stacks')
     else
         for k, key in pairs(keys) do
             setState(key)
@@ -95,12 +99,19 @@ function setState(key)
             cardData.currentOffer[k] = cast(castOrigin)
         end
 
+        for k,castOrigin in ipairs(cardData.cardOfferPos_AA) do
+            cardData.currentOffer_AA[k] = cast(castOrigin)
+        end
+
     elseif key == 'decks' then --drawDecks.silver.pos drawDecks.silver.deck
         cardData.drawDecks.silver.deck = cast(cardData.drawDecks.silver.pos)
         cardData.drawDecks.gold.deck = cast(cardData.drawDecks.gold.pos)
+        cardData.drawDecks.aa.deck = cast(cardData.drawDecks.aa.pos)
 
         cardData.discardDecks.silver.deck = cast(cardData.discardDecks.silver.pos)
         cardData.discardDecks.gold.deck = cast(cardData.discardDecks.gold.pos)
+        cardData.discardDecks.aa.deck = cast(cardData.discardDecks.aa.pos)
+
     elseif key == 'drawType' then
         --print(unitOffer.current.gold)
         if unitOffer.gold.on then
@@ -108,49 +119,77 @@ function setState(key)
         else
             unitOffer.drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'}
         end
+
+    elseif key == 'stacks' then
+        cardData.stack_AA = cast(cardData.stackPos_AA)
+        --print(logString(cardData.stack_AA, "\n---- cardData.stack_AA"))
+        if cardData.stack_AA then
+            local count = cardData.stack_AA.getQuantity(); if count == -1 then count = 1 end
+            cardData.stack_AA = count
+        end
     end
 end
 
 function clearOffer()
     waitForFunction('allStop')
-
     local currentOffer = cardData.currentOffer
+    local currentOffer_AA = cardData.currentOffer_AA
     local discardDecks = cardData.discardDecks
-    local discard = {silver=discardDecks.silver.deck, gold=discardDecks.gold.deck}
-    local offset = {silver=Vector(0,0,0), gold=Vector(0,0,0),}
+    local discard = {silver=discardDecks.silver.deck, gold=discardDecks.gold.deck, aa=discardDecks.aa.deck}
+    local offset = {silver=Vector(0,0,0), gold=Vector(0,0,0), aa=Vector(0,0,0)}
         for k,deck in pairs(discard) do
             if deck then
                 offset[k] = Vector(0,deck.getBounds().size.y/2+0.2,0)
             end
         end
-    local pos = {silver=discardDecks.silver.pos+offset.silver, gold=discardDecks.gold.pos+offset.gold}
-    local overflow = unitOffer.overflow
+    local pos = {silver=discardDecks.silver.pos+offset.silver, gold=discardDecks.gold.pos+offset.gold, aa=discardDecks.aa.pos+offset.aa}
 
-    if not overflow then
-        local Y ={silver=0, gold=0}
-        for k,card in ipairs(currentOffer) do
-            if card then
-                local type = setGoldSilver(card)
-                if type then
-                    card.setPositionSmooth(pos[type]+Vector(0,Y[type],0))
-                    Y[type] = Y[type] + 0.5
-                    if not discard[type] then
-                        discard[type] = card
-                        Wait.condition(function()
-                            discard[type].setPosition(pos[type])--cardData.discardPilePos 32.92, 2.02, -31.23
-                        end, function() return isSmooth(card) end)
-                    else
-                        Wait.condition(function()
-                            discard[type] = discard[type].putObject(card)
-                        end, function() return isSmooth(card) end)
-                    end
+    local moveTestList = {}
+    local Y ={silver=0, gold=0, aa=0}
+
+    for k,card in ipairs(currentOffer) do
+        if card then
+            table.insert(moveTestList, card)
+            local type = setGoldSilver(card)
+            if type then
+                card.setPositionSmooth(pos[type]+offset[type]+Vector(0,Y[type],0))
+                Y[type] = Y[type] + 0.5
+                if not discard[type] then
+                    discard[type] = card
+                    Wait.condition(function()
+                        discard[type].setPosition(pos[type])--cardData.discardPilePos 32.92, 2.02, -31.23
+                    end, function() return isSmooth(card) end)
+                else
+                    Wait.condition(function()
+                        discard[type] = discard[type].putObject(card)
+                    end, function() return isSmooth(card) end)
                 end
             end
         end
-        Wait.condition(function() functionStopped.clearOffer = true end, function() return objectsAreMoving(currentOffer) end)
-    else
-        functionStopped.clearOffer = true
     end
+
+    --print(logString(discard['aa'], '\n--- discard.aa'))
+
+    for k,card in ipairs(currentOffer_AA) do
+        if card then
+            table.insert(moveTestList, card)
+            local type = 'aa'
+            card.setPositionSmooth(pos[type]+offset[type]+Vector(0,Y[type],0))
+            Y[type] = Y[type] + 0.5
+            if not discard[type] then
+                discard[type] = card
+                Wait.condition(function()
+                    discard[type].setPosition(pos[type])--cardData.discardPilePos 32.92, 2.02, -31.23
+                end, function() return isSmooth(card) end)
+            else
+                Wait.condition(function()
+                    discard[type] = discard[type].putObject(card)
+                end, function() return isSmooth(card) end)
+            end
+        end
+    end
+
+    Wait.condition(function() functionStopped.clearOffer = true end, function() return objectsAreMoving(moveTestList) end)
 end
 
 function resetDecks()
@@ -158,15 +197,16 @@ function resetDecks()
     setGameState('decks')
 
     --print(logString(unitOffer.overflowValues, 'unitOffer.overflowValues'))
-    local discard = {silver=cardData.discardDecks.silver.deck, gold=cardData.discardDecks.gold.deck, process={}} --print(logString(discard, 'discard'))
-    local draw = {silver=cardData.drawDecks.silver.deck, gold=cardData.drawDecks.gold.deck} --print(logString(draw, 'draw'))
-    local pos = {silver=cardData.drawDecks.silver.pos, gold=cardData.drawDecks.gold.pos} --print(logString(pos, 'pos'))
+    local discard = {silver=cardData.discardDecks.silver.deck, gold=cardData.discardDecks.gold.deck, aa=cardData.discardDecks.aa.deck, process={}} --print(logString(discard, 'discard'))
+    local draw = {silver=cardData.drawDecks.silver.deck, gold=cardData.drawDecks.gold.deck, aa=cardData.drawDecks.aa.deck} --print(logString(draw, 'draw'))
+    local pos = {silver=cardData.drawDecks.silver.pos, gold=cardData.drawDecks.gold.pos, aa=cardData.drawDecks.aa.pos} --print(logString(pos, 'pos'))
     local rot = cardData.face --print(logString(rot, 'rot'))
     local offset = cardData.dropOffSet --print(logString(offset, 'offset'))
-    local size = {silver=Vector(0,0,0), gold=Vector(0,0,0)} --print(logString(size, 'size'))
+    local size = {silver=Vector(0,0,0), gold=Vector(0,0,0), aa=Vector(0,0,0)} --print(logString(size, 'size'))
 
     if discard.silver then size.silver = Vector(0,discard.silver.getBounds().size.y/2,0) end
     if discard.gold then size.gold = Vector(0,discard.gold.getBounds().size.y/2,0) end
+    if discard.aa then size.aa = Vector(0,discard.aa.getBounds().size.y/2,0) end
 
     if not draw.silver then
         if discard.silver then
@@ -184,7 +224,17 @@ function resetDecks()
         end
     end
 
-    if draw.gold and draw.silver then -- If there are valid draw deck skip Reset
+    if not draw.aa then
+        if discard.aa then
+            discard.process.aa = discard.aa
+        else
+            printToAll('ERROR : Um.. I can not find any Gold Unit cards at all?! ', 'Red')
+        end
+    end
+
+    --print(logString(discard.process, '\n--- discard.process'))
+
+    if draw.gold and draw.silver and draw.aa then -- If there are valid draw deck skip Reset
         functionStopped.resetDecks = true
     else
         for t, deck in pairs(discard.process) do -- Reset any deck with no draw decks.
@@ -208,6 +258,7 @@ function drawCards()
     setGameState('drawType')
     setGameState('decks')
     setGameState('currentOffer')
+    setGameState('stacks')
 
     local data = {
         drawLimit = gameSettings.unitOfferCount,
@@ -219,19 +270,45 @@ function drawCards()
         type=unitOffer.drawType,
         }
 
-    local drawLimit = {silver=0, gold=0, maxTotal=gameSettings.unitOfferCount}
+    local data_AA = {
+        drawDeck = cardData.drawDecks.aa.deck,
+        stackPos = cardData.stackPos_AA,
+        currentOffer_AA = cardData.currentOffer_AA,
+        offerDrawPos_AA = cardData.cardOfferPos_AA,
+        count=cardData.stack_AA,
+    }
+
+    local drawLimit = {silver=0, gold=0, maxTotal=gameSettings.unitOfferCount, aa=0}
         if data.drawDecks.silver then drawLimit.silver = data.drawDecks.silver.getQuantity() end; if drawLimit.silver == -1 then drawLimit.silver = 1 end
         if data.drawDecks.gold then drawLimit.gold = data.drawDecks.gold.getQuantity() end; if drawLimit.gold == -1 then drawLimit.gold = 1 end
+        if data_AA.drawDeck then drawLimit.aa = data_AA.drawDeck.getQuantity() end; if drawLimit.aa == -1 then drawLimit.aa = 1 end
 
-    local skipDraw = false
-    for _, value in ipairs(data.offerTypes) do
-        if not value then skipDraw = true break end
+    --print(logString(drawLimit, '\n--- drawLimit'))
+
+    --print(logString(data.offerTypes, '\n--- data.offerTypes'))
+    --print(logString(data_AA.currentOffer_AA, '\n--- data_AA.currentOffer_AA'))
+    --print(logString(data_AA.count, '\n--- data_AA.count'))
+
+    -- Find if the offer Requires any cards to be delt
+    local skipDraw = true
+    for i = 1, drawLimit.maxTotal do
+        if data.offerTypes[i] == false or data.offerTypes[i] == nil then
+            skipDraw = false
+            break
+        end
     end
 
-    if skipDraw then
+    for i = 1, data_AA.count do
+        if data_AA.currentOffer_AA[i] == false or data_AA.currentOffer_AA[i] == nil then
+            skipDraw = false
+            break
+        end
+    end
+
+    local waitCardList = {}
+    if not skipDraw then
+    -- Draw Unit Cards ---------------------------------------------------------
         local count = {silver=0, gold=0}
-        unitOffer.overflow = false
-        local waitCardList = {}
         for k, inValid in ipairs(data.offerTypes) do
             if k <= data.drawLimit then
                 if not inValid then
@@ -249,21 +326,40 @@ function drawCards()
                         end
                         Wait.condition(function() c.setPositionSmooth(data.drawPos[k]) end, function() return isSmooth(c) end)
                         table.insert(waitCardList, c)
-                        --print(count[type])
-                    else
-                        unitOffer.overflow = true
-                        break
                     end
                     count[type] = count[type] + 1
                 end
             end
         end
+    -- Draw AA Cards -----------------------------------------------------------
+        local count = 0
+        for k, inValid in ipairs(data_AA.currentOffer_AA) do
+            if k <= data_AA.count then
+                if not inValid then
+                    local container = data_AA.drawDeck
+                    if count < drawLimit.aa then
+                        local c = nil
+                        local prams = {position=data_AA.offerDrawPos_AA[k]+data.offset, rotation=data.rot}
+                        if container.type == 'Card' then
+                            c = container
+                            c.setPositionSmooth(prams.position, false, false)
+                            c.setRotationSmooth(prams.rotation, false, false)
+                        else
+                            c = container.takeObject(prams)
+                        end
+                        Wait.condition(function() c.setPositionSmooth(data_AA.offerDrawPos_AA[k]) end, function() return isSmooth(c) end)
+                        table.insert(waitCardList, c)
+                    end
+                    count = count + 1
+                end
+            end
+        end
+    -- Are any cards that are draw still moving? -------------------------------
         Wait.condition(function() functionStopped.drawCards = true end, function() return objectsAreMoving(waitCardList) end)
     else
         functionStopped.drawCards = true
     end
 end
-
 
 --******************************************************************************
 ---- Wait Functions ------------------------------------------------------------
@@ -350,6 +446,8 @@ function processCast(zone)
         if v.hit_object.type == "Card" or v.hit_object.type == "Deck" then
             object = v.hit_object
           --print(object.getName())
+        elseif v.hit_object.hasTag('MonasteryDiscoverToken') then
+              object = v.hit_object
         end
     end
     if object then
@@ -363,14 +461,16 @@ end
 --- Button Code ----------------------------------------------------------------
 --******************************************************************************
 -- On-Click Button Functions
-function b_disabled(obj, color, alt_click) end-- print('b_disabled') end
+function b_disabled(obj, color, alt_click) print('disabled') end-- print('b_disabled') end
 
-function b_setGoldTicked_Toggle(obj, color, alt_click)
+function b_setGoldTicked_Toggle(gold)
     self.clearButtons()
     if unitOffer.gold.on then -- untick
-        unitOffer.gold.char = unitOffer.gold.unticked.char
-        unitOffer.gold.pos = unitOffer.gold.unticked.pos
-        unitOffer.gold.on = false
+        if gold ~= 'gold' then
+            unitOffer.gold.char = unitOffer.gold.unticked.char
+            unitOffer.gold.pos = unitOffer.gold.unticked.pos
+            unitOffer.gold.on = false
+        end
     else -- tick
         unitOffer.gold.char = unitOffer.gold.ticked.char
         unitOffer.gold.pos = unitOffer.gold.ticked.pos
@@ -399,6 +499,7 @@ end
 
 -- setButton Function Definitions
 setButtons.init = function()
+    waitForFunction('allStop')
     setButtons.create(setButtons.get('ready'))
 end
 
@@ -409,10 +510,16 @@ setButtons.create = function(buttons)
 end
 
 setButtons.disableButtons = function()
+    if tool.tableSize(getObjectsWithTag('maptile_Core')) > 1 then
+        if unitOffer.automatic.on then
+            b_setGoldTicked_Toggle('gold')
+        end
+    end
     setButtons.create(setButtons.get('disabled'))
 end
 
 setButtons.get = function(key)
+    self.clearButtons()
         if not unitOffer.gold.char or not unitOffer.gold.pos then
             unitOffer.gold.char = unitOffer.gold.unticked.char
             unitOffer.gold.pos = unitOffer.gold.unticked.pos
