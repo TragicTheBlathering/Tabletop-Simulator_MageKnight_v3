@@ -1,151 +1,218 @@
-local ShowCast = false
-local drawCount = 5
-local drawPos = false
-local Yoffset = 0.3
+local ShowCast = true
+local toolID = false
+local wait_ids = {}
+
 local rot = {down=Vector(0, 180, 180), up=Vector(0,180,0)}
-local keepCount = {count=0, textCol = "Black", butttonCol = "White"}
-local modiCount = {count=0, textCol = "Black", butttonCol = "White"}
+local baseCount = 5
+local keepCount = {on=false, count=0, butCol='White', txtCol='Black'}
+local modiCount = {on=false, count=0, butCol='White', txtCol='Black'}
+
+local drawPosition = require("/MageKnightV3/GlobalVariables").DrawToHandPositions
+local tags_DiscardPile = require("/MageKnightV3/GlobalVariables").PlayerBoardDiscardPiles
+local tagKey = false
 
 function onload()
+    --print(' -- Code : Draw Buttons [W.I.P]')
     setVariables()
     makeButtons()
 end
 
 function setVariables()
-    drawPos = self.getPosition() + Vector(-12.37, 0, -15.16) + Vector(1, 0, 0)
-    drawPos.y = 4.1
-end
-
-function setDrawvariables()
-    local draw = cast(self.getPosition(), 'Decks').draw --decks.draw / discard
-
-    local inHand = cast(self.getPosition(), 'inHand')
-    local currentMax = drawCount+keepCount.count+modiCount.count
-    local count = currentMax-inHand
-
-    local deckSize = false
-    if draw then
-        if draw.type == 'Deck' then
-            deckSize = tableSize(draw.getObjects())
-            if count > deckSize then
-                count = deckSize
+    --print(logString(drawPosition, '\n--- drawPosition'))
+    if not toolID then -- setPlayer Board Number for Draw Tool
+        local toolID_names = {'PlayerTool_DrawCard_P1', 'PlayerTool_DrawCard_P2', 'PlayerTool_DrawCard_P3', 'PlayerTool_DrawCard_P4'}
+        for key, tag in ipairs(toolID_names) do
+            if self.hasTag(tag) then
+                toolID = tag
+                drawPosition = drawPosition[key]
+                tagKey = key
+                break
             end
         end
     end
-
-    local Y = Vector(0,0,0)
-    return draw, deckSize, count, Y
 end
 
-function b_Draw(obj, color, alt_click) --{-42.37, 7.54, -89.78} -- -12.37, 12.34, 15.16
-    local deck, deckSize, count, Y = setDrawvariables()
-    --print("draw : "..tostring(deck))    print("deckSize : "..tostring(deckSize))    print("count : "..tostring(count)) print("Y : "..tostring(Y))
-    if count > 0 and deck then
-        if deck.type == 'Deck' then
-            for i = 1, count do
-                local c = deck.takeObject({position=drawPos+Y, rotation=rot.down}, false)
-                c.setLock(true)
-                c.use_hands = false
-                Y.y = Y.y + Yoffset
-                Wait.condition(function()
-                    c.setRotationSmooth(rot.up, false)
-                    c.setLock(false)
-                    c.use_hands = true
-                end, function() return isSmooth(c) end)
+function b_Draw_IndividualCards(obj, color, alt_click)
+    Wait_countClicks(self, draw_IndividualCards)
+end
+
+function draw_IndividualCards(count)
+    local draw = cast(self.getPosition(), 'drawDeck')
+    if draw then
+        local pos = drawPosition
+        draw.count = count
+        if draw.limit == 1 then
+            local card = draw.deck
+            card.setPositionSmooth(pos, false, false)
+            card.setRotationSmooth(rot.down, false, false)
+            addTrashTag(card)
+            Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+        else
+            for i = 1, draw.count do
+                pos = pos + Vector(0,0.3,0)
+                local prams = {position=pos, rotation=rot.down}
+                local card = draw.deck.takeObject(prams)
+                addTrashTag(card)
+                Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+            end
+        end
+    end
+end
+
+function b_Draw_HandSize(obj, color, alt_click)
+    local draw = cast(self.getPosition(), 'drawDeck')
+    makeButtons('drawHand')
+    local waitForObjs = {}
+    if draw then
+        local pos = drawPosition
+        draw.count = setbuttonData().draw.total; if draw.limit < draw.count then draw.count = draw.limit end
+        if draw.limit == 1 then
+            local card = draw.deck
+            card.setPositionSmooth(pos, false, false)
+            card.setRotationSmooth(rot.down, false, false)
+            addTrashTag(card)
+            Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+            table.insert(waitForObjs, card)
+        else
+            for i = 1, draw.count do
+                pos = pos + Vector(0,0.3,0)
+                local prams = {position=pos, rotation=rot.down}
+                local card = draw.deck.takeObject(prams)
+                addTrashTag(card)
+                Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+                table.insert(waitForObjs, card)
+            end
+        end
+    end
+    Wait.condition(function() makeButtons() end, function() return objectsAreMoving(waitForObjs) end)
+end
+
+function addTrashTag(card)
+    for k, tag in ipairs(tags_DiscardPile) do
+        card.removeTag(tag)
+    end
+    card.addTag(tags_DiscardPile[tagKey])
+end
+
+function objectsAreMoving(...)
+    local args = {...}
+    local objList = {}
+    for k,var in pairs(args) do
+        if type(var) == "table" then
+            for k,v in pairs(var) do
+                if v then
+                    table.insert(objList, v)
+                end
             end
         else
-            local c = deck
-            c.setPositionSmooth(drawPos+Y, false)
-            c.setLock(true)
-            c.use_hands = false
-            Wait.condition(function()
-                c.setRotationSmooth(rot.up, false)
-                c.setLock(false)
-                c.use_hands = true
-            end, function() return isSmooth(c) end)
+            if var then
+                table.insert(objList, var)
+            end
         end
     end
+    --print(logString(objList, '\n---- objList'))
+    for k, obj in pairs(objList) do
+        if obj then
+            if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+        end
+    end
+    return true
+end
+-- obj.isSmoothMoving() shorthand ----------------------------------------------
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
 end
 
-function b_DrawCounter(obj, color, alt_click)
-    local decks = cast(self.getPosition(), 'Decks')
-    local inHand = cast(self.getPosition(), 'inHand')
-
-    print("Draw Counter")
-end
-
-function b_DrawCount(obj, color, alt_click)
+function b_setBaseCount(obj, color, alt_click)
     if not alt_click then
-        drawCount = drawCount + 1
-        if drawCount > 15 then drawCount = 15 end
+        baseCount = baseCount + 1
+        if baseCount > 20 then baseCount = 20 end
     else
-        drawCount = drawCount - 1
-        if drawCount < 5 then drawCount = 5 end
+        baseCount = baseCount - 1
+        if baseCount < 5 then baseCount = 5 end
     end
     makeButtons()
 end
 
-function b_setModiCount(obj, color, alt_click)
+function b_setModiCount(obj, color, alt_click) -- modiCount = {on=false, count=0, butCol='White', txtCol='Black'}
     if not alt_click then
+        modiCount.on = true
         modiCount.count = modiCount.count + 1
-        if modiCount.count > 15 then modiCount.count = 15 end
-        modiCount.textCol = 'White'
-        modiCount.butttonCol = 'Green'
+        if modiCount.count > 11 then modiCount.count = 11 end
+        modiCount.butCol = 'Green'
+        modiCount.txtCol = 'White'
     else
-        modiCount.count = 0
-        modiCount.textCol = 'Black'
-        modiCount.butttonCol = 'White'
+        modiCount.on = true
+        modiCount.count = modiCount.count - 1
+        if modiCount.count < 0 then modiCount.count = 0 end
+        modiCount.butCol = 'Green'
+        modiCount.txtCol = 'White'
     end
+
+    if modiCount.count == 0 then
+        modiCount.on = false
+        modiCount.butCol = 'White'
+        modiCount.txtCol = 'Black'
+    end
+
     makeButtons()
 end
 
 function b_setKeepCount(obj, color, alt_click)
     if not alt_click then
-        keepCount.count = cast(self.getPosition(), 'keepCount')
-        if keepCount.count ~= false then
-            keepCount.textCol = 'White'
-            keepCount.butttonCol = 'Green'
+        local keeps = cast(self.getPosition(), 'keepCount')
+        if keeps then --keepCount = {on=false, count=0, butCol='White', txtCol='Black'}
+            keepCount.on = true
+            keepCount.count = keeps
+            keepCount.butCol = 'Green'
+            keepCount.txtCol = 'White'
         else
+            keepCount.on = off
             keepCount.count = 0
-            keepCount.textCol = 'Black'
-            keepCount.butttonCol = 'White'
+            keepCount.butCol = 'White'
+            keepCount.txtCol = 'Black'
         end
     else
-        keepCount.count = 0
-        keepCount.textCol = 'Black'
-        keepCount.butttonCol = 'White'
+        keepCount.on = false
+        keepCount.butCol = 'White'
+        keepCount.txtCol = 'Black'
     end
     makeButtons()
 end
 
 function cast(castOrigin, switch)
-    if switch == 'Decks' then
-        local zone = Physics.cast({ origin=castOrigin + Vector(-17.8,5,-7.5),
-            direction={0,1,0},
-            type=3,
-            max_distance=0,
-            size=Vector(9.5,10,5),
-            debug=ShowCast})
-        return processCast_FindDecks(zone, castOrigin+Vector(-17.4,10,-7.5))
-
-    elseif switch == 'inHand' then
-        local zone = Physics.cast({ origin=castOrigin + Vector(6.5,10,-15),
-            direction={0,1,0},
-            type=3,
-            max_distance=0,
-            size=Vector(33,5,5),
-            debug=ShowCast})
-        return processCast_findInHand(zone)
-
-    elseif switch == 'keepCount' then
-        local zone = Physics.cast({ origin=castOrigin + Vector(-17.3,7,-16.5),
-            direction={0,1,0},
-            type=3,
-            max_distance=0,
-            size=Vector(2,2,2),
-            debug=ShowCast})
+    local zone = {}
+    if switch == 'keepCount' then
+        zone = Physics.cast({origin=castOrigin + Vector(-17.3,7,-16.5)
+                            ,direction={0,1,0}, type=3, max_distance=0, size=Vector(2,2,2)
+                            ,debug=ShowCast})
         return processCast_findConquredKeeps(zone)
+
+   elseif switch == 'drawDeck' then
+       zone = Physics.cast({origin=castOrigin + Vector(-20.25,7,-7.5)
+                           ,direction={0,1,0}, type=3, max_distance=0, size=Vector(2,2,2)
+                           ,debug=ShowCast})
+       return processCast_findDrawDeck(zone)
+   end
+end
+
+function processCast_findDrawDeck(zone)
+    local draw = false
+    for k,v in pairs(zone) do
+        local obj = v.hit_object
+        if obj.type == 'Deck' or obj.type == 'Card' then
+            draw = {deck=obj}
+            local limit = obj.getQuantity(); if limit == -1 then limit = 1 end
+            draw.limit = limit
+            break
+        end
     end
+    return draw
 end
 
 function processCast_findConquredKeeps(zone)
@@ -160,75 +227,69 @@ function processCast_findConquredKeeps(zone)
     return keeps
 end
 
-function processCast_findInHand(zone)
-    local z = {}
-    for k,v in pairs(zone) do
-        local obj = v.hit_object
-        if obj.type == 'Card' then
-            table.insert(z, obj)
+function setbuttonData(disable)
+    disable = disable or false
+    --print(disable)
+    local z={}
+    z.draw = {}
+    z.draw.base = baseCount
+    z.draw.keep = keepCount
+    z.draw.modi = modiCount
+    z.draw.total = baseCount
+        if keepCount.on then z.draw.total = z.draw.total + keepCount.count end
+        if modiCount.on then z.draw.total = z.draw.total + modiCount.count end
+
+    z.b_Draw_HandSize = {b='b_Draw_HandSize', c='White', t='Black'}
+        --z.b_Draw_HandSize.b = 'b_Draw_HandSize'
+        --z.b_Draw_HandSize.c = 'White'
+        --z.b_Draw_HandSize.t = 'Black'
+    --print(logString(z, '\n -- z'))
+    if disable then
+        if disable == 'drawHand' then
+            z.b_Draw_HandSize.b = 'b_disable'
+            z.b_Draw_HandSize.c = 'Red'
+            z.b_Draw_HandSize.t = 'White'
         end
     end
-
-    return tableSize(z)
+    return z
 end
 
-function processCast_FindDecks(zone, xPos)
-    xPos = xPos.x
-    local foundDraw = false
-    local foundDiscard = false
-
-    for k,v in pairs(zone) do
-        local obj = v.hit_object
-        if obj.type == 'Deck' or obj.type == 'Card' then
-            if obj.getPosition().x < xPos then
-                foundDraw = obj
-            elseif obj.getPosition().x > xPos then
-                foundDiscard = obj
-            end
-        end
-    end
-
-    return {draw=foundDraw, discard=foundDiscard}
-end
-
-function makeButtons()
+function b_disable()end-- print('disabled') end
+function makeButtons(disable)
+    disable = disable or false
+    local bData = setbuttonData(disable)--print(logString(bData, '\n -- bData'))
     self.clearButtons()
-    local buttons = {}
-    local drawOne  = {label="Draw Card", click_function="b_DrawCounter", function_owner=self,
-                      position={3.94,2,-5.3}, rotation={0,180,0}, height=400, width=1900, font_size=250
-                    , scale={0.3,0.3,0.3}
-                    , color='Green', font_color='White',
-                     }
-    table.insert(buttons, drawOne)
-
-    local drawButton = {label="Draw to "..(drawCount+keepCount.count+modiCount.count), click_function="b_Draw", function_owner=self,
-                        position={4.65,2,-3.9}, rotation={0,180,0}, height=600, width=1900, font_size=250
-                      , scale={0.75,0.75,0.75}
-                    --, color='Green', font_color='White',
-                    }
-    table.insert(buttons, drawButton)
-
-    local baseDrawCount = {label=drawCount, click_function="b_DrawCount", function_owner=self,
-                           position={5.75,2,-4.8}, rotation={0,180,0}, height=400, width=450, font_size=250
-                          , scale={0.75,0.75,0.75}
-                         -- , color='Green', font_color='White',
-                        }
-    table.insert(buttons, baseDrawCount)
-
-
-    local drawKeeps    = {label="+"..keepCount.count, click_function="b_setKeepCount", function_owner=self,
-                          position={4.3,2,-4.8}, rotation={0,180,0}, height=400, width=450, font_size=250
-                        , scale={0.75,0.75,0.75}
-                        , color=keepCount.butttonCol, font_color=keepCount.textCol
-                         }
-    table.insert(buttons, drawKeeps)
-
-    local drawModifier  = {label="+"..modiCount.count, click_function="b_setModiCount", function_owner=self,
-                          position={3.55,2,-4.8}, rotation={0,180,0}, height=400, width=450, font_size=250
-                        , scale={0.75,0.75,0.75}
-                        , color=modiCount.butttonCol, font_color=modiCount.textCol
-                         }
-    table.insert(buttons, drawModifier)
+    local buttons, button = {}, {}
+        -- Draw Single Cards, one at a time.
+        button = {label="Draw Card", click_function="b_Draw_IndividualCards", function_owner=self,
+                  position={3.94,2,-5.3}, rotation={0,180,0}, height=400, width=1900, font_size=250
+                 ,scale={0.3,0.3,0.3}
+                 ,color='Green', font_color='White'
+                 };table.insert(buttons, button)
+        -- Draw to Hand Size, including Modifiers.
+        button = {label="Draw to "..(bData.draw.total), click_function=bData.b_Draw_HandSize.b, function_owner=self
+                 ,position={4.65,2,-3.9}, rotation={0,180,0}, height=600, width=1900, font_size=250
+                 ,scale={0.75,0.75,0.75}
+                 , color=bData.b_Draw_HandSize.c, font_color=bData.b_Draw_HandSize.t,
+                 };table.insert(buttons, button)
+        -- Set Base Hand Size.
+        button = {label=bData.draw.base, click_function="b_setBaseCount", function_owner=self
+                 ,position={5.75,2,-4.8}, rotation={0,180,0}, height=400, width=450, font_size=250
+                 , scale={0.75,0.75,0.75}, tooltip='Hand Size'
+                 ,color='Green', font_color='White',
+             };table.insert(buttons, button)
+        -- Set Keep Modifier.
+        button = {label="+"..bData.draw.keep.count, click_function="b_setKeepCount", function_owner=self
+                 ,position={4.3,2,-4.8}, rotation={0,180,0}, height=400, width=450, font_size=250
+                 ,scale={0.75,0.75,0.75}, tooltip='Keeps'
+                 ,color=bData.draw.keep.butCol, font_color=bData.draw.keep.txtCol
+                 };table.insert(buttons, button)
+         -- Set Manual Modifiers.
+        button = {label="+"..bData.draw.modi.count, click_function="b_setModiCount", function_owner=self
+                 ,position={3.55,2,-4.8}, rotation={0,180,0}, height=400, width=450, font_size=250
+                 ,scale={0.75,0.75,0.75}, tooltip='Manual Modifier'
+                 ,color=bData.draw.modi.butCol, font_color=bData.draw.modi.txtCol
+                 };table.insert(buttons, button)
 
     for k, b in pairs(buttons) do
         self.createButton(b)
@@ -245,20 +306,21 @@ function tableSize(t)
     return count
 end
 
--- obj.isSmoothMoving() shorthand ----------------------------------------------
-function isSmooth(obj)
-    if obj == nil then
-        return true
-    elseif not obj.isSmoothMoving() then
-        return true
-    end
-    return false
-end
+function Wait_countClicks(obj,func,delay)
+    --print('IN : waitUtils.countClicks')
+    local delay = delay or 0.8 -- better way of setting default parameters
+    wait_ids[obj] = wait_ids[obj] or { -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+      count = 0, -- We set the count to 0 here when the table is made
+    }
 
---- Zero Out Tool for Object Placment
-function zero_modifier(vector)
-    local mod_x = -vector.x
-    local mod_y = -vector.y
-    local mod_z = -vector.z
-    return Vector(mod_x, mod_y, mod_z)
+    function delayCall()
+        func(wait_ids[obj].count)
+        wait_ids[obj].waitID = nil -- remove the wait id when the function is called
+        wait_ids[obj].count = 0  -- We set the count to 0 here when the wait has ended due to timeout
+    end
+
+    if wait_ids[obj].waitID then Wait.stop(wait_ids[obj].waitID); wait_ids[obj].waitID = nil end -- end the previous wait if it exists
+    wait_ids[obj].waitID = Wait.time(delayCall, delay) -- make a new wait, but with _no_ count
+
+    wait_ids[obj].count = wait_ids[obj].count + 1 -- finally increment the click amount.
 end
