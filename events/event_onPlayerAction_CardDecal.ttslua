@@ -1,45 +1,34 @@
 local cardDecal = {}
 local ShowDebug = false
 
-    function cardDecal.setDecal(player, action, targets)
-        local cardList = setOnlyCardsDecks(targets)
-        if tableSize(cardList) > 0 then
-            checkDecals(cardList)
-        end
-    end
-
-    function addDecalOnObject(obj, rot, decal)
-        --print('Inside WTF?!')
-        local faceDown = true
-        if rot.z < 350 and rot.z > 5 then
-            faceDown = false
-        end
-
-        if faceDown then
-            --print('!!!')
-            obj.setDecals({decal})
-            obj.memo = setDiscardFlag(obj, true) -- true means "Add" memo, flase means clear memo
-        else
-            obj.setDecals({})
-            obj.memo = setDiscardFlag(obj)
-        end
-    end
-
-    function checkDecals(cardList)
-        local testLines = require("/MageKnightV3/GlobalVariables").testDropPositions
-        local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
-
-        for k, obj in pairs(cardList) do
-            local pos = obj.getPosition()
-            local rot = obj.getRotation()
-            if isPositionBetween(pos, testLines) then
-                --print('FLIP : INSIDE')
-                addDecalOnObject(obj, rot, decal)
+    function cardDecal.setDecal(player, action, objList)
+        local testLines = require("/MageKnightV3/GlobalVariables").Decal_testDropPositions
+        local face = {up=Vector(0,0,180), down=Vector(0,0,0)}
+        for k, obj in pairs(objList) do
+            if isPositionBetween(obj.getPosition(), testLines) then
+                local rot = Vector(0,0,obj.getRotation().z)
+                if rot:equals(face.up) then
+                    setDecals(obj,'remove')
+                elseif rot:equals(face.down) then
+                    setDecals(obj,'add')
+                end
             else
-                --print('FLIP : OUTSIDE')
-                obj.setDecals({})
-                obj.memo = setDiscardFlag(obj)
+                setDecals(obj,'remove')
             end
+        end
+    end
+
+    function setDecals(obj,switch)
+        if obj.type == 'Deck' then obj.hide_when_face_down = false end
+        local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
+        if switch == 'remove' then
+            obj.setDecals({})
+            obj.setMemo('decal')
+            --print('REMOVE : UP')
+        elseif switch == 'add' then
+            obj.setDecals({decal})
+            obj.setMemo('')
+            --print('ADD : DOWN')
         end
     end
 
@@ -62,30 +51,5 @@ local ShowDebug = false
         end
         return allFalse
     end
-
---if isBetween(v.p1, v.p2, pos.x) then
-function setOnlyCardsDecks(targets)
-    local z = {}
-    for k,v in pairs(targets) do
-        if v.type == 'Card' or v.type == 'Deck' then
-            table.insert(z, v)
-        end
-    end
-    return z
-end
-
-function isBetween(n1, n2, test)
-    local min, max = math.min(n1, n2), math.max(n1, n2)
-    return test > min and test < max
-end
-
--- Table Size ------------------------------------------------------------------
-function tableSize(t)
-    local count = 0
-    if t ~= nil then
-        for key,value in pairs(t) do count = count + 1 end
-    end
-    return count
-end
 
 return cardDecal

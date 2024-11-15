@@ -7,13 +7,14 @@ local MKevent = {}
     MKevent.OnDrop_monestery = require("/MageKnightV3/events/event_onObjectDrop_Monastery").dropTest
 
     --MKevent.DiceInHand = require("/MageKnightV3/events/event_DiceInHand").DiceInHand
-    -- Discard Decal on Card
-    MKevent.OnFlip_cardDecal = require("/MageKnightV3/events/event_onPlayerAction_CardDecal").setDecal
-    MKevent.OnDrop_cardDecal = require("/MageKnightV3/events/event_onObjectDrop_CardDecal").changeDiscardDecal
 
-    MKevent.OnSpawn_PlayerCard = require("/MageKnightV3/events/event_SpawnEvents").onPlayerCardSpawn
+    -- Discard Decal on Card
+    MKevent.OnDrop_cardDecal = require("/MageKnightV3/events/event_onObjectDrop_CardDecal").changeDiscardDecal
+    MKevent.OnFlip_cardDecal = require("/MageKnightV3/events/event_onPlayerAction_CardDecal").setDecal
 
     MKevent.OnDrop_Mana = require("/MageKnightV3/events/event_OnDrop_Mana").DropMana
+
+    --MKevent.OnSpawn_PlayerCard = require("/MageKnightV3/events/event_SpawnEvents").onPlayerCardSpawn
 
 local globalVar = {}
       globalVar.TrashSetting = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
@@ -49,13 +50,38 @@ end
 function onObjectSpawn(object)
     if object.type == 'Card' then
         object.setDecals({})
-        object.memo = ''
-        object.setGMNotes('')
     end
 end
 
 function onPlayerAction(player, action, targets)
     if action == Player.Action.FlipOver then
-        MKevent.OnFlip_cardDecal(player, action, targets)
+        local objsFlipped = onPlayerAction_Filter_PlayerCards(targets) -- {decalTargets=false, objectList={}}
+        if objsFlipped.decalTargets then
+            MKevent.OnFlip_cardDecal(player, action, objsFlipped.objectList)
+        end
     end
+end
+
+function onPlayerAction_Filter_PlayerCards(targets)
+    local z = {decalTargets=false, objectList={}}
+    for k, v in pairs(targets) do
+        if v.type == 'Card' or v.type =='Deck' then
+            if not v.hasTag('Cards_Tactic') then
+                table.insert(z.objectList, v)
+            end
+        end
+    end
+    if tableSize(z.objectList) > 0 then
+        z.decalTargets = true
+    end
+    return z
+end
+
+-- Table Size ------------------------------------------------------------------
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
 end
