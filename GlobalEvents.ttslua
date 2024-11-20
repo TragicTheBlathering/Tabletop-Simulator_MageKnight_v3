@@ -1,6 +1,6 @@
 local tool = {}
         tool.virtualTokenStack = require("/_libs/virtualTokenStacks/event_virtualTokenStacks")
-        tool.TrashCan = require("/MageKnightV3/TrashBags/trashCan_CoreSystem")
+        tool.TrashCan = require("/MageKnightV3/TrashBags/trashCan_EventCall")
 
 local MKevent = {}
     --MKevent.setDiscardPileButton = require("/MageKnightV3/pugDiscardPiles/event_pugDiscardButton")
@@ -17,7 +17,7 @@ local MKevent = {}
     --MKevent.OnSpawn_PlayerCard = require("/MageKnightV3/events/event_SpawnEvents").onPlayerCardSpawn
 
 local globalVar = {}
-      globalVar.TrashSetting = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
+      --globalVar.UniqueTrash = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
       globalVar.vStackData = require("/MageKnightV3/GlobalVariables").virtualTokenStackData
 
 function onLoad(save_state)
@@ -28,7 +28,7 @@ end
 
 function onObjectEnterContainer(bag, obj)
     tool.virtualTokenStack.enterContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack', 0.5)
-    tool.TrashCan.enterContainer(bag, obj, globalVar.TrashSetting)
+    tool.TrashCan.enterContainer(bag, obj, 0.8) -- No time == 0.8, if you send number as string, it will wait frames instead.
     --MKevent.setDiscardPileButton.enterContainer(bag, obj, obj.getTags())
 end
 
@@ -50,30 +50,31 @@ end
 function onObjectSpawn(object)
     if object.type == 'Card' then
         object.setDecals({})
+        --object.setMemo('')
     end
 end
 
 function onPlayerAction(player, action, targets)
     if action == Player.Action.FlipOver then
         local objsFlipped = onPlayerAction_Filter_PlayerCards(targets) -- {decalTargets=false, objectList={}}
-        if objsFlipped.decalTargets then
-            MKevent.OnFlip_cardDecal(player, action, objsFlipped.objectList)
+        if objsFlipped.decalTargets.found then
+            MKevent.OnFlip_cardDecal(player, action, objsFlipped.decalTargets.objectList)
         end
     end
 end
 
 function onPlayerAction_Filter_PlayerCards(targets)
-    local z = {decalTargets=false, objectList={}}
+    local z = {
+                decalTargets={found=false, objectList={}}
+              }
     for k, v in pairs(targets) do
         if v.type == 'Card' or v.type =='Deck' then
-            if not v.hasTag('Cards_Tactic') then
-                table.insert(z.objectList, v)
-            end
+            --print(k..' : '..v.getName())
+            z.decalTargets.found = true
+            table.insert(z.decalTargets.objectList, v)
         end
     end
-    if tableSize(z.objectList) > 0 then
-        z.decalTargets = true
-    end
+
     return z
 end
 

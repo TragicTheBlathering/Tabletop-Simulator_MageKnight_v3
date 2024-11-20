@@ -1,0 +1,113 @@
+function onload()end
+
+function process_DecalFlip(objList)
+    processObjects(objList)
+end
+
+function processObjects(objList)
+    for k, obj in pairs(objList) do
+        local tags = findTrashTags(obj)
+        local editAllowed = setValidPos(obj, tags.validPos)
+
+        if editAllowed then
+            local showDecal = setTags(obj, tags, editAllowed)
+            setDecal(obj, showDecal)
+        else
+            setTags(obj, tags, false)
+            setDecal(obj, false)
+        end
+    end
+end
+
+--[[
+
+if obj.type == 'Card' or obj.type == 'Deck' then
+    if obj.type == 'Deck' then obj.hide_when_face_down = false end
+    local tags = findTrashTags(obj)
+    local editAllowed = setValidPos(obj, tags.validPos)
+
+    if editAllowed then
+        local showDecal = setTags(obj, tags, editAllowed)
+        setDecal(obj, showDecal)
+    else
+        setTags(obj, tags, false)
+        setDecal(obj, false)
+    end
+
+end
+
+]]
+function setDecal(obj, showDecal)
+    local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
+    local decalApplied = obj.getDecals(); if decalApplied == nil then decalApplied = false else decalApplied = true end
+
+    if showDecal then
+        if not decalApplied then
+            obj.setDecals({decal})
+        end
+    else
+        if decalApplied then
+            obj.setDecals({})
+        end
+    end
+end
+
+function setTags(obj, tags, editAllowed)
+    local face = {up=0, down=180}
+
+    if editAllowed then
+        local rot = obj.getRotation().z; if rot >= 300 then rot = 0 end
+        if isAprox(face.up, rot, 50) then
+            obj.removeTag(tags.player)
+            obj.addTag(tags.remove)
+            return true
+
+        elseif isAprox(face.down, rot, 50) then
+            obj.removeTag(tags.remove)
+            obj.addTag(tags.player)
+            return false
+
+        end
+
+    else
+        obj.removeTag(tags.remove)
+        obj.addTag(tags.player)
+        return false
+    end
+
+    return false
+end
+
+function isAprox(num1, num2, margin)
+    margin = margin or 5 -- Default margin to 5 if not provided
+    return math.abs(num1 - num2) < margin
+end
+
+function setValidPos(obj, playerBoard)
+    local testLines = require("/MageKnightV3/GlobalVariables").Decal_testDropPositions
+    return isPointInValidPosition(testLines[playerBoard], testLines.height, obj.getPosition())
+end
+
+function findTrashTags(obj)
+    local objTags = obj.getTags()
+    local trashIDs = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
+    local z = false
+
+    for k, tag in ipairs(objTags) do
+        if string.find(tag, 'hand_Player', 1, true) then
+            z = {}
+            z.num = tag:match("%d+")
+            z.remove = trashIDs.remove
+            z.player = trashIDs.player..z.num
+            z.tags = objTags
+            z.validPos = 'player'..z.num
+        end
+    end
+    return z
+end
+
+function isPointInValidPosition(n, h, p)
+    local xInRange = p.x >= math.min(n.p1, n.p2) and p.x <= math.max(n.p1, n.p2)
+    local zInRange = p.z >= math.min(h.h1, h.h2) and p.z <= math.max(h.h1, h.h2)
+    return not xInRange and zInRange --{board = not xInRange and zInRange, table = zInRange}
+end

@@ -1,55 +1,8 @@
 local cardDecal = {}
-local ShowDebug = false
 
     function cardDecal.setDecal(player, action, objList)
-        local testLines = require("/MageKnightV3/GlobalVariables").Decal_testDropPositions
-        local face = {up=Vector(0,0,180), down=Vector(0,0,0)}
-        for k, obj in pairs(objList) do
-            if isPositionBetween(obj.getPosition(), testLines) then
-                local rot = Vector(0,0,obj.getRotation().z)
-                if rot:equals(face.up) then
-                    setDecals(obj,'remove')
-                elseif rot:equals(face.down) then
-                    setDecals(obj,'add')
-                end
-            else
-                setDecals(obj,'remove')
-            end
-        end
-    end
-
-    function setDecals(obj,switch)
-        if obj.type == 'Deck' then obj.hide_when_face_down = false end
-        local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
-        if switch == 'remove' then
-            obj.setDecals({})
-            obj.setMemo('decal')
-            --print('REMOVE : UP')
-        elseif switch == 'add' then
-            obj.setDecals({decal})
-            obj.setMemo('')
-            --print('ADD : DOWN')
-        end
-    end
-
-    function isPositionBetween(pos, testLines)
-        local allFalse = false
-        if pos.z < testLines.height.h1 and pos.z > testLines.height.h2 then
-            for _, points in pairs(testLines) do
-                if points and type(points) == "table" then
-                    if points.p1 and points.p2 then
-                        allFalse = true
-                        if (pos.x > points.p1 and pos.x < points.p2) or
-                        (pos.x > points.p2 and pos.x < points.p1) then
-                            return false
-                        end
-                    end
-                end
-            end
-        else
-            return false
-        end
-        return allFalse
+        local controlobject = getObjectFromGUID('2dcb89')
+        controlobject.call('process_DecalFlip', objList)
     end
 
 return cardDecal

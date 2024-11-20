@@ -1,5 +1,5 @@
 local ShowCast = true
-local toolID = false
+local tagIDs = false
 local wait_ids = {}
 
 local rot = {down=Vector(0, 180, 180), up=Vector(0,180,0)}
@@ -8,7 +8,6 @@ local keepCount = {on=false, count=0, butCol='White', txtCol='Black'}
 local modiCount = {on=false, count=0, butCol='White', txtCol='Black'}
 
 local drawPosition = require("/MageKnightV3/GlobalVariables").DrawToHandPositions
-local tags_DiscardPile = require("/MageKnightV3/GlobalVariables").PlayerBoardDiscardPiles
 local tagKey = false
 
 function onload()
@@ -17,28 +16,59 @@ function onload()
     makeButtons()
 end
 
-function setVariables()
-    --print(logString(drawPosition, '\n--- drawPosition'))
-    if not toolID then -- setPlayer Board Number for Draw Tool
-        local toolID_names = {'PlayerTool_DrawCard_P1', 'PlayerTool_DrawCard_P2', 'PlayerTool_DrawCard_P3', 'PlayerTool_DrawCard_P4'}
-        for key, tag in ipairs(toolID_names) do
-            if self.hasTag(tag) then
-                toolID = tag
-                drawPosition = drawPosition[key]
-                tagKey = key
-                break
-            end
+function dprint(txt, var)
+    txt = txt or '-------'
+    var = var or false
+    if self.hasTag('trashID_PlayerDiscard_p2') then
+        if var then
+            print(logString(var, '\n--- '..txt))
+        else
+            print('\n'..txt)
         end
     end
 end
+
+function setVariables()
+    if not tagIDs then
+        tagIDs = setTagIDs()
+        drawPosition = drawPosition[tagIDs.num]
+        --dprint('tagIDs', tagIDs)
+    end
+end
+
+function setTagIDs()
+    local selfTags = self.getTags()
+    local trashIDs = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
+    local z = {}
+        z.remove = 'trashID_RemovedFromGame'
+        z.num = findFirstNumber(selfTags)
+        z.handID = trashIDs.hand[z.num]
+        z.trashID = trashIDs.player..z.num
+    return z
+end
+
+function findFirstNumber(strList)
+    for _, str in ipairs(strList) do
+        local number = str:match("%d+") -- Find the first sequence of digits
+        if number then
+            return tonumber(number) -- Return the first number found
+        end
+    end
+    return nil -- Return nil if no number is found
+end
+
 
 function b_Draw_IndividualCards(obj, color, alt_click)
     Wait_countClicks(self, draw_IndividualCards)
 end
 
-function draw_IndividualCards(count)
+function draw_IndividualCards(clickCount)
     local draw = cast(self.getPosition(), 'drawDeck')
     if draw then
+        local drawData = setbuttonData()
+        local count = clickCount
+        if count > draw.limit then count = draw.limit end
+
         local pos = drawPosition
         draw.count = count
         if draw.limit == 1 then
@@ -59,28 +89,59 @@ function draw_IndividualCards(count)
     end
 end
 
+function setHandZoneLimit(draw)
+    local hand = getObjectsWithTag(tagIDs.handID)[1]
+    local handsize = 0
+    for k, o in ipairs(hand.getObjects()) do
+        if o.type =='Card' then
+            handsize = handsize + 1
+        end
+    end
+
+    local count = 0
+
+    if count < draw.maxDraw then
+        count = draw.maxDraw
+    end
+
+    local remainder = draw.maxDraw - handsize ; if remainder  < 0 then remainder = 0 end
+    if count > remainder then
+        count = remainder
+    end
+
+    if count > draw.limit then
+        count = draw.limit
+    end
+
+    return handsize, count
+end
+
 function b_Draw_HandSize(obj, color, alt_click)
     local draw = cast(self.getPosition(), 'drawDeck')
     makeButtons('drawHand')
     local waitForObjs = {}
     if draw then
-        local pos = drawPosition
-        draw.count = setbuttonData().draw.total; if draw.limit < draw.count then draw.count = draw.limit end
-        if draw.limit == 1 then
-            local card = draw.deck
-            card.setPositionSmooth(pos, false, false)
-            card.setRotationSmooth(rot.down, false, false)
-            addTrashTag(card)
-            Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
-            table.insert(waitForObjs, card)
-        else
-            for i = 1, draw.count do
-                pos = pos + Vector(0,0.3,0)
-                local prams = {position=pos, rotation=rot.down}
-                local card = draw.deck.takeObject(prams)
+        local drawData = setbuttonData()
+        draw.maxDraw = drawData.draw.total
+        draw.handSize, draw.count = setHandZoneLimit(draw)
+        if draw.count > 0 then
+            local pos = drawPosition
+            if draw.limit == 1 then
+                local card = draw.deck
+                card.setPositionSmooth(pos, false, false)
+                card.setRotationSmooth(rot.down, false, false)
                 addTrashTag(card)
                 Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
                 table.insert(waitForObjs, card)
+            else
+                for i = 1, draw.count do
+                    pos = pos + Vector(0,0.3,0)
+                    local prams = {position=pos, rotation=rot.down}
+                    local card = draw.deck.takeObject(prams)
+                    addTrashTag(card)
+                    Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+                    table.insert(waitForObjs, card)
+                end
             end
         end
     end
@@ -88,11 +149,27 @@ function b_Draw_HandSize(obj, color, alt_click)
 end
 
 function addTrashTag(card)
-    for k, tag in ipairs(tags_DiscardPile) do
-        card.removeTag(tag)
+    for k, tag in ipairs(card.getTags()) do
+        if string.find(string.lower(tag), string.lower('trashID_'), 1, true) then
+            card.removeTag(tagIDs.remove)
+            card.addTag(tagIDs.trashID)
+            card.addTag(tagIDs.handID)
+        end
     end
-    card.addTag(tags_DiscardPile[tagKey])
 end
+
+--[[
+--print('AddTrrashTags')
+for k, tag in ipairs(card.getTags()) do
+    if string.find(string.lower(tag), string.lower('trashID_'), 1, true) then
+        card.removeTag(tag)
+        card.addTag(tagIDs.player)
+        card.addTag(tagIDs.remove)
+        card.addTag(tagIDs.active)
+        break
+    end
+end
+]]
 
 function objectsAreMoving(...)
     local args = {...}

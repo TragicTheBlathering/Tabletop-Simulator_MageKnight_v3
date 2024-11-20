@@ -1,0 +1,67 @@
+local trashCodeObject = '1d469c'
+local trashCan_Universal = {}
+local trashTools = {wait={id={}}}
+--------------------------------------------------------------------------------
+------ Event Call --------- ----------------------------------------------------
+function trashCan_Universal.enterContainer(bag, obj, time)
+    if bag.hasTag('event_TrashCan') then
+        local id = 'trashCan_Universal'
+        trashTools.wait.dropIntoBox(id, bag, obj, callTrashCodeObject, time)
+    end
+end
+
+function callTrashCodeObject(prams)
+    local id = prams.waitID
+    local data = {trashBag=prams.bag}
+
+    Wait.stop(trashTools.wait.id[id]); trashTools.wait.id[id] = false
+
+    local trashCodeObj = getObjectFromGUID(trashCodeObject)
+    trashCodeObj.call('callTrash',data)
+end
+
+--[[****************************************************************************
+******* WAIT UTILS *************************************************************
+********************************************************************************]]
+function trashTools.wait.dropIntoBox(id, bag, objDrop, func, time) -- '0.8' ... PramTable for Sent Function and number or Fn string for frames or time
+    local time = time or 0.8
+    local funcPrams = {}
+    local bagID = bag.getGUID()
+    id = id..'_'..bagID
+
+    funcPrams.bag = bag
+    funcPrams.objDropData = objDrop.getData()
+    funcPrams.waitID = id
+
+    -- Test if time is a number as string, if it is, convert to number and switch to wait.frame instead of wait time.
+    local useFrames = false
+    local waitTime_inframes = nil
+    if type(time) == "string" then -- test if time is a string
+        if string.match(time, "%d") ~= nil then -- test if the string has numbers in it
+            if waitTime_inframes == nil then waitTime_inframes = 0 end
+            for numberStr in time:gmatch("%d+") do -- extract numbers in chat order tonumber() as var "sum"
+                waitTime_inframes = waitTime_inframes + tonumber(numberStr)
+                useFrames = true
+            end
+        end
+    end
+    if waitTime_inframes then time = waitTime_inframes end
+
+    -- Assign waitIDs
+    if trashTools.wait.id[id] then -- the the wiatID exists, then stop the wait function and set to false
+        --print('FOUND')
+        Wait.stop(trashTools.wait.id[id])
+        trashTools.wait.id[id] = false
+    else
+        --print('NOT FOUND')
+        trashTools.wait.id[id] = {}
+    end
+
+    if useFrames then
+        trashTools.wait.id[id] = Wait.frames(function() func(funcPrams) end, time)
+    else
+        trashTools.wait.id[id] = Wait.time(function() func(funcPrams) end, time)
+    end
+end
+
+return trashCan_Universal

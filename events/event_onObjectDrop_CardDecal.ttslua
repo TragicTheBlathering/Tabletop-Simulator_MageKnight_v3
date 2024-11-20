@@ -1,26 +1,28 @@
 local CardDrop = {}
     function CardDrop.changeDiscardDecal(obj)
-    --print('DROP CARD OR DECK')
-        local testLines = require("/MageKnightV3/GlobalVariables").Decal_testDropPositions
-        local face = {up=Vector(0,0,180), down=Vector(0,0,0)}
-        --print(logString(testLines, '\n--- testLines'))
-        --print(logString(decal, '\n--- decal'))
-        local pos = obj.getPosition()
-        local rot = obj.getRotation()
-        if isPositionBetween(pos, testLines) then
-            local rot = Vector(0,0,obj.getRotation().z)
-            if rot:equals(face.up) then
-                print('DROP : INSIDE - ADD')
-                setDecals_Drop(obj,'add')
-            elseif rot:equals(face.down) then
-                print('DROP : INSIDE - REMOVE')
-                setDecals_Drop(obj,'remove')
-            end
-        else
-            print('DROP : OUTSIDE')
-            setDecals_Drop(obj,'remove')
-        end
+        --print('DROP CARD OR DECK')
     end
+--[[
+local testLines = require("/MageKnightV3/GlobalVariables").Decal_testDropPositions
+local face = {up=Vector(0,0,180), down=Vector(0,0,0)}
+--print(logString(testLines, '\n--- testLines'))
+--print(logString(decal, '\n--- decal'))
+local pos = obj.getPosition()
+local rot = obj.getRotation()
+if isPositionBetween(pos, testLines) then
+    local rot = Vector(0,0,obj.getRotation().z)
+    if rot:equals(face.up) then
+        --print('DROP : INSIDE - ADD')
+        setDecals_Drop(obj,'add')
+    elseif rot:equals(face.down) then
+        --print('DROP : INSIDE - REMOVE')
+        setDecals_Drop(obj,'remove')
+    end
+else
+    --print('DROP : OUTSIDE')
+    setDecals_Drop(obj,'remove')
+end
+]]
 
     function setDecals_Drop(obj,switch)
         if obj.type == 'Deck' then obj.hide_when_face_down = false end
