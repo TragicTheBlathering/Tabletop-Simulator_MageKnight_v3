@@ -1,0 +1,519 @@
+local Showbug = false
+local dprint = require("/_libs/debug/dPrint").dprint
+
+local trash_Tags = {
+    tag_validTrashCan = 'event_TrashCan', tag_validTrashOBJ = "trash_discardobject",
+    trashID_="trashid_",
+    discardObject='trash_discardobject', discardTarget='trash_discardtarget', specialCase='trash_specialcase', deleteme='trash_deleteme', manaDie='trash_manadie',
+} --trash_Tags.discardTarget
+
+--local tools = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
+
+--[[****************************************************************************
+***** Function Called by Event to Start Trash Cascade **************************
+********************************************************************************]]
+function callTrash(data)
+    --dprint('---- Clear : callTrash(data)')
+    local TrashBag = data.trashBag
+    local removedDeckList = nil
+
+    Wait.frames(function()
+        removedDeckList = removeDecksFormTrash(TrashBag)
+        Wait.frames(function() processAllTrash(TrashBag, removedDeckList) end, 1) -- wait for removed decks to spawn compleatly
+    end, 1)
+
+end
+
+--[[****************************************************************************
+***** Process Items inside Trash Bag *******************************************
+********************************************************************************]]
+function processAllTrash(TrashBag, removedDeckList)
+    local uniqueCastLocatons = setUniqueCastLocations(TrashBag, removedDeckList) --dprint('uniqueCast', uniqueCastLocatons)
+    processObjectsIn_Container(uniqueCastLocatons, TrashBag, removedDeckList)
+    --dprint('/n---- Clear : processTrashBag(TrashBag, removedDeckList)')
+end
+
+--trash_Tags.discardObject='trash_discardobject', discardTarget='trash_discardtarget',
+--specialCase='trash_specialcase',
+--deleteme='trash_deleteme', manaDie='trash_manadie',
+
+function processObjectsIn_Container(uniqueCast, container, removedDeckList)
+    local Y = {}
+    local dieCount = {}
+    --- Run the objects inside the actual TrashCan
+    local containedObjs = container.getObjects()
+    local idex = reverseIndex(containedObjs)
+    for k,dex in ipairs(idex) do
+        local objInContainer = containedObjs[dex+1]
+        local objTags = objInContainer.tags
+        if objTags[1] then
+            if singleTagFoundinTagList(objTags, trash_Tags.deleteme) then --Delete Me Objects
+                local obj = container.takeObject({index=dex})
+                destroyObject(obj)
+
+            elseif singleTagFoundinTagList(objTags, trash_Tags.manaDie) then -- Die Objects
+                dieCount = sendDieBackToSource(objInContainer, dex, dieCount, container)
+
+            elseif singleTagFoundinTagList(objTags, trash_Tags.discardObject) then -- Most Objects
+                Y = moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, container, container)
+            end
+        end
+    end
+    --- Run the Cards inside the removedDecks
+
+    if removedDeckList then
+        for k, deck in ipairs(removedDeckList) do
+            local containedObjs = deck.getObjects()
+            local idex = reverseIndex(containedObjs)
+            for k,dex in ipairs(idex) do
+                local objInContainer = containedObjs[dex+1]
+                local objTags = objInContainer.tags
+                if objTags[1] then
+                    if singleTagFoundinTagList(objTags, trash_Tags.discardObject) then
+                        --print('GenericDiscardObject')
+                        Y = moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, deck, container)
+                    else
+                        local obj = deck.takeObject({index=dex})
+                        destroyObject(obj)
+                    end
+                end
+            end
+        end
+    end
+end
+--[[****************************************************************************
+***** Dice Code  ***************************************************************
+********************************************************************************]]
+function sendDieBackToSource(objInContainer, dex, dieCount, container)
+    local returnDietoSource = require("/MageKnightV3/TrashBags/trashCan_DieToSource").returnDie
+    return returnDietoSource(objInContainer, dex, dieCount, container)
+end
+--[[****************************************************************************
+***** Move Code  ***************************************************************
+********************************************************************************]]
+function moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, container, trashBag)
+    --dprint('objInContainer', objInContainer)
+    local loc = returnTagsfoundinTagList('trashID_', objInContainer.tags, true)
+    if not Y[loc] then Y[loc] = Vector(0,1,0) end
+
+    local pos = uniqueCast[loc].getPosition()
+    --local obj = container.takeObject({position=pos+Y[loc], index=dex})
+    local obj = container.takeObject({index=dex})
+    local posAboveTrash = placeTopOrBot_ofObject(trashBag,'top')
+    obj.setPosition(posAboveTrash)
+    obj.setPositionSmooth(pos+Y[loc], false, false)
+
+    obj.use_hands = false
+    obj.setPositionSmooth(pos+Y[loc], false, false)
+    Wait.condition(function() obj.use_hands = true end, function() return isSmooth(obj) end)
+
+    local offset = Vector(0,0.5,0) + Vector(0, obj.getBounds().size.y+0.2, 0)
+    Y[loc] = Y[loc] + offset
+
+    return Y
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+--[[****************************************************************************
+***** Casting Code *************************************************************
+********************************************************************************]]
+--- UniqueCastLocations(TrashBag, removedDeckList) -----------------------------
+--- Build a list from trash and find the unique locations for each discard, then cast at that location and return found data.
+--- Loop though trash objects and find the "DiscardMe_" Tag.. and then extract the "kind" of discard type as well as the unique Identifyer (ID) of the discard
+function setUniqueCastLocations(TrashBag, removedDeckList)
+    local location = {}
+
+    -- Proccess Contents of TrashBag
+    for k,obj in ipairs(TrashBag.getObjects()) do
+        local objTags = obj.tags
+        if objTags[1] then
+            local id = setDiscardContainerTargets(obj, TrashBag, objTags)
+            if id.validDiscardObj then
+                if not location[id.trashTarget] then
+                    location[id.trashTarget] = id.validDiscardObj -- location[trashID_name] = true
+                end
+            end
+        end
+    end
+
+    -- Proccess Each removed Deck and the Cards inside it
+    if removedDeckList then
+        for k, deck in ipairs(removedDeckList) do
+            for k,obj in ipairs(deck.getObjects()) do
+                local objTags = obj.tags
+                if objTags[1] then
+                    local id = setDiscardContainerTargets(obj, TrashBag, objTags)
+                    if id.validDiscardObj then
+                        if not location[id.trashTarget] then
+                            location[id.trashTarget] = id.validDiscardObj
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    location = findDiscardTargets(location)
+
+    --dprint('---- Clear : setUniqueCastLocations(TrashBag, removedDeckList)')
+    return location
+end
+
+function findDiscardTargets(location)
+
+    for loc, valid in pairs(location) do
+        local discardTargetTag = 'trash_DiscardTarget'
+        local targetObj = getObjectsWithAllTags({loc, discardTargetTag})[1]
+        location[loc] = cast(targetObj.getPosition(), 'DiscardLocation')
+    end
+
+    return location
+end
+
+--[[****************************************************************************
+***** Cast Code ****************************************************************
+********************************************************************************]]
+function cast(castOrigin, switch)
+    local zone = Physics.cast({ origin=castOrigin + Vector(0,1,0),
+                                direction={0,1,0},
+                                type=3,
+                                max_distance=0,
+                                size=Vector(2,2,2),
+                                debug=Showbug})
+
+    if switch == 'DiscardLocation' then
+        --processCast_DiscardLocation(zone, castOrigin)
+        return processCast_DiscardLocation(zone, castOrigin)
+    end
+end
+
+function processCast_DiscardLocation(zone)
+    --dprint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    for k,v in pairs(zone) do
+        local obj = v.hit_object
+        if obj.type == "Card" or obj.type == "Deck" then
+              return obj
+        else
+            if obj.hasTag(trash_Tags.discardTarget) then
+                return obj
+            end
+        end
+    end
+end
+
+--[[****************************************************************************
+***** Tag Processing and Data Gathering ****************************************
+********************************************************************************]]
+function setDiscardContainerTargets(obj, TrashBag, objTags)
+    local id = {}
+    for k,t in ipairs(objTags) do
+        local tag = string.lower(t)
+        if tag == trash_Tags.discardObject then
+            id.validDiscardObj = true
+        elseif string.find(tag, trash_Tags.trashID_, 1, true) then
+            id.trashTarget = t
+        end
+    end
+    return id
+end
+
+--[[****************************************************************************
+***** Check Trashcan for Decks *************************************************
+********************************************************************************]]
+--- Remove Decks form the Trash Bag --------------------------------------------
+function removeDecksFormTrash(TrashBag)
+    --dprint('---- Clear : removeDecksFormTrash(TrashBag)')
+    local tag = trash_Tags.tag_validTrashOBJ
+    local type = 'Deck'
+    local containedObjects = TrashBag.getData().ContainedObjects
+    local indexesToRemove = reverseIndex_TagedOnly(tag, containedObjects, 'Deck')
+    if indexesToRemove[1] then
+        return removeDecks_SetPosition(indexesToRemove, TrashBag, Showbug)--, 'debug') -- debug will move decks to a visible locaiton before running code
+    else
+        return false
+    end
+end
+
+function removeDecks_SetPosition(indexesToRemove, TrashBag, debug)
+    debug = debug or false; local count = 0
+    local z = {}
+    local posAbove = placeTopOrBot_ofObject(TrashBag,'top')
+    for i,indexToRemove in ipairs (indexesToRemove) do
+        local obj = TrashBag.takeObject({ index = indexToRemove })
+            if debug then
+                --print('debug')
+                local sizeCard = obj.getBounds().size
+                local trashSize = TrashBag.getBounds().size
+                local offset = Vector(count,0,0-trashSize.z-2.8)
+                obj.setPosition(posAbove+offset)
+                count = count + sizeCard.x + 0.6
+            else
+                obj.setPosition(posAbove+Vector(0,-70,0))
+            end
+        obj.setRotation(Vector(0,180,0))
+        obj.setLock(true)
+        local newDeck = deck_checkThrowAwayDecals(obj)
+        table.insert(z, newDeck)
+    end
+    if z[1] then return z else return {} end
+end
+
+-- Removed Decks need to be checked for the throw away decal.
+-- No Decal, then all cards inside the deck need the trashID chnaged to : trashID_RemovedFromGame
+-- YES Decal, then all cards inside the deck need the trashID chnaged to : trashID_PlayerDiscard_p#
+function deck_checkThrowAwayDecals(obj)
+    local decals = obj.getDecals()
+    local deckData = obj.getData()
+    --dprint('deckData', deckData)
+
+    local deckHasDeecal = deckData.AttachedDecals
+
+    if deckHasDeecal then
+        for k, card in ipairs(deckData.ContainedObjects) do
+            local tags = card.Tags
+            deckData.ContainedObjects[k].Tags = setDiscardLocationTag(tags)
+        end
+    else
+        for k, card in ipairs(deckData.ContainedObjects) do
+            local tags = card.Tags
+            local playerNum = findPlayuerNumber(tags)
+            deckData.ContainedObjects[k].Tags = setDiscardLocationTag(tags, playerNum)
+        end
+    end
+
+    destroyObject(obj)
+    local deck = spawnObjectData({data=deckData})
+    return deck
+end
+
+-- Trash IDs applied to cards in deck_checkThrowAwayDecals(obj) is done here
+function setDiscardLocationTag(oldTags, playerNum)
+    local tags = {}
+
+    if playerNum then
+        for k, t in ipairs(oldTags) do
+            if not string.find(t, 'trashID_', 1, true) then
+                table.insert(tags, t)
+            end
+        end
+        table.insert(tags, 'trashID_PlayerDiscard_p'..playerNum)
+    else
+        for k, t in ipairs(oldTags) do
+            if not string.find(t, 'trashID_', 1, true) then
+                table.insert(tags, t)
+            end
+        end
+        table.insert(tags, 'trashID_RemovedFromGame')
+    end
+
+    return tags
+end
+
+function findPlayuerNumber(tags) -- extract nukmber from string
+    local num = false
+
+    for k, tag in ipairs(tags) do
+        if string.find(tag, 'hand_Player', 1, true) then
+            num=string.match(tag, "%d")
+        end
+    end
+
+    return num
+end
+
+--[[****************************************************************************
+***** Take Object Tools ********************************************************
+********************************************************************************]]
+function reverseIndex(containedObjects)
+    local z = {}
+    local tagType, isGetData = getTagKey(containedObjects)
+    for i, obj in pairs(containedObjects) do
+        local index = setIndex(i, isGetData, obj)
+        table.insert(z, index)
+    end
+    table.sort(z, function(a,b) return a>b end)
+    --print(logString(z, "\n ---- z"))
+    return z
+end
+
+function reverseIndex_TagedOnly(tags, containedObjects, ...)
+    --dprint('---- Clear : reverseIndex_TagedOnly(tags, containedObjects, ...)')
+    local arg = {...}; local type = false; local searchSubStr = false
+    for k, v in ipairs(arg) do
+        if tostring(v) == 'true' or tostring(v) == 'false' then
+            searchSubStr = v
+        else
+            type = v
+        end
+    end
+
+    local tagType, isGetData = getTagKey(containedObjects)
+    local tagFound = isTagFound_ObjList(containedObjects, tags, searchSubStr)
+
+    local z = {}
+    if tagFound then
+        --print("\n===========")
+        for i, obj in pairs(containedObjects) do
+            local index = setIndex(i, isGetData, obj)
+            local validTag = singleTagFoundinTagList(obj[tagType], tags)
+            if type then
+                if obj.Name == type and validTag then
+                    table.insert(z, index) -- add all objs with valid tags AND type ("deck")
+                end
+            elseif validTag then
+                table.insert(z, index)-- add all objs with valid tags
+            end
+        end
+    end
+    table.sort(z, function(a,b) return a>b end)
+    --print(logString(z, "\n ---- z"))
+    return z
+end
+
+function setIndex(i, isGetData, obj)
+    local index = i
+    if isGetData then
+        return index-1
+    else
+        return obj.index
+    end
+end
+
+--------------------------------------------------------------------------------
+--- posFromObject(obj,switch) - 'top', 'bot'------------------------------------
+--- create a pos value that is just above or below the container object --------
+--- switch == 'top' -- Just above container
+--- switch == 'bot' -- Just below container
+--- switch == number -- use the number to set Y position
+function placeTopOrBot_ofObject(obj,switch)
+    switch = switch or 'top'
+
+    if switch == 'top' then
+        return obj.getPosition() + Vector(0, obj.getBounds().size.y+0.01, 0)
+    elseif switch =='bot' then
+        return obj.getPosition() + Vector(0, -obj.getBounds().size.y-0.01, 0)
+    elseif type(switch) == 'number' then
+        return Vector(0, switch, 0)
+    else
+        return Vector(0,0,0)
+    end
+end
+--[[****************************************************************************
+***** tag Utils ****************************************************************
+********************************************************************************]]
+function returnTagsfoundinTagList(tagListToFind, tagListToSearch, useFind) -- useFind BOOL : use keys insead of values form tagList
+    local foundTags = {}
+    useFind = useFind or false
+
+    if type(tagListToFind) == "string" then -- if tagList to find is a single string, put it inside a table, otherwise use table as is.
+        tagListToFind = {tagListToFind}
+    end
+
+    for k, t in pairs(tagListToSearch) do
+        local objTag = string.lower(t)
+        for key, findTag in pairs(tagListToFind) do
+            if useFind then
+                if string.find(objTag, string.lower(findTag), 1, true) then
+                    table.insert(foundTags, t)
+                end
+            else
+                if objTag == string.lower(findTag) then
+                    table.insert(foundTags, t)
+                end
+            end
+        end
+    end
+
+    if tableSize(foundTags) == 0 then
+        foundTags = false
+    elseif tableSize(foundTags) == 1 then
+        foundTags = foundTags[1]
+    end
+
+    return foundTags
+end
+
+-- Table Size ------------------------------------------------------------------
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end
+
+function getTagKey(objList)
+    if objList[1] then
+        if objList[1].Nickname then
+            return 'Tags', true
+        else
+            return 'tags', false
+        end
+    end
+    --print("--== : tagUtils.getTagKey : obj")
+    return false, false
+end
+--- TagFound --- ---------------------------------------------------------------
+--- search a tag list for another tag. useFind is a bool. flase/nil ==  look for exact match. true will use string.find()
+function isTagFound_ObjList(objList, tags, subStringSearch) -- useFind BOOL : use == or use string.find()
+    local tKey = getTagKey(objList) -- set o.Tags or o.tags
+    local tagList = {}
+
+    if type(tags) == "string" then -- if tag to search is a single string, put it inside a table, otherwise use table as is.
+        tags = {string.lower(tags)}
+    end
+
+    if tKey then
+        for k,o in pairs(objList) do
+            if o[tKey] then
+                for k, ot in pairs(o[tKey]) do
+                    local t = string.lower(ot)
+                    tagList[t] = false
+                end
+            end
+        end
+
+        for objTags,_  in pairs(tagList) do
+            for k, listTag in pairs(tags) do
+                if subStringSearch then
+                    if string.find(objTags, string.lower(listTag), 1, true) then
+                        return true
+                    end
+                else
+                    if objTags == tostring(listTag) then
+                        return true -- retun true if at least 1 tag matchs
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- Return true or false is a single tag is found in a list of tags
+function singleTagFoundinTagList(tagTable, str, find)
+    if tagTable then
+        find = find or false
+        for k, line in pairs(tagTable) do
+            if find then
+                if string.find(string.lower(line), string.lower(str), 1, true) then
+                    return true
+                end
+            else
+                if string.lower(line) == string.lower(str) then
+                    return true
+                end
+            end
+        end
+        return false
+    else
+        return false
+    end
+end

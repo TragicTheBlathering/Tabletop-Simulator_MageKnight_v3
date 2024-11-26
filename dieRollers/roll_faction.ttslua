@@ -77,7 +77,7 @@ function onload(saved_data)
         spawnedDice = {}
     end
 
-    math.randomseed(os.time())
+    --math.randomseed(os.time())
     createButtons()
 end
 

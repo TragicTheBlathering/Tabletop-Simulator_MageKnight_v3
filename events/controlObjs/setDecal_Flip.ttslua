@@ -19,30 +19,13 @@ function processObjects(objList)
     end
 end
 
---[[
-
-if obj.type == 'Card' or obj.type == 'Deck' then
-    if obj.type == 'Deck' then obj.hide_when_face_down = false end
-    local tags = findTrashTags(obj)
-    local editAllowed = setValidPos(obj, tags.validPos)
-
-    if editAllowed then
-        local showDecal = setTags(obj, tags, editAllowed)
-        setDecal(obj, showDecal)
-    else
-        setTags(obj, tags, false)
-        setDecal(obj, false)
-    end
-
-end
-
-]]
 function setDecal(obj, showDecal)
     local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
     local decalApplied = obj.getDecals(); if decalApplied == nil then decalApplied = false else decalApplied = true end
 
     if showDecal then
         if not decalApplied then
+            if obj.type == 'Deck' then obj.hide_when_face_down = false end
             obj.setDecals({decal})
         end
     else

@@ -1,0 +1,176 @@
+local spitDice = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+local rollingDie = {}
+local allStopNotStarted = true
+--math.randomseed(os.time())
+
+local DicePosition = {
+    Vector(-14.93, 2.44, -40.39),
+    Vector(-10.87, 2.44, -40.28),
+    Vector(-8.80, 2.44, -38.35),
+    Vector(-5.65, 2.44, -39.14),
+    Vector(-3.76, 2.44, -38.83),
+    Vector(-0.54, 2.44, -38.19),
+    Vector(-0.54, 2.44, -38.19),
+    Vector(-13.60, 2.44, -43.20),
+    Vector(-10.93, 2.44, -45.18),
+    Vector(6.62, 2.44, -39.53),
+    Vector(-8.23, 2.44, -41.86),
+    Vector(-4.37, 2.44, -41.94),
+    Vector(1.63, 2.44, -40.60),
+    Vector(-5.75, 2.44, -43.79),
+    Vector(-2.65, 2.44, -44.52),
+    Vector(1.19, 2.44, -44.43),
+    Vector(4.69, 2.44, -43.95),
+    Vector(-5.14, 2.44, -46.41),
+    Vector(-0.40, 2.44, -47.03),
+    Vector(4.27, 2.44, -46.84)
+}
+
+function spitDice.returnDie(objInContainer, dex, dieCount, container)
+    dieCount = randomDiePos(dieCount)
+
+    local randomRot = randomRotation()
+    local ranPos = DicePosition[dieCount[tableSize(dieCount)]]
+    local Y = 10
+
+    local die = container.takeObject({index=dex})
+    die.setScale({1,1,1})
+    die.setPositionSmooth(Vector(ranPos.x, Y, ranPos.z), false, false)
+    die.setRotationSmooth(randomRot, false, false)
+
+    rollingDie[die] = true
+        Wait.condition(function()
+            Wait.time(function()
+                die.roll()
+                rollDice(die)
+            end, 0.3)
+        end, function() return isSmooth(die) end)
+
+    if allStopNotStarted then
+        allStopNotStarted = false
+        Wait.condition(function()
+            local slide = getObjectFromGUID('a16e5d')
+            slide.call('slideOffer')
+            rollingDie = {}
+            allStopNotStarted = true
+        end, function() return isAllDieStopped() end)
+    end
+
+    return dieCount
+end
+
+function rollDice(die)
+    Wait.condition(
+        function() -- Executed after our condition is met
+            die.roll()
+            Wait.condition(
+                function() -- Executed after our condition is met
+                    die.roll()
+                    Wait.condition(
+                        function() -- Executed after our condition is met
+                            die.roll()
+                            Wait.condition(function()
+                                rollingDie[die] = false
+                            end, function() return die.resting end)
+                        end,
+                        function() -- Condition function
+                            return die.resting
+                        end
+                    )
+                end,
+                function() -- Condition function
+                    return die.resting
+                end
+            )
+        end,
+        function() -- Condition function
+            return die.resting
+        end
+    )
+end
+-------------------------------------------------------------
+-- Random Values use when Return Die ------------------------
+function randomRotation()
+    --Credit for this function goes to Revinor (forums)
+    --Get 3 random numbers
+    local u1 = math.random();
+    local u2 = math.random();
+    local u3 = math.random();
+    --Convert them into quats to avoid gimbal lock
+    local u1sqrt = math.sqrt(u1);
+    local u1m1sqrt = math.sqrt(1-u1);
+    local qx = u1m1sqrt *math.sin(2*math.pi*u2);
+    local qy = u1m1sqrt *math.cos(2*math.pi*u2);
+    local qz = u1sqrt *math.sin(2*math.pi*u3);
+    local qw = u1sqrt *math.cos(2*math.pi*u3);
+    --Apply rotation
+    local ysqr = qy * qy;
+    local t0 = -2.0 * (ysqr + qz * qz) + 1.0;
+    local t1 = 2.0 * (qx * qy - qw * qz);
+    local t2 = -2.0 * (qx * qz + qw * qy);
+    local t3 = 2.0 * (qy * qz - qw * qx);
+    local t4 = -2.0 * (qx * qx + ysqr) + 1.0;
+    --Correct
+    if t2 > 1.0 then t2 = 1.0 end
+    if t2 < -1.0 then ts = -1.0 end
+    --Convert back to X/Y/Z
+    local xr = math.asin(t2);
+    local yr = math.atan2(t3, t4);
+    local zr = math.atan2(t1, t0);
+
+    return Vector(math.deg(xr),math.deg(yr),math.deg(zr))
+end
+-------------------------------------------------------------
+-- Set Random Value for Die Position in Source --------------
+function randomDiePos(dieCount)
+    local groupSize = 20 -- Size of each range
+    local groupIndex = math.floor(#dieCount / groupSize) + 1 -- Current group (1-based)
+
+    -- Calculate start and end indices for the current group
+    local groupStart = (groupIndex - 1) * groupSize + 1
+    local groupEnd = groupIndex * groupSize
+
+    -- Identify numbers already in the current group
+    local usedNumbers = {}
+    for i = groupStart, groupEnd do
+        if dieCount[i] then
+            usedNumbers[dieCount[i]] = true
+        end
+    end
+
+    -- Build a list of unused numbers for the current group
+    local availableNumbers = {}
+    for i = 1, 20 do
+        if not usedNumbers[i] then
+            table.insert(availableNumbers, i)
+        end
+    end
+
+    -- If there are unused numbers, add one randomly to the current group
+    if #availableNumbers > 0 then
+        local randomIndex = math.random(1, #availableNumbers)
+        local randomNum = availableNumbers[randomIndex]
+        table.insert(dieCount, randomNum)
+    end
+
+    return dieCount
+end
+
+function tableHasValue(tbl, value)
+    for _, v in ipairs(tbl) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
+function isAllDieStopped()
+    for k,die in pairs(rollingDie) do
+        if die then return false end
+    end
+    return true
+end
+
+return spitDice

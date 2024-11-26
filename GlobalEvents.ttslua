@@ -1,3 +1,4 @@
+local dprint = require("/_libs/debug/dPrint").dprint
 local tool = {}
         tool.virtualTokenStack = require("/_libs/virtualTokenStacks/event_virtualTokenStacks")
         tool.TrashCan = require("/MageKnightV3/TrashBags/trashCan_EventCall")
@@ -50,8 +51,27 @@ end
 function onObjectSpawn(object)
     if object.type == 'Card' then
         object.setDecals({})
-        --object.setMemo('')
+        local tag = spawn_findTrashTags(object)
+        object.removeTag(tag.remove)
+        object.addTag(tag.player)
     end
+end
+
+function spawn_findTrashTags(obj)
+    local objTags = obj.getTags()
+    local trashIDs = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
+    local z = false
+
+    for k, tag in ipairs(objTags) do
+        if string.find(tag, 'hand_Player', 1, true) then
+            z = {}
+            z.num = tag:match("%d+")
+            z.remove = trashIDs.remove
+            z.player = trashIDs.player..z.num
+        end
+    end
+    
+    return z
 end
 
 function onPlayerAction(player, action, targets)
