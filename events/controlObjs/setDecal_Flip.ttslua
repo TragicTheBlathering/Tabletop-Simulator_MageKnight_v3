@@ -1,3 +1,5 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+
 function onload()end
 
 function process_DecalFlip(objList)
@@ -7,14 +9,15 @@ end
 function processObjects(objList)
     for k, obj in pairs(objList) do
         local tags = findTrashTags(obj)
-        local editAllowed = setValidPos(obj, tags.validPos)
-
-        if editAllowed then
-            local showDecal = setTags(obj, tags, editAllowed)
-            setDecal(obj, showDecal)
-        else
-            setTags(obj, tags, false)
-            setDecal(obj, false)
+        if tags then -- If HandZone Tags are not applied then skip everything.
+            local editAllowed = setValidPos(obj, tags.validPos)
+            if editAllowed then
+                local showDecal = setTags(obj, tags, editAllowed)
+                setDecal(obj, showDecal)
+            else
+                setTags(obj, tags, false)
+                setDecal(obj, false)
+            end
         end
     end
 end
@@ -84,6 +87,7 @@ function findTrashTags(obj)
             z.player = trashIDs.player..z.num
             z.tags = objTags
             z.validPos = 'player'..z.num
+            return z
         end
     end
     return z

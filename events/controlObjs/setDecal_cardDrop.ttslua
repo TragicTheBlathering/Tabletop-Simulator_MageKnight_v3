@@ -1,0 +1,173 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+
+function onload()end
+
+function process_DecalDrop(obj)
+    local objTags = obj.getTags()
+    local tags = findTrashTags(objTags)
+
+    if tags then -- If HandZone Tags are not applied then skip everything.
+        local editAllowed = setValidPos(obj, tags.validPos)
+        if editAllowed then
+            local face = {up=0, down=180}
+            local rot = obj.getRotation().z; if rot >= 300 then rot = 0 end
+
+            if isAprox(face.up, rot, 50) then
+                if singleTagFoundinTagList(objTags, '_RemovedFromGame', true) then
+                    setTags(obj, tags, 'Discard')
+                    setDecal(obj, 'Discard')
+
+                    --dprint('END : Send to Player Discard Decal')
+                end
+
+            elseif isAprox(face.down, rot, 50) then
+                -- Add Decal and Throw Away Code
+                if singleTagFoundinTagList(objTags, '_PlayerDiscard_', true) then
+                    setTags(obj, tags, 'ThrowAway')
+                    setDecal(obj, 'ThrowAway')
+
+                    --dprint('END : Send to Throw Away Chest')
+                end
+
+            end
+
+        else
+            if singleTagFoundinTagList(objTags, '_RemovedFromGame', true) then
+                setTags(obj, tags, 'Discard')
+                setDecal(obj, 'Discard')
+
+                --dprint('END : ALWAYS : Send to Player Discard Decal')
+            end
+        end
+    end
+end
+
+function setTags(obj, tags, addThrowTag)
+    addThrowTag = addThrowTag or false
+    if addThrowTag == 'ThrowAway' then
+        addThrowTag = true
+    elseif addThrowTag == 'Discard' then
+        addThrowTag = false
+    end
+
+    if addThrowTag then
+        obj.removeTag(tags.player)
+        obj.addTag(tags.remove)
+    else
+        obj.removeTag(tags.remove)
+        obj.addTag(tags.player)
+    end
+end
+
+
+function setDecal(obj, addThrowDecal)
+
+    addThrowDecal = addThrowDecal or false
+    if addThrowDecal == 'ThrowAway' then
+        addThrowDecal = true
+    elseif addThrowDecal == 'Discard' then
+        addThrowDecal = false
+    end
+
+    local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
+    local decalApplied = obj.getDecals(); if decalApplied == nil then decalApplied = false else decalApplied = true end
+
+    if addThrowDecal then
+        if not decalApplied then
+            if obj.type == 'Deck' then
+                obj.hide_when_face_down = false
+            end
+            obj.setDecals({decal})
+        end
+    else
+        if decalApplied then
+            if decalApplied then
+                obj.setDecals({})
+            end
+        end
+    end
+end
+
+--[[
+local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
+local decalApplied = obj.getDecals(); if decalApplied == nil then decalApplied = false else decalApplied = true end
+
+if showDecal then
+    if not decalApplied then
+        if obj.type == 'Deck' then
+            obj.hide_when_face_down = false
+        end
+        obj.setDecals({decal})
+    end
+else
+    if decalApplied then
+        obj.setDecals({})
+    end
+end
+]]
+
+function isAprox(num1, num2, margin)
+    margin = margin or 5 -- Default margin to 5 if not provided
+    return math.abs(num1 - num2) < margin
+end
+
+function findTrashTags(objTags)
+    if singleTagFoundinTagList(objTags, 'hand_Player', true) then
+        --local objTags = obj.getTags()
+        local trashIDs = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
+        local z = false
+
+        for k, tag in ipairs(objTags) do
+            if string.find(tag, 'hand_Player', 1, true) then
+                if not z then z = {} end
+                z.num = tag:match("%d+")
+                z.remove = trashIDs.remove
+                z.player = trashIDs.player..z.num
+                z.tags = objTags
+                z.validPos = 'player'..z.num
+            elseif string.find(tag, 'trashID_', 1, true) then
+                if not z then z = {} end
+                z.currentTag = tag
+                z.validPos = false
+            end
+        end
+        return z
+    else
+        return false
+    end
+end
+
+function singleTagFoundinTagList(tagTable, str, find)
+    if tagTable then
+        find = find or false
+        for k, line in pairs(tagTable) do
+            if find then
+                if string.find(string.lower(line), string.lower(str), 1, true) then
+                    return true
+                end
+            else
+                if string.lower(line) == string.lower(str) then
+                    return true
+                end
+            end
+        end
+        return false
+    else
+        return false
+    end
+end
+
+function setValidPos(obj, playerBoard)
+    if playerBoard then
+        local testLines = require("/MageKnightV3/GlobalVariables").Decal_testDropPositions
+        return isPointInValidPosition(testLines[playerBoard], testLines.height, obj.getPosition())
+    else
+        return false
+    end
+end
+
+function isPointInValidPosition(n, h, p)
+    local xInRange = p.x >= math.min(n.p1, n.p2) and p.x <= math.max(n.p1, n.p2)
+    local zInRange = p.z >= math.min(h.h1, h.h2) and p.z <= math.max(h.h1, h.h2)
+    return not xInRange and zInRange --{board = not xInRange and zInRange, table = zInRange}
+end

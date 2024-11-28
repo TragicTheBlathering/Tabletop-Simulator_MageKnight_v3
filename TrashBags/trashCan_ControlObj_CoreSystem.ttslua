@@ -96,7 +96,7 @@ function moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, container, tr
     local loc = returnTagsfoundinTagList('trashID_', objInContainer.tags, true)
     if not Y[loc] then Y[loc] = Vector(0,1,0) end
 
-    local pos = uniqueCast[loc].getPosition()
+    local pos = placeTopOrBot_ofObject(uniqueCast[loc],'top')--uniqueCast[loc].getPosition()
     --local obj = container.takeObject({position=pos+Y[loc], index=dex})
     local obj = container.takeObject({index=dex})
     local posAboveTrash = placeTopOrBot_ofObject(trashBag,'top')
@@ -105,13 +105,38 @@ function moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, container, tr
 
     obj.use_hands = false
     obj.setPositionSmooth(pos+Y[loc], false, false)
-    Wait.condition(function() obj.use_hands = true end, function() return isSmooth(obj) end)
+    Wait.condition(function()
+                        obj.use_hands = true
+                        uniqueCast[loc] = putObjectIntoDiscard(obj, uniqueCast[loc])
+                    end, function() return isSmooth(obj) end)
 
     local offset = Vector(0,0.5,0) + Vector(0, obj.getBounds().size.y+0.2, 0)
     Y[loc] = Y[loc] + offset
 
     return Y
 end
+
+function putObjectIntoDiscard(obj, discardTarget)
+    --print(discardTarget.type)
+    if discardTarget.type == 'Bag' then
+        --print('!!!')
+        discardTarget.putObject(obj)
+        return discardTarget
+
+    elseif discardTarget.type == 'Generic' and obj.type == 'Card' then
+        obj.setPosition(discardTarget.getPosition()+Vector(0,0.05,0))
+        return obj
+
+    elseif (discardTarget.type == 'Card' or discardTarget.type == 'Deck') and obj.type == 'Card' then
+        --print('###')
+        local newObj = discardTarget.putObject(obj)
+        return newObj
+    end
+
+end
+
+--{-45.02, 2.53, -82.12}
+--{-45.03, 2.52, -82.12}
 
 function isSmooth(obj)
     if obj == nil then

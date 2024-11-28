@@ -1,6 +1,7 @@
 local CardDrop = {}
     function CardDrop.changeDiscardDecal(obj)
-        --print('DROP CARD OR DECK')
+        local controlobject = getObjectFromGUID('a3defa')
+        controlobject.call('process_DecalDrop', obj)
     end
 --[[
 local testLines = require("/MageKnightV3/GlobalVariables").Decal_testDropPositions

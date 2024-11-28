@@ -48,31 +48,53 @@ function onObjectDrop(colorName, object)
     end
 end
 
-function onObjectSpawn(object)
-    if object.type == 'Card' then
-        object.setDecals({})
-        local tag = spawn_findTrashTags(object)
-        object.removeTag(tag.remove)
-        object.addTag(tag.player)
+function onObjectSpawn(obj)
+    if obj.type == 'Card' then
+        obj.setDecals({})
+        local tag = spawn_findTrashTags(obj)
+        if tag then
+            if obj.hasTag(tag.remove) then
+                obj.removeTag(tag.remove)
+                obj.addTag(tag.player)
+            end
+        end
     end
 end
+
 
 function spawn_findTrashTags(obj)
     local objTags = obj.getTags()
     local trashIDs = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
-    local z = false
 
     for k, tag in ipairs(objTags) do
         if string.find(tag, 'hand_Player', 1, true) then
-            z = {}
+            local z = {}
             z.num = tag:match("%d+")
             z.remove = trashIDs.remove
             z.player = trashIDs.player..z.num
+            return z
         end
     end
-    
-    return z
+
+    return false
 end
+
+--[[
+local objTags = obj.getTags()
+local trashIDs = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
+local z = false
+for k, tag in ipairs(objTags) do
+    dprint('tag', tag)
+    if string.find(tag, 'hand_Player', 1, true) then
+        z = {}
+        z.num = tag:match("%d+")
+        z.remove = trashIDs.remove
+        z.player = trashIDs.player..z.num
+    end
+end
+
+drint('objTags',objTags)
+]]
 
 function onPlayerAction(player, action, targets)
     if action == Player.Action.FlipOver then

@@ -1,42 +1,105 @@
+local Showbug = false
+local dprint = require("/_libs/debug/dPrint").dprint
+
+local ids = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
+local pos = require("/MageKnightV3/GlobalVariables").DrawToHandPositions
+
+
 local wait_ids = {}
-local pos = {
-    p1 = {hand = Vector(-44.11, 5, -88.94), poison = Vector(-45.03, 5, -81.93)},
-    p2 = {hand = Vector(-44, 5, -88.94), poison = Vector(-45.03, 5, -81.93)},
-    p3 = {hand = Vector(-44.11, 5, -88.94), poison = Vector(-45.03, 5, -81.93)},
-    p4 = {hand = Vector(-44.11, 5, -88.94), poison = Vector(-45.03, 5, -81.93)}
-}
-local poison = false
+local data = {poison=false, pos={}}
 
 function onLoad(save_state)
     makeButtons()
     setVariables()
 end
 
+function setVariables()
+    data.poison = self.hasTag('PosionBag')
+    for k, tag in pairs(self.getTags()) do
+        if string.find(tag, '_', 1, true) then
+            data.key = tag:match("%d+")
+            data.playerTrashID = ids.player..data.key
+            data.playerRemove = ids.remove
+            data.playerHandID = ids.hand[tonumber(data.key)]
+        end
+    end
+    data.pos.hand = pos[tonumber(data.key)]
+    data.discardPlatform = getObjectsWithAllTags({'trash_DiscardTarget', 'Cards_PlayerCard', data.playerTrashID})[1]
+    data.pos.discard = data.discardPlatform.getPosition()
+end
+
 function button_AddWounds()
-    --local card = self.takeObject({position=Vector(-45.03, 5, -81.93)}, false)
     --card.use_hands = false
     countClicks(self,countedClicks,0.5)
 end
 
 function countedClicks(count)
-    local Y = {hand = 0, poison=0, offset=0.3}
-    for i = 1, count do
-        local prams = {position=pos.hand+Vector(0,Y.hand,0), rotation=Vector(0,180,0)}
-        local card = self.takeObject(prams)
-        card.use_hands = false
-        Y.hand = Y.hand + Y.offset
-        Wait.condition(function() card.use_hands = true end, function() return isSmooth(card) end)
+    local Y = {hand = 0.5, poison=2, offset= 0.5}
+    local rot = Vector(0,180,0)
+    --dprint('data', data)
+    --local prams = {hand={position=data.pos.hand+Vector(0,Y.hand,0), rotation=}}
 
-        if poison then
-            local prams = {position=pos.poison+Vector(0,Y.poison,0), rotation=Vector(0,180,0)}
-            local poison = self.takeObject(prams)
-            poison.use_hands = false
-            Y.poison = Y.poison + Y.offset
-            Wait.condition(function() poison.use_hands = true end, function() return isSmooth(poison) end)
+    local discard, noCast = false, true
+    for i = 1, count do
+        local handCard = self.takeObject({})
+        handCard.setPositionSmooth(data.pos.hand+Vector(0,Y.hand,0), false, false)
+        handCard, Y.hand = applyChanges(handCard, Y.hand, Y.offset)
+
+
+        if data.poison then
+            if noCast then
+                discard = cast(data.pos.discard)
+                noCast = false
+            end
+
+            if discard then
+                local poisionCard = self.takeObject({})
+                poisionCard.setPositionSmooth(data.pos.discard+Vector(0,Y.poison,0), false, false)
+                poisionCard, Y.poison = applyChanges(poisionCard, Y.poison, Y.offset)
+                Wait.condition(function() discard = discard.putObject(poisionCard) end, function() return isSmooth(poisionCard) end)
+            else
+                --dprint('data.poison',data.poison)
+                local poisionCard = self.takeObject({})
+                poisionCard.setPositionSmooth(data.pos.discard+Vector(0,Y.poison,0), false, false)
+                discard, Y.poison = applyChanges(poisionCard, Y.poison, Y.offset)
+                Wait.condition(function() poisionCard.setPosition(data.pos.discard+Vector(0,0.1,0)) end, function() return isSmooth(poisionCard) end)
+            end
         end
     end
 end
 
+function applyChanges(card, Y, offset)
+    Y = Y + offset
+    card.removeTag(data.playerRemove)
+    card.addTag(data.playerHandID)
+    card.addTag(data.playerTrashID)
+    return card, Y
+end
+
+--[[****************************************************************************
+***** Cast Code ****************************************************************
+********************************************************************************]]
+function cast(castOrigin, switch)
+    local zone = Physics.cast({ origin=castOrigin + Vector(0,1,0),
+                                direction={0,1,0},
+                                type=3,
+                                max_distance=0,
+                                size=Vector(2,2,2),
+                                debug=Showbug})
+
+    return processCast(zone, castOrigin)
+end
+
+function processCast(zone)
+    for k,v in pairs(zone) do
+        local obj = v.hit_object
+        if obj.type == "Card" or obj.type == "Deck" then
+            return obj
+        end
+    end
+    return false
+end
+--******************************************************************************
 function isSmooth(obj)
     if obj == nil then
         return true
@@ -64,27 +127,6 @@ function countClicks(obj,func,delay)
 
     wait_ids[obj].count = wait_ids[obj].count + 1 -- finally increment the click amount.
 end
-
-function setVariables()
-    local tags = self.getTags()
-    --print(logString(tags, '\n--- tags'))
-    --local result = string.sub(string.lower('WoundBag_P2'), 10)
-    --print(result)
-
-    for k,t in pairs(tags) do
-        local tag = string.lower(t)
-        if string.find(tag, 'woundbag_') then
-            if string.find(tag, 'poison') then
-                poison = true
-            end
-            if #tag == 11 then
-                local p = string.sub(string.lower(tag), 10)
-                pos = pos[p]
-            end
-        end
-    end
-end
-
 
 function makeButtons()
     local button = {}
