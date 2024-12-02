@@ -1,27 +1,30 @@
-local GlobalVariables = {}
---[[
-GlobalVariables.virtualTokenStackData = {
+local vStackVar = {}
+
+vStackVar.virtualTokenStackData = {
         eventID_maptile_DrawBag = {
-                tags = {maptile_Countryside='http://cloud-3.steamusercontent.com/ugc/1688270643043406251/A651D5CA5D876C2784761FC27F04CDB14CB7FF19/',                        maptile_Core='http://cloud-3.steamusercontent.com/ugc/1688270643043527253/68E270678D47C66202EAF01B86981ADF5509CE89/'},
+                tags = {
+                    maptile_Countryside='http://cloud-3.steamusercontent.com/ugc/1688270643043406251/A651D5CA5D876C2784761FC27F04CDB14CB7FF19/',
+                    maptile_Core='http://cloud-3.steamusercontent.com/ugc/1688270643043527253/68E270678D47C66202EAF01B86981ADF5509CE89/'
+                    },
                 type = {hex=false, url=true, contents=false},
                 pivot = 'center',
                 value = {scaleValue=3.5, baseScale=Vector(0, 5.8, 0), basePos=Vector(0, 2.16, 0), origSize=0.2901816},
                 empty = "http://cloud-3.steamusercontent.com/ugc/2265941315537168720/A0D67752A48BE0DDC1B046FED85236AFAE4D8A40/",
         },
         eventID_monsterDrawBag = {
-                 tags  = {'pug_orc', 'pug_Dungeon', 'pug_Keep', 'pug_MageTower', 'pug_Dragon', '', 'pug_Ruin', 'pug_City',
+                 tags  = {'pug_orc', 'pug_Dungeon', 'pug_Keep', 'pug_MageTower', 'pug_Dragon', 'pug_Ruin', 'pug_City',
                  'pug_Tesla_nOrc', 'pug_Tesla_nDungeon', 'pug_Tesla_nDragon',
                  'pug_Tesla_eOrc', 'pug_Tesla_eDungeon', 'pug_Tesla_eDragon'},
                  type  = {hex=true, url=false, contents=false},
                  pivot = 'center',
-                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011},
+                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200016},
                  empty = "#4C4C4C"
         },
         eventID_teslaTokenDrawBag = {
                  tags  = {'pug_Tesla_nItem','pug_Tesla_eItem'},
                  type  = {hex=true, url=false, contents=false},
-                 pivot = 'bot',
-                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.01, 0), origSize=0.4000015},
+                 pivot = 'bottom',
+                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.01, 0), origSize=0.400001},
                  empty = "#4C4C4C"
         },
         eventID_commandToken = {
@@ -46,41 +49,22 @@ GlobalVariables.virtualTokenStackData = {
                      pug_Tesla_eOrc='http://cloud-3.steamusercontent.com/ugc/2322236944769321325/7AC7DE1E6C75770DB207ECF316F8282DD6AF6380/',
                      pug_Tesla_eDungeon='http://cloud-3.steamusercontent.com/ugc/2322236944769320824/A8BE51651F078EC4C076A7219E403429758E0AC7/',
                      pug_Tesla_eDragon='http://cloud-3.steamusercontent.com/ugc/2322236944769321501/57CDC852C5245428BEF833419994685F53AE382C/',
-                     pug_Tesla_nItem='http://cloud-3.steamusercontent.com/ugc/784120584200083226/E0E35CE133D654D020C1E632D15E702C2D81304A/',
-                     pug_Tesla_eItem='http://cloud-3.steamusercontent.com/ugc/784120584200084456/DB5EBB8F597B1FEABC0769307CB07AB0D2F2936F/',
                  },
-                 type  = {hex=false, url=false, contents=true},
+                 type  = {hex=false, url=true, contents=true},
                  pivot = 'center',
                  value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.17, 0), origSize=0.3200011}, --origSize=0. 3200006
                  empty = "#333333"
         },
-}
-]]
-GlobalVariables.ThrowAwayDecals = {
-    name = 'decal_ThrowAway',
-    url = 'https://steamusercontent-a.akamaihd.net/ugc/2407824359581070407/2813428A9547F9716D2DBDEDB0911EAEF8E7A61C/',
-    position=Vector(0.03095254, -0.3631536, -0.005958159),
-    rotation=Vector(270, 0, 0),
-    scale=Vector(0.4829904, 0.4761907, 15.38463)
-}
-
-GlobalVariables.DrawToHandPositions = {Vector(-110.09, 7.74, -89.78), --PlayerTool_DrawCard_P1
-                                       Vector(-42.17, 7.74, -89.78), --PlayerTool_DrawCard_P2
-                                       Vector(25.85, 7.74, -89.78), --PlayerTool_DrawCard_P3
-                                       Vector(93.86, 7.74, -89.78), --PlayerTool_DrawCard_P4
+        eventID_teslaTokenDiscardPile = {
+                 tags  = {--'pug_Tesla_nItem','pug_Tesla_eItem'
+                            pug_Tesla_nItem='http://cloud-3.steamusercontent.com/ugc/784120584200083226/E0E35CE133D654D020C1E632D15E702C2D81304A/',
+                            pug_Tesla_eItem='http://cloud-3.steamusercontent.com/ugc/784120584200084456/DB5EBB8F597B1FEABC0769307CB07AB0D2F2936F/',
+                         },
+                 type  = {hex=false, url=true, contents=true},
+                 pivot = 'bottom',
+                 value = {scaleValue=2.2, baseScale=Vector(0, 2.00, 0), basePos=Vector(0, 2.01, 0), origSize=0.400001},
+                 empty = "#333333"
+        },
 }
 
-GlobalVariables.tags_PlayerCard_TrashIDs ={
-    hand = {'hand_Player1', 'hand_Player2', 'hand_Player3', 'hand_Player4'},
-    player='trashID_PlayerDiscard_p', remove='trashID_RemovedFromGame'}
-
-GlobalVariables.Decal_testDropPositions = { -- mat1-4 (player board 1 - 4) -- left sideof PlayerBoard
-    height = {h1=-56.29, h2=-85.85}, --H1 == Line to Table, H2=Line under player board
-    player1={p1=-126.17, p2=-109.49}, --p1 == left(off edge of player board), p2==right (skill snap on playerboard)
-    player2={p1=-58.14, p2=-41.52},
-    player3={p1=9.91, p2=26.48},
-    player4={p1=77.83, p2=94.48}
-}
-
-
-return GlobalVariables
+return vStackVar

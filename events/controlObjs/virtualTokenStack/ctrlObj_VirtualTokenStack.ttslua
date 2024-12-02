@@ -1,0 +1,118 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+local tool = {}
+      tool.wait = {}
+      tool.wait.dropIntoBox=require("/_libs/waitUtils/waitUtils").dropIntoBox
+
+      tool.findTag = require("/_libs/tagUtils/tagUtils").singleTagFoundinTagList
+
+      tool.scaleBag = require("/MageKnightV3/events/controlObjs/virtualTokenStack/scaleBags").fromContents
+      tool.setBagTexture = require("/MageKnightV3/events/controlObjs/virtualTokenStack/setBagTextureFromContents")
+      tool.allObjectsValid = require("/MageKnightV3/events/controlObjs/virtualTokenStack/checkStackForInvalidObj").checkBag_InvalidMarkRED
+
+local vStackData = require("MageKnightV3/events/controlObjs/virtualTokenStack/vStack_GlobalVariables").virtualTokenStackData
+local runExitBag = true
+local scaleBagComplete = false
+
+function onLoad()end -- 6e81c3
+
+function processVirtualStack(args) -- {bag=bag, obj=obj, variableData=variableData, idTag=idTag, time=time}
+--dprint('vStackData',vStackData)
+--- Set Variables --------------------------------------------------------------
+    runExitBag = false
+    local bag = args.bag
+    local bagTags = bag.getTags()
+
+    local value = {}
+        for tag, v  in pairs(vStackData) do
+            if bag.hasTag(tag) then
+                value = vStackData[tag]
+                value.tagID = {}
+                break
+            end
+        end
+        if value.type.url then
+            for tag, v in pairs(value.tags) do
+                --print(tag)
+                if bag.hasTag(tag) then
+                    table.insert(value.tagID, tag)
+                    --value.tagID = tag
+                    --break
+                end
+            end
+        else
+            for k, tag in pairs(value.tags) do
+                --print(tag)
+                if bag.hasTag(tag) then
+                    table.insert(value.tagID, tag)
+                    --value.tagID = tag
+                    --break
+                end
+            end
+        end
+    value.options = vStackData.options
+
+    --dprint('Start Virtual Token Stack')
+
+--- Scale Bag based on ammount of contained Objects ----------------------------
+    if vStackData.options.scaleBag then
+        scaleBagComplete = tool.scaleBag(bag, value) -- returns true when finished
+    else
+        scaleBagComplete = true
+    end
+--- Change Look of Bag (texture or colour)--------------------------------------
+    local bagData = bag.getData()
+    local invalidObjsFound = tool.allObjectsValid(bag, bagData, value)
+    if invalidObjsFound then
+
+        if value.type.url then
+            tool.setBagTexture.usingURLs(bag, bagData, value)
+        elseif value.type.hex then
+            tool.setBagTexture.usingTint(bag, bagData, value)
+        end
+
+    else -- if any invliad objects are found turn the bag red to indicate it.
+        --dprint(': INVALID :')
+        local errorTint = {0.9607843, 0.2235294, 0.2235294} -- '#F53939'
+        bag.setColorTint(errorTint)
+    end
+    runExitBag = true
+end
+
+--******************************************************************************
+--******* Main Virtual Token Event Call ****************************************
+--******************************************************************************
+function runVirtualTokenStackEvent(args) -- function Called to Run Bag
+    if runExitBag then
+        local bag, obj, idTag, time = extractArgs(args)
+        setVirtualStackOptions(bag.getTags())
+        tool.wait.dropIntoBox(idTag, bag, obj, processVirtualStack, time)
+    end
+end
+
+function setVirtualStackOptions(tags)
+    vStackData.options = {}
+    if tool.findTag(tags, 'noScale', true) then
+        vStackData.options.scaleBag = false else vStackData.options.scaleBag = true
+    end
+    if tool.findTag(tags, 'noTextureChange', true) then
+        vStackData.options.changeTexture = false else vStackData.options.changeTexture = true
+    end
+end
+--******************************************************************************
+--******* Table Tools **********************************************************
+--******************************************************************************
+function extractArgs(tbl)
+    local result = {}
+    for _, value in pairs(tbl) do
+        table.insert(result, value)
+    end
+    return table.unpack(result)
+end
+
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end

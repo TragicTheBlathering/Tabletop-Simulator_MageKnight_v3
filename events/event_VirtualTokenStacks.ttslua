@@ -1,0 +1,34 @@
+---test
+local event_VirtualTokenStack = {}
+    local dprint = require("/_libs/debug/dPrint").dprint
+    local tool_VirtualTokenStack = {}
+    local controlObj = false
+
+    function event_VirtualTokenStack.VirtualTokenStackEvent(bag, obj, idTag, time)
+        if tool_VirtualTokenStack.singleTagFoundinTagList(bag.getTags(), idTag, true) then
+            if not controlObj then controlObj = getObjectFromGUID('6e81c3') end
+            controlObj.call('runVirtualTokenStackEvent',{bag=bag, obj=obj, idTag=idTag, time=time})
+        end
+    end
+
+    function tool_VirtualTokenStack.singleTagFoundinTagList(tagTable, str, find)
+        if tagTable then
+            find = find or false
+            for k, line in pairs(tagTable) do
+                if find then
+                    if string.find(string.lower(line), string.lower(str), 1, true) then
+                        return true
+                    end
+                else
+                    if string.lower(line) == string.lower(str) then
+                        return true
+                    end
+                end
+            end
+            return false
+        else
+            return false
+        end
+    end
+
+return event_VirtualTokenStack

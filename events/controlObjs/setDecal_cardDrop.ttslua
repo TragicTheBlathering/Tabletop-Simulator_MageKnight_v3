@@ -88,24 +88,6 @@ function setDecal(obj, addThrowDecal)
     end
 end
 
---[[
-local decal = require("/MageKnightV3/GlobalVariables").ThrowAwayDecals
-local decalApplied = obj.getDecals(); if decalApplied == nil then decalApplied = false else decalApplied = true end
-
-if showDecal then
-    if not decalApplied then
-        if obj.type == 'Deck' then
-            obj.hide_when_face_down = false
-        end
-        obj.setDecals({decal})
-    end
-else
-    if decalApplied then
-        obj.setDecals({})
-    end
-end
-]]
-
 function isAprox(num1, num2, margin)
     margin = margin or 5 -- Default margin to 5 if not provided
     return math.abs(num1 - num2) < margin

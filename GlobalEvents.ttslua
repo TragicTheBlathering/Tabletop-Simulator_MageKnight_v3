@@ -1,25 +1,17 @@
 local dprint = require("/_libs/debug/dPrint").dprint
 local tool = {}
-        tool.virtualTokenStack = require("/_libs/virtualTokenStacks/event_virtualTokenStacks")
+        tool.virtualTokenStack = require("/MageKnightV3/events/event_VirtualTokenStacks")
         tool.TrashCan = require("/MageKnightV3/TrashBags/trashCan_EventCall")
 
 local MKevent = {}
-    --MKevent.setDiscardPileButton = require("/MageKnightV3/pugDiscardPiles/event_pugDiscardButton")
+    -- Monserty Drop and Draw
     MKevent.OnDrop_monestery = require("/MageKnightV3/events/event_onObjectDrop_Monastery").dropTest
-
-    --MKevent.DiceInHand = require("/MageKnightV3/events/event_DiceInHand").DiceInHand
-
     -- Discard Decal on Card
     MKevent.OnDrop_cardDecal = require("/MageKnightV3/events/event_onObjectDrop_CardDecal").changeDiscardDecal
     MKevent.OnFlip_cardDecal = require("/MageKnightV3/events/event_onPlayerAction_CardDecal").setDecal
-
+    -- Mana Drop and save face
     MKevent.OnDrop_Mana = require("/MageKnightV3/events/event_OnDrop_Mana").DropMana
 
-    --MKevent.OnSpawn_PlayerCard = require("/MageKnightV3/events/event_SpawnEvents").onPlayerCardSpawn
-
-local globalVar = {}
-      --globalVar.UniqueTrash = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
-      globalVar.vStackData = require("/MageKnightV3/GlobalVariables").virtualTokenStackData
 
 function onLoad(save_state)
 end
@@ -28,14 +20,12 @@ end
 --- onObjectEnter : CONTAINER --------------------------------------------------
 
 function onObjectEnterContainer(bag, obj)
-    tool.virtualTokenStack.enterContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack', 0.5)
+    tool.virtualTokenStack.VirtualTokenStackEvent(bag, obj, 'event_virtualTokenStack', 0.5)
     tool.TrashCan.enterContainer(bag, obj, 0.8) -- No time == 0.8, if you send number as string, it will wait frames instead.
-    --MKevent.setDiscardPileButton.enterContainer(bag, obj, obj.getTags())
 end
 
 function onObjectLeaveContainer(bag, obj)
-    tool.virtualTokenStack.exitContainer(bag, obj, globalVar.vStackData, 'event_virtualTokenStack', 'F3')
-    --MKevent.setDiscardPileButton.enterContainer(bag, obj, obj.getTags())
+    tool.virtualTokenStack.VirtualTokenStackEvent(bag, obj, 'event_virtualTokenStack', 'F3')
 end
 
 function onObjectDrop(colorName, object)
@@ -78,23 +68,6 @@ function spawn_findTrashTags(obj)
 
     return false
 end
-
---[[
-local objTags = obj.getTags()
-local trashIDs = require("/MageKnightV3/GlobalVariables").tags_PlayerCard_TrashIDs
-local z = false
-for k, tag in ipairs(objTags) do
-    dprint('tag', tag)
-    if string.find(tag, 'hand_Player', 1, true) then
-        z = {}
-        z.num = tag:match("%d+")
-        z.remove = trashIDs.remove
-        z.player = trashIDs.player..z.num
-    end
-end
-
-drint('objTags',objTags)
-]]
 
 function onPlayerAction(player, action, targets)
     if action == Player.Action.FlipOver then

@@ -1,0 +1,60 @@
+local checkStackForInvalidObj = {}
+    local dprint = require("/_libs/debug/dPrint").dprint
+
+    function checkStackForInvalidObj.checkBag_InvalidMarkRED(bag, bagData, value)
+        --dprint('value.tagID', value.tagID)
+
+        if bagData.ContainedObjects then
+            local containtedTags = {}
+            for k, obj in pairs(bagData.ContainedObjects) do
+                table.insert(containtedTags, obj.Tags)
+            end
+
+            if allObjectsAreValid(containtedTags, value.tagID) then
+                --dprint(': VALID : true')
+                return true
+            else
+                --dprint(': INVALID : false')
+                return false
+            end
+        end
+
+        return true
+    end
+
+    function allObjectsAreValid(allLists, searchStrings)
+        -- If allLists is false, nil, or an empty table, evaluate as true
+        if not allLists or next(allLists) == nil then
+            return true
+        end
+
+        -- Convert all search strings to lowercase for consistent comparison
+        local searchLower = {}
+        for _, searchString in ipairs(searchStrings) do
+            table.insert(searchLower, searchString:lower())
+        end
+
+        -- Check each sublist in allLists
+        for _, stringList in ipairs(allLists) do
+            local foundAny = false
+
+            -- Check if at least one string from searchStrings is in the current list
+            for _, search in ipairs(searchLower) do
+                for _, str in ipairs(stringList) do
+                    if str:lower() == search then
+                        foundAny = true
+                        break
+                    end
+                end
+                if foundAny then break end -- Exit early if one string is found
+            end
+
+            if not foundAny then
+                return false -- Return false if no string is found in a list
+            end
+        end
+
+        return true -- Return true if at least one string is found in all lists
+    end
+
+return checkStackForInvalidObj
