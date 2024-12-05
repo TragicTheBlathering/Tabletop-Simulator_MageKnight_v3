@@ -22,7 +22,11 @@ function fetchKnight(playerSlot, contactObject)
         setUpBags.knight = setUpBags.knight.takeObject({}); setUpBags.knight.setLock(true); table.insert(destroyBagList, setUpBags.knight)
 
     start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
-    cleanup(contactObject, destroyBagList, 'move')
+
+    Wait.frames(function()
+        destroyObject(self)
+        cleanup(contactObject, destroyBagList, 'move')
+    end, 2)
 end
 
 function start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
@@ -203,17 +207,25 @@ end
 
 function cleanup(contactObject, bagList, move)
     if move then
+        --destroyObject(self)
+        --self.setLock(true);
+        contactObject.setLock(true)
+        --self.interactable = false;
+        contactObject.interactable = false;
+        --disableCollider(self);
+        disableCollider(contactObject)
+
         local offset = Vector(0,-2,0)
         contactObject.setPosition(contactObject.getPosition()+offset)
-        self.setPosition(contactObject.getPosition()+offset)
+        --self.setPosition(contactObject.getPosition()+offset)
     else
-        destroyObject(contactObject)
         Wait.time(function()
             for k,o in pairs(bagList) do
                 destroyObject(o)
             end
         end, 1)
-        destroyObject(self)
+        destroyObject(contactObject)
+        --destroyObject(self)
     end
 end
 

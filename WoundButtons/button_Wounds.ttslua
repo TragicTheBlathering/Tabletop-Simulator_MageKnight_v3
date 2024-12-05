@@ -9,9 +9,11 @@ local wait_ids = {}
 local data = {poison=false, pos={}}
 
 function onLoad(save_state)
-    makeButtons()
     setVariables()
+    makeButtons()
 end
+
+local forceFix = {trashID_PlayerDiscard_p1=Vector(-113.03, 2.54, -82.12), trashID_PlayerDiscard_p2=Vector(-45.03, 2.54, -82.12), trashID_PlayerDiscard_p3=Vector(22.98, 2.55, -82.12), trashID_PlayerDiscard_p4=Vector(90.98, 2.54, -82.12)}
 
 function setVariables()
     data.poison = self.hasTag('PosionBag')
@@ -24,8 +26,8 @@ function setVariables()
         end
     end
     data.pos.hand = pos[tonumber(data.key)]
-    data.discardPlatform = getObjectsWithAllTags({'trash_DiscardTarget', 'Cards_PlayerCard', data.playerTrashID})[1]
-    data.pos.discard = data.discardPlatform.getPosition()
+    --data.discardPlatform = getObjectsWithAllTags({'trash_DiscardTarget', 'Cards_PlayerCard', data.playerTrashID})[1]
+    data.pos.discard = forceFix[data.playerTrashID]
 end
 
 function button_AddWounds()
