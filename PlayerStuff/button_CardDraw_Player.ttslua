@@ -1,4 +1,4 @@
-local ShowCast = true
+local ShowCast = false
 local tagIDs = false
 local wait_ids = {}
 
@@ -11,7 +11,6 @@ local drawPosition = require("/MageKnightV3/GlobalVariables").DrawToHandPosition
 local tagKey = false
 
 function onload()
-    --print(' -- Code : Draw Buttons [W.I.P]')
     setVariables()
     makeButtons()
 end
@@ -149,6 +148,7 @@ function b_Draw_HandSize(obj, color, alt_click)
 end
 
 function addTrashTag(card)
+    card.hide_when_face_down = false
     for k, tag in ipairs(card.getTags()) do
         if string.find(string.lower(tag), string.lower('trashID_'), 1, true) then
             card.removeTag(tagIDs.remove)

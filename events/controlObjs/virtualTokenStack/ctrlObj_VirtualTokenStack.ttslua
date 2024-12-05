@@ -32,8 +32,8 @@ function processVirtualStack(args) -- {bag=bag, obj=obj, variableData=variableDa
         end
         if value.type.url then
             for tag, v in pairs(value.tags) do
-                --print(tag)
                 if bag.hasTag(tag) then
+                    print(tag)
                     table.insert(value.tagID, tag)
                     --value.tagID = tag
                     --break
@@ -68,6 +68,8 @@ function processVirtualStack(args) -- {bag=bag, obj=obj, variableData=variableDa
             tool.setBagTexture.usingURLs(bag, bagData, value)
         elseif value.type.hex then
             tool.setBagTexture.usingTint(bag, bagData, value)
+        elseif value.type.contents then
+            tool.setBagTexture.usingContentsOfBag(bag, bagData, value)
         end
 
     else -- if any invliad objects are found turn the bag red to indicate it.

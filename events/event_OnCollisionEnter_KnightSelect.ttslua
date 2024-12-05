@@ -1,0 +1,9 @@
+local event_OnCollisionEnter_KnightSelect = {}
+    local dprint = require("/_libs/debug/dPrint").dprint
+
+    function event_OnCollisionEnter_KnightSelect.chooseKnight(collision_info)
+        dprint('collision_info',collision_info)
+    end
+
+
+return event_OnCollisionEnter_KnightSelect

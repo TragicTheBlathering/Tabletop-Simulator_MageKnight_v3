@@ -11,13 +11,13 @@ local MKevent = {}
     MKevent.OnFlip_cardDecal = require("/MageKnightV3/events/event_onPlayerAction_CardDecal").setDecal
     -- Mana Drop and save face
     MKevent.OnDrop_Mana = require("/MageKnightV3/events/event_OnDrop_Mana").DropMana
+    -- Select Mage Knight
+    --MKevent.ChooseMageKnight = require("/MageKnightV3/events/event_OnCollisionEnter_KnightSelect").chooseKnight
+
 
 
 function onLoad(save_state)
 end
-
---------------------------------------------------------------------------------
---- onObjectEnter : CONTAINER --------------------------------------------------
 
 function onObjectEnterContainer(bag, obj)
     tool.virtualTokenStack.VirtualTokenStackEvent(bag, obj, 'event_virtualTokenStack', 0.5)

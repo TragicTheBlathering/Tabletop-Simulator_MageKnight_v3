@@ -13,7 +13,7 @@ setting.setup = false
 --How far from the center of the device the dice are spawned
 setting.radius = 3
 --How wide of an arch the dice are placed on, in degrees (1-360)
-setting.arc = 120
+setting.arc = 70
 --Where center of the arc is around the tool is placed (0=bottom, 180=top)
 setting.rotation = 180
 --Height above tool die is spawned
@@ -22,7 +22,7 @@ setting.height = 3
 setting.scale = 1
 
 --Maximum dice that can be spawned by this tool (-1 is infinite)
-setting.maxCount = 1
+setting.maxCount = 5
 --Delay (seconds) after a click that the roll is done (0.5 or more)
 setting.rollDelay = 1.2
 --Time before dice are cleaned up (0 is instant, -1 won't clean them)
@@ -76,7 +76,10 @@ function onload(saved_data)
     else
         spawnedDice = {}
     end
-
+    if Vector.equals(Vector(-65.30, 2.13, -5.49), self.getPosition()) then
+        setting.rotation = -120
+        setting.radius = 5
+    end
     --math.randomseed(os.time())
     createButtons()
 end

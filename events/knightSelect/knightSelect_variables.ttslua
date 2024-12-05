@@ -1,0 +1,50 @@
+local knightSelect_variables = {}
+    knightSelect_variables.deck={pos=Vector(-118.35, 2.61, -82.12), rot=Vector(0, 180, 180)}
+
+    knightSelect_variables.knight = {
+        Compeditive_SkillToken={pos=Vector(-108.66, 2.52, -75.63), rot=Vector(0, 180, 0)},
+        CoOp_SkillToken={pos=Vector(-108.66, 2.52, -77.31), rot=Vector(0, 180, 0)},
+        player_CommandToken={pos=Vector(-103.03, 2.66, -64.86), rot=Vector(0,180,180)},
+        player_Meeple={pos=Vector(-92.02, 2.57, -64.86), rot=Vector(0, 180, 0)},
+        eventID_CommandToken={pos=Vector(-109.87, 2.52, -68.39), rot=Vector(0, 180, 0), forzen=true},
+        player_ControlMarker={pos=Vector(-107.26, 2.61, -68.35), rot=Vector(0, 180, 0), forzen=true},
+        player_QuestMarker={pos=Vector(-110.60, 2.60, -71.16), rot=Vector(0, 180, 0), forzen=true},
+        PlayerSkill_Token={pos=Vector(-108.67, 3.01, -73.77), rot=Vector(0, 180, 0), forzen=true},
+        SkillCard_A={pos=Vector(-124.64, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
+        SkillCard_B={pos=Vector(-121.29, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
+        SkillCard_Small={pos=Vector(-121.30, 2.01, -91.62), rot=Vector(0, 180, 0), forzen=true},
+        PlayerBoard={pos=Vector(-98.00, 2.52, -74.62), rot=Vector(0, 180, 180), not_interactive=true}
+    }
+
+    knightSelect_variables.generic = {
+        ManaToken_Black={pos=Vector(-110.80, 3.06, -64.08), rot=Vector(22.15, 245.94, 248.77), forzen=true},
+        ManaToken_Gold={pos=Vector(-110.77, 3.11, -65.82), rot=Vector(37.53, 265.54, 127.65), forzen=true},
+        ManaToken_Green={pos=Vector(-108.91, 3.08, -64.03), rot=Vector(333.61, 158.41, 111.54), forzen=true},
+        ManaToken_Red={pos=Vector(-108.92, 3.07, -66.05), rot=Vector(335.32, 224.50, 56.86), forzen=true},
+        ManaToken_White={pos=Vector(-106.91, 3.07, -63.94), rot=Vector(335.32, 298.03, 56.86), forzen=true},
+        ManaToken_Blue={pos=Vector(-106.89, 3.06, -65.91), rot=Vector(22.15, 275.04, 248.77), forzen=true},
+
+        token_ConqueredKeep={pos=Vector(-125.80, 2.58, -85.89), rot=Vector(0,180,0), forzen=true},
+
+        UnitOffer_ExtraDraw={pos=Vector(-71.33, 2.62, -69.24), rot=Vector(0,180,0), forzen=true},
+        UnitOffer_ExtraColour={pos=Vector(-71.33, 2.57, -69.24), rot=Vector(0,180,0), not_interactive=true},
+
+        Player_UnitWounds={pos=Vector(-71.33, 2.58, -67.35), rot=Vector(0,180,0), forzen=true},
+        DieRoller_PlayerBoard={pos=Vector(-71.37, 2.57, -64.86), rot=Vector(0,180,0), not_interactive=true},
+        ArtifactRoller_PlayerBoard={pos=Vector(-71.33, 2.57, -71.53), rot=Vector(0,180,0), not_interactive=true}
+    }
+
+    knightSelect_variables.unique = {
+        Cards_PlayerCard={pos=Vector(-113.02, 2.52, -82.12), rot=Vector(0,180,0), not_interactive=true},
+        event_TrashCan={pos=Vector(-71.23, 2.52, -80.00), rot=Vector(0,180,0), not_interactive=true},
+        WoundBag={pos=Vector(-108.66, 2.52, -71.09), rot=Vector(0,180,0), not_interactive=true},
+        PosionBag={pos=Vector(-106.90, 2.52, -71.09), rot=Vector(0,180,0), not_interactive=true},
+        tool_DrawPlayerCards={pos=Vector(-98.00, -4.80, -74.62), rot=Vector(0,00,0), not_interactive=true}
+        }
+
+return knightSelect_variables
+
+
+--[[
+
+]]

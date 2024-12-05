@@ -2,7 +2,7 @@ local checkStackForInvalidObj = {}
     local dprint = require("/_libs/debug/dPrint").dprint
 
     function checkStackForInvalidObj.checkBag_InvalidMarkRED(bag, bagData, value)
-        --dprint('value.tagID', value.tagID)
+        --dprint('checkStackForInvalidObj.checkBag_InvalidMarkRED', value.tagID)
 
         if bagData.ContainedObjects then
             local containtedTags = {}

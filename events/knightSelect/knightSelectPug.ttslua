@@ -1,0 +1,271 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+function onload()end
+
+function onCollisionEnter(collision_info)
+    local contactObject = collision_info.collision_object
+    if contactObject.hasTag('KnightSelect') then
+        for k, tag in pairs(contactObject.getTags()) do
+            if string.find(tag, 'PlayerPosition', 1, true) then
+                fetchKnight(tag, contactObject)
+            end
+        end
+    end
+end
+
+function fetchKnight(playerSlot, contactObject)
+    --local data = require("MageKnightV3/events/knightSelect/knightSelect_variables")-- generic / unique / knight--dprint('data',data)
+    local destroyBagList = {}
+    local boardPosOffset = getPlayerBoardOffset(contactObject)
+    local setUpBags = getSetupBags(playerSlot)
+        setUpBags.generic = setUpBags.generic.takeObject({}); setUpBags.generic.setLock(true); table.insert(destroyBagList, setUpBags.generic)
+        setUpBags.unique = setUpBags.unique.takeObject({}); setUpBags.unique.setLock(true); table.insert(destroyBagList, setUpBags.unique)
+        setUpBags.knight = setUpBags.knight.takeObject({}); setUpBags.knight.setLock(true); table.insert(destroyBagList, setUpBags.knight)
+
+    start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
+    cleanup(contactObject, destroyBagList, 'move')
+end
+
+function start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
+    local data = require("MageKnightV3/events/knightSelect/knightSelect_variables")-- generic / unique / knight--dprint('data',data)
+    local contents = setUpBags.knight.getObjects()
+    local playerboard = 'PlayerBoard'
+
+    local shouldBreak = false
+    for k, obj in pairs(contents) do
+        if shouldBreak then break end
+        local objTags = obj.tags
+        for k, tag in ipairs(objTags) do
+            if tag == playerboard then
+                playerBoard_index = obj.index
+                shouldBreak = true
+                break
+            end
+        end
+    end
+
+    if playerBoard_index then
+        local offset = {height=Vector(0,7,0), board=Vector(boardPosOffset,0,0)}
+        local obj = setUpBags.knight.takeObject({index=playerBoard_index})
+
+        setSwitched(obj, 'clear')
+        obj.setPosition(data.knight[playerboard].pos+offset.height+offset.board, false, false)
+        obj.setRotation(data.knight[playerboard].rot, false, false)
+
+        obj.setPositionSmooth(data.knight[playerboard].pos+offset.board, false, false)
+        Wait.condition(function()
+            setSwitched(obj, 'set', {not_interactive=true})
+            otherbags_Fetch(setUpBags, data, contactObject, offset, playerSlot, destroyBagList)
+
+        end, function() return isSmooth(obj) end)
+    end
+end
+
+function otherbags_Fetch(setUpBags, data, contactObject, offset, playerSlot, destroyBagList)
+    emptyBag(setUpBags, 'generic', data, contactObject, offset)
+    emptyBag(setUpBags, 'knight', data, contactObject, offset, 'deck')
+    emptyBag(setUpBags, 'knight', data, contactObject, offset)
+    emptyBag(setUpBags, 'unique', data, contactObject, offset)
+
+    --dprint(destroyBagList)
+    Wait.frames(function() cleanup(contactObject, destroyBagList) end, 1)
+end
+
+function emptyBag(bag, bagType, data, contactObject, offset, deckOnly, num)
+    local bag = bag[bagType]
+    if deckOnly == 'deck' then
+        local contents = bag.getData()
+        for k, deck in pairs(contents.ContainedObjects) do
+            if deck.Name == 'Deck' then
+                local obj = bag.takeObject({index=k-1})
+                obj.setRotation(data.deck.rot)
+                placeOnPlayerBoard(obj, data.deck, offset)
+            end
+        end
+    else
+        local movmentData = data[bagType]
+        local contents = bag.getObjects()
+        local reverseIndex = reverseBagIndex(contents)
+
+        local fetchList = {}
+        for k, obj in ipairs(contents) do
+            local key = findTagKey(obj.tags, movmentData)
+            fetchList[tostring(obj.index)] = movmentData[key]
+        end
+
+        for _, rdex in pairs(reverseIndex) do
+            local key = tostring(rdex)
+            local obj = bag.takeObject({index=rdex})--, position={-80.65, 5, -57.42}})
+            obj.setLock(true)
+            obj = setInvisTexture(obj)
+            obj.setPosition(contactObject.getPosition()+Vector(0,-20,0))
+            Wait.frames(function()
+                if obj.hasTag('tool_DrawPlayerCards') then
+                    obj.setPosition(contactObject.getPosition()+Vector(16,-5,15))
+                else
+                    obj.setPosition(contactObject.getPosition()+Vector(0,3,0))
+                end
+                placeOnPlayerBoard(obj, fetchList[key], offset)
+            end, 1)
+        end
+    end
+end
+
+function setInvisTexture(obj)
+    local texture = {invsi='https://steamusercontent-a.akamaihd.net/ugc/1997946697964286437/3F74E429C36D51E1BF2F201D33D5734F1F8C69DC/',
+                     opaqu='https://steamusercontent-a.akamaihd.net/ugc/1997946697964290241/A9B68730371DBBF6B53D60A502CEB631833479BC/'
+            }
+    local customData = obj.getCustomObject()
+    if customData.diffuse == texture.opaqu then
+        obj.setCustomObject({diffuse=texture.invsi})
+        local newObject = obj.reload()
+        return newObject
+    end
+
+    return obj
+end
+
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end
+
+function placeOnPlayerBoard(obj, prams, offset)
+    setSwitched(obj, 'clear')
+    if obj.hasTag('tool_DrawPlayerCards') then
+        obj.setPositionSmooth(prams.pos+offset.height+offset.board+Vector(0,-2,0), false, false)
+    else
+        obj.setPositionSmooth(prams.pos+offset.height+offset.board, false, false)
+    end
+    obj.setRotationSmooth(prams.rot, false, false)
+    Wait.condition(function()
+        obj.setPositionSmooth(prams.pos+offset.board, false, false)
+        setSwitched(obj, 'set', prams)
+        Wait.condition(function()
+            obj.setPosition(prams.pos+offset.board, false, false)
+        end, function() return isSmooth(obj) end)
+    end, function() return isSmooth(obj) end)
+end
+
+function findTagKey(objTags, tbl)
+    for _, str in ipairs(objTags) do
+        local tag = string.lower(str)
+        for k, v in pairs(tbl) do
+            local key = string.lower(k)
+            if key == tag then
+                --print('TAG : '..k)
+                return k
+            end
+        end
+    end
+    return 'false'
+end
+
+function reverseBagIndex(containedObjects)
+    local z = {}
+        for i, obj in ipairs(containedObjects) do
+            local index = obj.index
+            table.insert(z, index)
+        end
+        table.sort(z, function(a,b) return a>b end)
+    return z
+end
+
+function getSetupBags(playerSlot) --getObjectsWithAllTags
+    local z = {}
+        z.generic=getObjectsWithTag('setupBag_PlayerBoard_Generic')[1]
+        z.unique=getObjectsWithAllTags({'setupBag_PlayerBoard_Unique', playerSlot})[1]
+
+    for k, bag in pairs(getObjectsWithTag('setupBag_PlayerBoard_Knight')) do
+        local bagName = bag.getName()
+        local fetchName = self.getName()
+        if bagName == fetchName then
+            z.knight=bag
+        end
+    end
+    return z
+end
+
+function setSwitched(obj, switch, prams)
+    switch = switch or false
+    if switch == 'clear' then
+        disableCollider(obj)
+        obj.interactable = true
+        obj.setLock(false)
+    elseif switch == 'set' then -- forzen not_interactive
+        if prams.forzen then obj.setLock(true) end
+        if prams.not_interactive then obj.setLock(true); obj.interactable = false end
+        enableCollider(obj)
+    end
+end
+
+function cleanup(contactObject, bagList, move)
+    if move then
+        local offset = Vector(0,-2,0)
+        contactObject.setPosition(contactObject.getPosition()+offset)
+        self.setPosition(self.getPosition()+offset)
+    else
+        contactObject.interactable = false
+        self.interactable = false
+        Wait.time(function()
+            for k,o in pairs(bagList) do
+                destroyObject(o)
+            end
+        end, 1)
+    end
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+function enableCollider(obj)
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", true)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", true)
+    end
+end
+function disableCollider(obj)
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", false)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", false)
+    end
+end
+
+function getPlayerBoardOffset(contactObject)
+    --[[ -- this code works out the offset.
+    -- Just uncomment and use player mat positons to recaculate
+    local source = -98.00
+    local p2 = -30.00
+    local p3 = 38.00
+    local p4 = 106.00
+
+    local p1 = 0
+    p2 = p2 - source
+    p3 = p3 - source
+    p4 = p4 - source
+
+    print(p1)
+    print(p2)
+    print(p3)
+    print(p4)
+    ]]
+    local playerBoardPosition = {playerPosition1=0, playerPosition2=68, playerPosition3=136, playerPosition4=204}
+    for tag, num in pairs(playerBoardPosition) do
+        if contactObject.hasTag(tag) then
+            return num
+        end
+    end
+    return 0
+end

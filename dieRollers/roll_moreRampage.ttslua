@@ -85,9 +85,24 @@ end
 
 --Spawn dice for rolling
 
+function click_roll(_, color, rightClick)
+    if rightClick then
+        local name = self.getName()
+        if name == 'Roll Rampage Die' then
+            broadcastToAll('Switching to : MORE RAMPAGE DIE', 'Orange')
+            self.setState(2)
+        elseif name == 'Roll MORE Rampage Die' then
+            broadcastToAll('Switching to : RAMPAGE DIE', 'Orange')
+            self.setState(1)
+        end
+
+    else
+        activateToolRoll(_, color)
+    end
+end
 
 
-function click_roll(_, color)
+function activateToolRoll(_, color)
     --Dice spam protection check
     local denyRoll = false
     if setting.maxCount > 0 and #spawnedDice >= setting.maxCount then
