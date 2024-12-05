@@ -35,8 +35,8 @@ local knightSelect_variables = {}
     }
 
     knightSelect_variables.unique = {
+        event_TrashCan={pos=Vector(-71.23, 2.52, -80.00), rot=Vector(0,180,0), forzen=true},
         Cards_PlayerCard={pos=Vector(-113.02, 2.52, -82.12), rot=Vector(0,180,0), not_interactive=true},
-        event_TrashCan={pos=Vector(-71.23, 2.52, -80.00), rot=Vector(0,180,0), not_interactive=true},
         WoundBag={pos=Vector(-108.66, 2.52, -71.09), rot=Vector(0,180,0), not_interactive=true},
         PosionBag={pos=Vector(-106.90, 2.52, -71.09), rot=Vector(0,180,0), not_interactive=true},
         tool_DrawPlayerCards={pos=Vector(-98.00, -4.80, -74.62), rot=Vector(0,00,0), not_interactive=true}

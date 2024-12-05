@@ -205,15 +205,15 @@ function cleanup(contactObject, bagList, move)
     if move then
         local offset = Vector(0,-2,0)
         contactObject.setPosition(contactObject.getPosition()+offset)
-        self.setPosition(self.getPosition()+offset)
+        self.setPosition(contactObject.getPosition()+offset)
     else
-        contactObject.interactable = false
-        self.interactable = false
+        destroyObject(contactObject)
         Wait.time(function()
             for k,o in pairs(bagList) do
                 destroyObject(o)
             end
         end, 1)
+        destroyObject(self)
     end
 end
 
