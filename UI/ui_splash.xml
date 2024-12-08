@@ -1,0 +1,5 @@
+<Panel id="splashScreen" width="660" height="635" color="rgb(0, 0, 0)">
+    <Button id="splashButton" interactable="true" onClick="closeSplash">
+		<Image image="SplashScreen" preserveAspect="true" height="735" width="960" rectAlignment="MiddleCenter"/>
+	</Button>
+</Panel>

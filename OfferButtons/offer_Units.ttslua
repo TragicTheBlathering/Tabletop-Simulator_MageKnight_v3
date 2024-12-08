@@ -1,5 +1,7 @@
 --******************************************************************************
 -- Function Storage ------------------------------------------------------------
+local dprint = require("/_libs/debug/dPrint").dprint
+
 local setButtons = {} -- SetButton Functionsd
 local tool = {} -- Various Tools (definitions at bottom of script)
 --******************************************************************************
@@ -8,7 +10,7 @@ local ShowCast = false
 local printBug = false
 local functionStopped = {resetDecks = false, drawCards = false, clearOffer = false}
 local gameSettings = {
-        unitOfferCount=nil, blitz=nil, playerCount=nil, plusTwo=2, set=false -- Player Set : Units = Player Count + 2 + (blitz) (Blitz == +1, volkaire = +1, if both on then +2)
+        unitOfferCount=nil, blitz=nil, playerCount=2, plusTwo=2, set=false -- Player Set : Units = Player Count + 2 + (blitz) (Blitz == +1, volkaire = +1, if both on then +2)
     }
 --gameSettings.unitOfferCount
 local unitOffer = { --unitOffer.overflowValues{total=nil, silver=0, gold=0, overflow=false},
@@ -259,7 +261,6 @@ function drawCards()
     setGameState('decks')
     setGameState('currentOffer')
     setGameState('stacks')
-
     local data = {
         drawLimit = gameSettings.unitOfferCount,
         offerTypes = cardData.currentOffer,
@@ -277,7 +278,6 @@ function drawCards()
         offerDrawPos_AA = cardData.cardOfferPos_AA,
         count=cardData.stack_AA,
     }
-
     local drawLimit = {silver=0, gold=0, maxTotal=gameSettings.unitOfferCount, aa=0}
         if data.drawDecks.silver then drawLimit.silver = data.drawDecks.silver.getQuantity() end; if drawLimit.silver == -1 then drawLimit.silver = 1 end
         if data.drawDecks.gold then drawLimit.gold = data.drawDecks.gold.getQuantity() end; if drawLimit.gold == -1 then drawLimit.gold = 1 end
@@ -298,12 +298,17 @@ function drawCards()
         end
     end
 
-    for i = 1, data_AA.count do
-        if data_AA.currentOffer_AA[i] == false or data_AA.currentOffer_AA[i] == nil then
-            skipDraw = false
-            break
+    if data_AA.count then
+        for i = 1, data_AA.count do
+            if data_AA.currentOffer_AA[i] == false or data_AA.currentOffer_AA[i] == nil then
+                skipDraw = false
+                break
+            end
         end
+    else
+        skipDraw = false
     end
+
 
     local waitCardList = {}
     if not skipDraw then
@@ -331,26 +336,30 @@ function drawCards()
                 end
             end
         end
+
     -- Draw AA Cards -----------------------------------------------------------
         local count = 0
         for k, inValid in ipairs(data_AA.currentOffer_AA) do
-            if k <= data_AA.count then
-                if not inValid then
-                    local container = data_AA.drawDeck
-                    if count < drawLimit.aa then
-                        local c = nil
-                        local prams = {position=data_AA.offerDrawPos_AA[k]+data.offset, rotation=data.rot}
-                        if container.type == 'Card' then
-                            c = container
-                            c.setPositionSmooth(prams.position, false, false)
-                            c.setRotationSmooth(prams.rotation, false, false)
-                        else
-                            c = container.takeObject(prams)
+            --dprint('data_AA.count', data_AA.count)
+            if data_AA.count then
+                if k <= data_AA.count then
+                    if not inValid then
+                        local container = data_AA.drawDeck
+                        if count < drawLimit.aa then
+                            local c = nil
+                            local prams = {position=data_AA.offerDrawPos_AA[k]+data.offset, rotation=data.rot}
+                            if container.type == 'Card' then
+                                c = container
+                                c.setPositionSmooth(prams.position, false, false)
+                                c.setRotationSmooth(prams.rotation, false, false)
+                            else
+                                c = container.takeObject(prams)
+                            end
+                            Wait.condition(function() c.setPositionSmooth(data_AA.offerDrawPos_AA[k]) end, function() return isSmooth(c) end)
+                            table.insert(waitCardList, c)
                         end
-                        Wait.condition(function() c.setPositionSmooth(data_AA.offerDrawPos_AA[k]) end, function() return isSmooth(c) end)
-                        table.insert(waitCardList, c)
+                        count = count + 1
                     end
-                    count = count + 1
                 end
             end
         end

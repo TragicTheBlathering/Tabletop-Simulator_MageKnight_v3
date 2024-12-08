@@ -1,0 +1,8 @@
+function onCollisionEnter(collision_info)
+    local contactObject = collision_info.collision_object
+    if not contactObject.hasTag('MegaFreeze') then
+        self.shuffle()
+        self.shuffle()
+        self.shuffle()
+    end
+end

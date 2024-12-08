@@ -1,3 +1,4 @@
+local uiFunc = require("/MageKnightV3/UI/_GlobalUI_lua")
 local tool = {}
       tool.onModLoad=require("/_libs/onModLoad/onModLoad")
       --tool.setupZone=require("/_libs/setUpZones/setUpZones")
@@ -7,6 +8,8 @@ local tool = {}
 local setupObjects = nil
 
 function onLoad()
+    uiFunc.closeSplash()
+    uiFunc.openSetupMenu()
     math.randomseed(os.time())
     tool.onModLoad.MegaFreeze() -- You can also add GUIDs via {'guid1', 'guid2'....}
     tool.onModLoad.FixHandZones(8)

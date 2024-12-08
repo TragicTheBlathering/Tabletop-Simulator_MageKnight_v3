@@ -17,16 +17,13 @@ function fetchKnight(playerSlot, contactObject)
     local destroyBagList = {}
     local boardPosOffset = getPlayerBoardOffset(contactObject)
     local setUpBags = getSetupBags(playerSlot)
-        setUpBags.generic = setUpBags.generic.takeObject({}); setUpBags.generic.setLock(true); table.insert(destroyBagList, setUpBags.generic)
-        setUpBags.unique = setUpBags.unique.takeObject({}); setUpBags.unique.setLock(true); table.insert(destroyBagList, setUpBags.unique)
-        setUpBags.knight = setUpBags.knight.takeObject({}); setUpBags.knight.setLock(true); table.insert(destroyBagList, setUpBags.knight)
+        setUpBags.generic = setUpBags.generic.takeObject({}); setUpBags.generic.setLock(true); setSwitched(setUpBags.generic, 'clear'); table.insert(destroyBagList, setUpBags.generic)
+        setUpBags.unique = setUpBags.unique.takeObject({}); setUpBags.unique.setLock(true); setSwitched(setUpBags.unique, 'clear'); table.insert(destroyBagList, setUpBags.unique)
+        setUpBags.knight = setUpBags.knight.takeObject({}); setUpBags.knight.setLock(true); setSwitched(setUpBags.knight, 'clear'); table.insert(destroyBagList, setUpBags.knight)
 
     start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
 
-    Wait.frames(function()
-        destroyObject(self)
-        cleanup(contactObject, destroyBagList, 'move')
-    end, 2)
+    Wait.frames(function() destroyObject(self); cleanup(contactObject, destroyBagList, 'move') end, 2)
 end
 
 function start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
@@ -136,21 +133,86 @@ function tableSize(t)
     return count
 end
 
-function placeOnPlayerBoard(obj, prams, offset)
-    setSwitched(obj, 'clear')
-    if obj.hasTag('tool_DrawPlayerCards') then
-        obj.setPositionSmooth(prams.pos+offset.height+offset.board+Vector(0,-2,0), false, false)
+function placeOnPlayerBoard(obj, prams, offsetData)
+    offset = deepCopy(offsetData)
+    if obj.hasTag('SkillCard_C') or obj.hasTag('SkillCard_D') then
+        adjust2ndarySkillCardPrams(obj,prams,offset)
     else
-        obj.setPositionSmooth(prams.pos+offset.height+offset.board, false, false)
-    end
-    obj.setRotationSmooth(prams.rot, false, false)
-    Wait.condition(function()
-        obj.setPositionSmooth(prams.pos+offset.board, false, false)
-        setSwitched(obj, 'set', prams)
+        setSwitched(obj, 'clear')
+
+        if obj.hasTag('tool_DrawPlayerCards') then
+            obj.setPositionSmooth(prams.pos+offset.height+offset.board+Vector(0,-2,0), false, false)
+            --dprint('tool_DrawPlayerCards', offset.board)
+        elseif obj.hasTag('playerMarker_TurnOrder') then
+            offset.board = Vector(0,0,0)
+            obj.setPositionSmooth(prams.pos+offset.height+offset.board, false, false)
+            --dprint('playerMarker_TurnOrder',offset.board)
+        else
+            obj.setPositionSmooth(prams.pos+offset.height+offset.board, false, false)
+            --dprint('else', offset.board)
+        end
+
+        obj.setRotationSmooth(prams.rot, false, false)
         Wait.condition(function()
-            obj.setPosition(prams.pos+offset.board, false, false)
+            if obj.hasTag('playerMarker_TurnOrder') then offset.board = Vector(0,0,0) else offset.board = offsetData.board end
+            obj.setPositionSmooth(prams.pos+offset.board, false, false)
+            setSwitched(obj, 'set', prams)
+            Wait.condition(function()
+                if obj.hasTag('playerMarker_TurnOrder') then offset.board = Vector(0,0,0) else offset.board = offsetData.board end
+                obj.setPosition(prams.pos+offset.board, false, false)
+            end, function() return isSmooth(obj) end)
         end, function() return isSmooth(obj) end)
-    end, function() return isSmooth(obj) end)
+    end
+end
+
+function adjust2ndarySkillCardPrams(obj,prams,offset)
+    local hideValue = 5
+    obj.setLock(false)
+    obj.setPosition(obj.getPosition()+Vector(0,-hideValue,0))--print(obj.getVelocity())
+
+    Wait.condition(function()--print(obj.getVelocity())
+        obj.setLock(true)
+        obj.setPosition(obj.getPosition()+Vector(0,hideValue,0))
+        local cardSize = 4.724289/2
+        local dropSize = obj.getBounds().size.z/2
+        local nprams = deepCopy(prams) nprams.pos = prams.pos + Vector(0, 0, -(cardSize+dropSize))
+
+        obj.setPositionSmooth(nprams.pos+offset.height+offset.board, false, false)
+        obj.setRotationSmooth(nprams.rot, false, false)
+        Wait.condition(function()
+            obj.setPositionSmooth(nprams.pos+offset.board, false, false)
+            setSwitched(obj, 'set', nprams)
+
+            Wait.condition(function()
+                obj.setPosition(nprams.pos+offset.board, false, false)
+
+            end, function() return isSmooth(obj) end)
+        end, function() return isSmooth(obj) end)
+
+    end, function() return testVelocity(obj) end)
+end
+
+function testVelocity(obj)
+    if obj == nil then
+        return false
+    elseif obj.getVelocity():magnitude() > 0 then --f v.x ~= 0 or v.y ~=0 or v.z ~= 0 then
+        return true
+    end
+    return false
+end
+
+function deepCopy(orig)
+    local origType = type(orig)
+    local copy
+    if origType == 'table' then
+        copy = {}
+        for key, value in pairs(orig) do
+            copy[key] = deepCopy(value)
+        end
+    else
+        copy = orig
+    end
+    return copy
 end
 
 function findTagKey(objTags, tbl)
@@ -207,17 +269,12 @@ end
 
 function cleanup(contactObject, bagList, move)
     if move then
-        --destroyObject(self)
-        --self.setLock(true);
         contactObject.setLock(true)
-        --self.interactable = false;
         contactObject.interactable = false;
-        --disableCollider(self);
         disableCollider(contactObject)
 
         local offset = Vector(0,-2,0)
         contactObject.setPosition(contactObject.getPosition()+offset)
-        --self.setPosition(contactObject.getPosition()+offset)
     else
         Wait.time(function()
             for k,o in pairs(bagList) do
@@ -225,7 +282,6 @@ function cleanup(contactObject, bagList, move)
             end
         end, 1)
         destroyObject(contactObject)
-        --destroyObject(self)
     end
 end
 

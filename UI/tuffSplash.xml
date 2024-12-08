@@ -1,0 +1,2185 @@
+<Defaults>
+	<Panel	color="rgb(0.7, 0.7, 0.7)" rectAlignment="MiddleCenter" active="true"
+			allowDragging="false" returnToOriginalPositionWhenReleased="true" raycastTarget="true"
+			hideAnimation="None" showAnimation="None" animationDuration="0.5" visibility=""
+			outline="rgb(0, 0, 0)" outlineSize="1 -1" offsetXY="0 0"/>
+	<Panel	class="Floating" allowDragging="true" returnToOriginalPositionWhenReleased="false"/>
+
+	<Text 	fontSize="18" font="Fonts/MKCardText" fontStyle="Normal"
+			resizeTextForBestFit="false" offsetXY="0 0"
+			color="rgb(0, 0, 0)" alignment="MiddleCenter"/>
+	<Text 	class="Title" fontSize="22" font="Fonts/MKCardTittle"/>
+	<text	class="MainGame" fontSize="20"/>
+	<Text 	class="ScoreData" fontSize="16"/>
+	<Text 	class="ScoreHeading" fontSize="18"/>
+	<Text 	class="LevelData" fontSize="17"/>
+
+	<Toggle fontSize="18" font="Fonts/MKCardText" fontStyle="Normal" textColor="rgb(0, 0, 0)"
+			isOn="false" interactable="true"
+			rectAlignment="MiddleLeft" offsetXY="5 0" height="26"/>
+
+	<Dropdown fontSize="15" font="Fonts/MKCardText" fontStyle="Normal"
+			dropdownHeight="700" resizeTextForBestFit="false"
+			scrollSensitivity="10" interactable="true"
+			rectAlignment="MiddleRight" height="30" width="130" offsetXY="-5 0"/>
+
+	<Button	fontSize="18" font="Fonts/MKCardText" fontStyle="Normal" textColor="rgb(0, 0, 0)"
+			onMouseDown="ButtonClicked" onMouseUp="ButtonClicked"
+			tooltipPosition="Left" tooltipBackgroundColor="clear" tooltipOffset="20"
+			shadow="rgb(0, 0, 0)" shadowDistance="0 -0"/>
+	<Button class="ScenarioTweak" width="25" height="25" color="#7F7F7F" textColor="#FFFFFF" onClick="baseValueTweak"/>
+	<Button class="ShortButton" preferredWidth="45" onMouseDown="ButtonClicked" onMouseUp="ButtonClicked"/>
+	<Button class="LongButton" preferredWidth="45" onMouseDown="ButtonClicked" onMouseUp="ButtonClicked"/>
+
+	<Row class="ScoreData" preferredHeight="0"/>
+	<Row class="ScoreHeading" preferredHeight="30" color="rgb(0.5, 0.5, 0.1)" dontUseTableRowBackground="true"/>
+	<Row class="LevelData" preferredHeight="0"/>
+
+	<Cell />
+	<Cell class="ScoreData" active="false" />
+	<Cell class="ScoreHeading" color="rgb(0.5, 0.5, 0.1)" columnSpan="4" dontUseTableRowBackground="true"/>
+</Defaults>
+
+<Panel id="MainGame" active="false"	color="rgba(0.2, 0.2, 0.2, 0.0)" class="Floating" rectAlignment="LowerRight" offsetXY="-10 20" width="315" height="445">
+	<Panel color="rgb(0.2, 0.2, 0.2)" rectAlignment="LowerRight" offsetXY="0 55" width="315" height="390">
+		<VerticalLayout>
+			<Text id="MainGameNotes" class="MainGame" alignment="TopCenter" preferredHeight="168">Script Modifies</Text>
+			<HorizontalLayout childForceExpandWidth="false">
+				<Button id="ShrinkHand" onClick="valueAdjust" class="ShortButton">
+					<Image id="ShrinkHandImage" image="Sliced Button/Button New Active" type="Sliced"/><Text fontSize="26" offsetXY="0 1">-</Text>
+				</Button>
+				<Button id="DrawHand" preferredWidth="225" interactable="false" onClick="drawUpTo" onMouseDown="" onMouseUp="" tooltipOffset="65" tooltip="Hand size will be purple when above your base Hand size. Achieved by proximity to Keeps and Cities, or Day Tactic 4.">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="DrawHandText" class="MainGame" offsetXY="0 1">Script Modifies</Text>
+				</Button>
+				<Button id="GrowHand" onClick="valueAdjust" class="ShortButton">
+					<Image id="GrowHandImage" image="Sliced Button/Button New Active" type="Sliced"/><Text fontSize="26" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+				</Button>
+			</HorizontalLayout>
+			<Button id="DrawOne" height="1" onClick="drawUpTo">
+				<Image id="DrawOneImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="drawOneCardText" class="MainGame" offsetXY="0 1">{en}Draw One Card{zh-cn}抽一张牌{ko}카드 1장 뽑기{es}Roba Una Carta{fr}Prendre Une Carte{pt-br}Compre Uma Carta{de}Zieh Aine Karte</Text>
+			</Button>
+			<HorizontalLayout childForceExpandWidth="false">
+				<Button id="ShrinkFame" onClick="valueAdjust" class="ShortButton">
+					<Image id="ShrinkFameImage" image="Sliced Button/Button New Active" type="Sliced"/><Text fontSize="26" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+				</Button>
+				<Button id="EndRoundPlusFame" preferredWidth="225" interactable="false" onClick="PreEndRound" tooltipOffset="65" tooltip="How much Fame is added at 'End of Turn'">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="EndRoundPlusFameText" class="MainGame" offsetXY="0 1">Script Modifies</Text>
+				</Button>
+				<Button id="GrowFame" onClick="valueAdjust" class="ShortButton">
+					<Image id="GrowFameImage" image="Sliced Button/Button New Active" type="Sliced"/><Text fontSize="26" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+				</Button>
+			</HorizontalLayout>
+			<HorizontalLayout childForceExpandWidth="false">
+				<Button id="ShrinkRep" onClick="valueAdjust" class="ShortButton">
+					<Image id="ShrinkRepImage" image="Sliced Button/Button New Active" type="Sliced"/><Text fontSize="26" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+				</Button>
+				<Button id="EndRoundPlusRep" preferredWidth="225" interactable="false" onClick="PreEndRound" tooltipOffset="65" tooltip="How much Reputation is added (subtracted) at 'End of Turn'">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="EndRoundPlusRepText" class="MainGame" offsetXY="0 1">Script Modifies</Text>
+				</Button>
+				<Button id="GrowRep" onClick="valueAdjust" class="ShortButton">
+					<Image id="GrowRepImage" image="Sliced Button/Button New Active" type="Sliced"/><Text fontSize="26" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+				</Button>
+			</HorizontalLayout>
+			<Button id="EndTurnButton" height="1" onClick="preEndTurn" tooltip="At least one card must be played or discarded to 'End Your Turn'.">
+				<Image id="EndTurnButtonImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+				<Text id="EndTurnButtonText" class="MainGame" offsetXY="0 1">Script Modifies</Text>
+			</Button>
+			<Button id="EndRoundButton" height="1" onClick="PreEndRound" tooltip="Your deed deck needs to be empty and no cards played to 'End the Round'.">
+				<Image id="EndRoundButtonImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+				<Text id="EndRoundButtonText" class="MainGame" offsetXY="0 1">Script Modifies</Text>
+			</Button>
+		</VerticalLayout>
+		<Panel id="DummyTurn" active="false" color="rgb(0.2, 0.2, 0.2)" outlineSize="0 0" rectAlignment="LowerCenter" width="315" height="250">
+			<VerticalLayout padding="10 10 0 0">
+				<Text id="DummyNotes" class="MainGame" color="gray" alignment="TopCenter">Script Modifies</Text>
+			</VerticalLayout>
+			<Button id="DummyButton" height="40" rectAlignment="LowerCenter" interactable="false" onClick="dummyTurn">
+				<Image id="DummyButtonImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+				<Text id="DummyButtonText" class="MainGame" offsetXY="0 1">Script Modifies</Text>
+			</Button>
+		</Panel>
+		<Panel id="ExtraTurnTactic"	active="false" color="rgb(0.2, 0.2, 0.2)" outlineSize="0 0" rectAlignment="LowerCenter" offsetXY="0 33" width="315" height="34">
+			<HorizontalLayout>
+				<Button id="EndTurnButtonAlt" height="1" onClick="preEndTurn">
+					<Image id="EndTurnButtonAltImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="EndTurnButtonAltText" class="MainGame" offsetXY="0 1">{en}End Turn{zh-cn}结束回合{ko}차례 종료{es}Fin de Turno{fr}Fin de Tour{pt-br}Fim de Turno{de}Zug Beenden</Text>
+				</Button>
+				<Button id="ExtraTurnTacticButton" height="1" onClick="preEndTurn">
+					<Image id="ExtraTurnTacticButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="ExtraTurnTacticButtonText" class="MainGame" offsetXY="0 1">Script Modifies</Text>
+				</Button>
+			</HorizontalLayout>
+		</Panel>
+		<Panel id="RewardCheck"	active="false" color="rgb(0.2, 0.2, 0.2)" outlineSize="0 0" rectAlignment="LowerCenter" offsetXY="0 -15" width="315" height="180">
+			<VerticalLayout padding="10 10 10 0">
+				<Text id="RewardNotes" class="MainGame" alignment="UpperLeft"></Text>
+			</VerticalLayout>
+			<Button id="PreEndTurn" rectAlignment="LowerCenter" height="40" fontSize="18" onClick="endTurn">
+				<Image id="PreEndTurnImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="PreEndTurnText" class="MainGame" offsetXY="0 1">{en}Rewards Claimed{zh-cn}确认结束回合{pt-br}Recompensas Coletadas</Text>
+			</Button>
+		</Panel>
+		<Panel id="EndGameButton" active="false" outlineSize="0 0" rectAlignment="LowerLeft" offsetXY="0 -45" width="315" height="30">
+			<ToggleButton id="EndGameButtonReal" onClick="scenarioEnd"
+				tooltipPosition="Left" tooltipOffset="20" tooltip="Toggle to trigger final round of turns">
+				<Image id="EndGameButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="EndGameButtonText" fontSize="18" offsetXY="0 1">{en}Scenario End Achieved - No{zh-cn}声明结束剧本-否{ko}시나리오 종료 조건 충족 전{es}Escenario Fin Realizados - No{fr}Scénario Fin Atteint - Non{pt-br}Fim do Cenário Alcançado - Não</Text>
+			</ToggleButton>
+		</Panel>
+		<Panel id="OutOfTurnActions" rectAlignment="UpperLeft" offsetXY="0 150" width="315" height="150">
+			<Panel color="rgb(0.2, 0.2, 0.2)" rectAlignment="UpperLeft" width="315" height="30">
+				<Text id="OutOfTurnActionsTitle" color="white" class="MainGame">{en}Optional Actions{zh-cn}可选操作{ko}추가 행동{es}Acciones Opcionales{fr}Actions Facultatives{pt-br}Ações Opcionais</Text>
+			</Panel>
+			<Panel id="OutOfTurnActionsSub" color="rgb(0.4, 0.4, 0.4)" rectAlignment="LowerLeft" width="315" height="120">
+				<VerticalLayout padding="5 5 5 5">
+					<Button id="Plunder1" active="false" fontSize="17" Text="Pos1 Plunder Village (-1 Rep)" onClick="plunderVillage" tooltip="Draw two cards but Lose 1 reputation"/>
+					<Button id="Pursuit1" active="false" fontSize="17" Text="Pos1 skips Movement Phase" onClick="pursuingRampagers" tooltip="Moves all the pursuing Monster tokens. Resting, Calling End of Round, and Cooperative Assualts don't have a Move Phase."/>
+					<Button id="NightTactic2-1" active="false" fontSize="17" Text="Pos1 Use Night Tactic 2" onClick="nightTactic2"/>
+					<Button id="NightTactic4-1" active="false" fontSize="17" Text="Pos1 Tactic 4 Draw ? Card(s)" onClick="nightTactic4" tooltip="Return Cards to Deed deck to activate this button"/>
+					<Button id="NightTactic6Store1" active="false" fontSize="17" Text="Pos1 Tactic 6 Store Card" onClick="nightTactic6"/>
+					<Button id="NightTactic6Claim1" active="false" fontSize="17" Text="Pos1 Tactic 6 Claim X Card(s)" onClick="nightTactic6"/>
+					<Button id="3d8336-Motivation1" active="false" fontSize="17" Text="Pos1 Motivation Arythea Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="171244-Motivation1" active="false" fontSize="17" Text="Pos1 Motivation Goldyx Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="14399f-Motivation1" active="false" fontSize="17" Text="Pos1 Motivation Norowas Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="ba4df5-Motivation1" active="false" fontSize="17" Text="Pos1 Motivation Tovak Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="527b47-Motivation1" active="false" fontSize="17" Text="Pos1 Motivation Wolfhawk Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="MasterOfChaos1" active="false" fontSize="17" Text="Pos1 Master of Chaos increment" onClick="masterOfChaos"/>
+
+					<Button id="Plunder2" active="false" fontSize="17" Text="Pos2 Plunder Village (-1 Rep)" onClick="plunderVillage" tooltip="Draw two cards but Lose 1 reputation"/>
+					<Button id="Pursuit2" active="false" fontSize="17" Text="Pos1 skips Movement Phase" onClick="pursuingRampagers" tooltip="Moves all the pursuing Monster tokens. Resting, Calling End of Round, and Cooperative Assualts don't have a Move Phase."/>
+					<Button id="NightTactic2-2" active="false" fontSize="17" Text="Pos2 Use Night Tactic 2" onClick="nightTactic2"/>
+					<Button id="NightTactic4-2" active="false" fontSize="17" Text="Pos2 Tactic 4 Draw ? Card(s)" onClick="nightTactic4" tooltip="Return Cards to Deed deck to activate this button"/>
+					<Button id="NightTactic6Store2" active="false" fontSize="17" Text="Pos2 Tactic 6 Store Card" onClick="nightTactic6"/>
+					<Button id="NightTactic6Claim2" active="false" fontSize="17" Text="Pos2 Tactic 6 Claim X Card(s)" onClick="nightTactic6"/>
+					<Button id="3d8336-Motivation2" active="false" fontSize="17" Text="Pos2 Motivation Arythea Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="171244-Motivation2" active="false" fontSize="17" Text="Pos2 Motivation Goldyx Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="14399f-Motivation2" active="false" fontSize="17" Text="Pos2 Motivation Norowas Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="ba4df5-Motivation2" active="false" fontSize="17" Text="Pos2 Motivation Tovak Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="527b47-Motivation2" active="false" fontSize="17" Text="Pos2 Motivation Wolfhawk Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="MasterOfChaos2" active="false" fontSize="17" Text="Pos2 Master of Chaos increment" onClick="masterOfChaos"/>
+
+					<Button id="Plunder3" active="false" fontSize="17" Text="Pos3 Plunder Village (-1 Rep)" onClick="plunderVillage" tooltip="Draw two cards but Lose 1 reputation"/>
+					<Button id="Pursuit3" active="false" fontSize="17" Text="Pos1 skips Movement Phase" onClick="pursuingRampagers" tooltip="Moves all the pursuing Monster tokens. Resting, Calling End of Round, and Cooperative Assualts don't have a Move Phase."/>
+					<Button id="NightTactic2-3" active="false" fontSize="17" Text="Pos3 Use Night Tactic 2" onClick="nightTactic2"/>
+					<Button id="NightTactic4-3" active="false" fontSize="17" Text="Pos3 Tactic 4 Draw ? Card(s)" onClick="nightTactic4" tooltip="Return Cards to Deed deck to activate this button"/>
+					<Button id="NightTactic6Store3" active="false" fontSize="17" Text="Pos3 Tactic 6 Store Card" onClick="nightTactic6"/>
+					<Button id="NightTactic6Claim3" active="false" fontSize="17" Text="Pos3 Tactic 6 Claim X Card(s)" onClick="nightTactic6"/>
+					<Button id="3d8336-Motivation3" active="false" fontSize="17" Text="Pos3 Motivation Arythea Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="171244-Motivation3" active="false" fontSize="17" Text="Pos3 Motivation Goldyx Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="14399f-Motivation3" active="false" fontSize="17" Text="Pos3 Motivation Norowas Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="ba4df5-Motivation3" active="false" fontSize="17" Text="Pos3 Motivation Tovak Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="527b47-Motivation3" active="false" fontSize="17" Text="Pos3 Motivation Wolfhawk Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="MasterOfChaos3" active="false" fontSize="17" Text="Pos3 Master of Chaos increment" onClick="masterOfChaos"/>
+
+					<Button id="Plunder4" active="false" fontSize="17" Text="Pos4 Plunder Village (-1 Rep)" onClick="plunderVillage" tooltip="Draw two cards but Lose 1 reputation"/>
+					<Button id="Pursuit4" active="false" fontSize="17" Text="Pos1 skips Movement Phase" onClick="pursuingRampagers" tooltip="Moves all the pursuing Monster tokens. Resting, Calling End of Round, and Cooperative Assualts don't have a Move Phase."/>
+					<Button id="NightTactic2-4" active="false" fontSize="17" Text="Pos4 Use Night Tactic 2" onClick="nightTactic2"/>
+					<Button id="NightTactic4-4" active="false" fontSize="17" Text="Pos4 Tactic 4 Draw ? Card(s)" onClick="nightTactic4" tooltip="Return Cards to Deed deck to activate this button"/>
+					<Button id="NightTactic6Store4" active="false" fontSize="17" Text="Pos4 Tactic 6 Store Card" onClick="nightTactic6"/>
+					<Button id="NightTactic6Claim4" active="false" fontSize="17" Text="Pos4 Tactic 6 Claim X Card(s)" onClick="nightTactic6"/>
+					<Button id="3d8336-Motivation4" active="false" fontSize="17" Text="Pos4 Motivation Arythea Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="171244-Motivation4" active="false" fontSize="17" Text="Pos4 Motivation Goldyx Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="14399f-Motivation4" active="false" fontSize="17" Text="Pos4 Motivation Norowas Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="ba4df5-Motivation4" active="false" fontSize="17" Text="Pos4 Motivation Tovak Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="527b47-Motivation4" active="false" fontSize="17" Text="Pos4 Motivation Wolfhawk Claim X Card(s)" onClick="motivation" tooltip="Draw two cards"/>
+					<Button id="MasterOfChaos4" active="false" fontSize="17" Text="Pos4 Master of Chaos increment" onClick="masterOfChaos"/>
+				</VerticalLayout>
+			</Panel>
+		</Panel>
+		<Panel id="GameOver" active="false" class="Floating" padding="10 10 10 10" color="rgb(0.2, 0.2, 0.2)" rectAlignment="LowerRight" width="315" height="390">
+			<VerticalLayout>
+				<Text class="MainGame" color="white">Game over
+					-
+					You have gone past the Round Limit and incured the wrath of the Council of the Void.
+					-
+					Check your Score if you still feel worthy, then grovel for a second chance if you dare!</Text>
+			</VerticalLayout>
+		</Panel>
+		<Panel id="VolkareAttacked" active="false" rectAlignment="LowerLeft" offsetXY="0 -55" width="315" height="100">
+			<VerticalLayout>
+				<Button id="VolkareAttackedFull" onClick="dummyTurn"
+					tooltip="Flips the attacked players Turn Order Token Down and proceeds to their turn. Attack Volkare with access to everything">
+					<Image id="VolkareAttackedFullImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="VolkareAttackedFullText" class="MainGame" offsetXY="0 1">{en}Fully Attend the Battle{zh-cn}完全参战{ko}전투 완전 참여{es}Participar en la Batalla por Completo{fr}Assistez pleinement à la bataille{pt-br}Participar Totalmente do Combate</Text>
+				</Button>
+				<Button id="VolkareAttackedPartial" onClick="volkarePartial"
+					tooltip="Attack Volkare with cards and units only. Play area will be cleaned when your turn next arrives">
+					<Image id="VolkareAttackedPartialImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="VolkareAttackedPartialText" class="MainGame" offsetXY="0 1">{en}Partially Attend the Battle{zh-cn}部分参加战斗{ko}전투에 부분적으로 참여{es}Asiste Parcialmente a la Batalla{fr}Participez Partiellement à la Bataille{pt-br}Participe Parcialmente da Batalha</Text>
+				</Button>
+				<Button id="VolkareRetreat" onClick="volkareRetreat"
+					tooltip="Gives the attacked player's hand the wounds, and continues to the next player">
+					<Image id="VolkareRetreatImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="VolkareRetreatText" class="MainGame" offsetXY="0 1">{en}Retreat from the Battle{zh-cn}退出战斗{ko}전투 후퇴{es}Retirarse de la Batalla{fr}Retraite de la bataille{pt-br}Recuar da Batalha</Text>
+				</Button>
+			</VerticalLayout>
+		</Panel>
+	</Panel>
+</Panel>
+
+<Panel id="NoticeBoard" active="false" hideAnimation="Shrink" showAnimation="Grow" rectAlignment="UpperCenter" offsetXY="0 -200" width="500" height="50">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<VerticalLayout>
+		<Text id="NoticeText" class="MainGame"></Text>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="ScoreButton" active="false" rectAlignment="UpperLeft" offsetXY="240 -35" width="110" height="30" outlineSize="0 0">
+	<Button id="ScoreButtonActual" onClick="DisplayScore" interactable="false">
+		<Image id="ScoreButtonActualImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+		<Text id="ScoreButtonActualText" offsetXY="0 1">{en}Score{zh-cn}得  分{ko}점수{es}Puntuación{fr}Score{pt-br}Pontuação</Text>
+	</Button>
+</Panel>
+
+<Panel id="HelpButton" active="false" rectAlignment="UpperLeft" offsetXY="240 -5" width="110" height="30" outlineSize="0 0">
+	<Button id="helpButtonReal" onClick="SetupMenu" interactable="false">
+		<Image id="helpButtonRealImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+		<Text id="helpButtonRealText" offsetXY="0 1">{en}Setup{zh-cn}设  置{ko}설정{es}Preparación{fr}Préparation{pt-br}Preparação</Text>
+	</Button>
+</Panel>
+
+<Panel id="ScoreBoard" active="false" width="1400" height="720"	class="Floating">
+	<TableLayout id="ScoreBoardTable"
+		cellSpacing="0"
+		columnWidths="280 280 280 280"
+		autoCalculateHeight="false"
+		cellPadding="5 5 3 3"
+		cellBackgroundColor="Clear"
+		rectAlignment="UpperCenter">
+		<Image image="Sliced Button/Button New Deactive" rotation="0 0 180" type="Sliced"/>
+		<Row preferredHeight="32" dontUseTableRowBackground="false" color="rgb(0.3,0.3,0.3)">
+			<Text id="ScoreBoardTableTitleText1" Color="White" fontSize="24" offsetXY="0 -3" class="Title">{en}Mage Knight Current Score{zh-cn}魔法骑士当前得分{ko}현재 점수{es}Puntuación Actual de Mage Knight{fr}Mage Knight Score Actuel{pt-br}Pontuação atual do Mage Knight</Text>
+		</Row>
+		<Row preferredHeight="22" dontUseTableRowBackground="false" color="rgb(0.3,0.3,0.3)">
+			<Text id="ScoreBoardTableTitleText2" Color="White" fontSize="14" offsetXY="0 3">{en}Scores are calculated as if the game has been completed{zh-cn}此分数视为游戏结束而统计{ko}점수는 게임이 종료된 것으로 간주하여 계산합니다{es}Las puntuaciones se calculan como si el juego se ubiera completado.{fr}Les scores sont calculés comme si le jeu était terminé{pt-br}Pontuação é calculada como se o jogo tivesse sido completado</Text>
+		</Row>
+		<Row class="ScoreData" preferredHeight="25">
+			<Cell id="Mage1BaseScoreCell" class="ScoreData"><Text id="Mage1BaseScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Mage2BaseScoreCell" class="ScoreData"><Text id="Mage2BaseScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Mage3BaseScoreCell" class="ScoreData"><Text id="Mage3BaseScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Mage4BaseScoreCell" class="ScoreData"><Text id="Mage4BaseScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="KnowledgeScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="KnowledgeScoreHeadingText">{en}Knowledge{zh-cn}博古通今{ko}지식{es}Conocimiento{fr}Connaissances{pt-br}Conhecimento</Text>
+		</Row>
+		<Row id="KnowledgeScoreData" class="ScoreData">
+			<Cell id="Knowledge1ScoreCell" class="ScoreData"><Text id="Knowledge1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Knowledge2ScoreCell" class="ScoreData"><Text id="Knowledge2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Knowledge3ScoreCell" class="ScoreData"><Text id="Knowledge3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Knowledge4ScoreCell" class="ScoreData"><Text id="Knowledge4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="LootScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="LootScoreHeadingText">{en}Loot{zh-cn}富可敌国{ko}전리품{es}Botín{fr}Butin{pt-br}Saque</Text>
+		</Row>
+		<Row id="LootScoreData" class="ScoreData">
+			<Cell id="Loot1ScoreCell" class="ScoreData"><Text id="Loot1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Loot2ScoreCell" class="ScoreData"><Text id="Loot2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Loot3ScoreCell" class="ScoreData"><Text id="Loot3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Loot4ScoreCell" class="ScoreData"><Text id="Loot4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="LeaderScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="LeaderScoreHeadingText">{en}Leader{zh-cn}至高领袖{ko}지도자{es}Líder{fr}Chef{pt-br}Líder</Text>
+		</Row>
+		<Row id="LeaderScoreData" class="ScoreData">
+			<Cell id="Leader1ScoreCell" class="ScoreData"><Text id="Leader1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Leader2ScoreCell" class="ScoreData"><Text id="Leader2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Leader3ScoreCell" class="ScoreData"><Text id="Leader3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Leader4ScoreCell" class="ScoreData"><Text id="Leader4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="ConquerorScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="ConquerorScoreHeadingText">{en}Conqueror{zh-cn}战无不胜{ko}정복자{es}Conquistador{fr}Conquérant{pt-br}Conquistador</Text>
+		</Row>
+		<Row id="ConquerorScoreData" class="ScoreData">
+			<Cell id="Conqueror1ScoreCell" class="ScoreData"><Text id="Conqueror1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Conqueror2ScoreCell" class="ScoreData"><Text id="Conqueror2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Conqueror3ScoreCell" class="ScoreData"><Text id="Conqueror3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Conqueror4ScoreCell" class="ScoreData"><Text id="Conqueror4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="AdventurerScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="AdventurerScoreHeadingText">{en}Adventurer{zh-cn}披荆斩棘{ko}모험가{es}Aventurero{fr}Aventurier{pt-br}Aventureiro</Text>
+		</Row>
+		<Row id="AdventurerScoreData" class="ScoreData">
+			<Cell id="Adventurer1ScoreCell" class="ScoreData"><Text id="Adventurer1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Adventurer2ScoreCell" class="ScoreData"><Text id="Adventurer2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Adventurer3ScoreCell" class="ScoreData"><Text id="Adventurer3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Adventurer4ScoreCell" class="ScoreData"><Text id="Adventurer4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="LiberatorScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="LiberatorScoreHeadingText">{en}Liberator{zh-cn}解放邻邦{ko}해방자{es}Libertador{fr}Libérateur{pt-br}Libertador</Text>
+		</Row>
+		<Row id="LiberatorScoreData" class="ScoreData">
+			<Cell id="Liberator1ScoreCell" class="ScoreData"><Text id="Liberator1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Liberator2ScoreCell" class="ScoreData"><Text id="Liberator2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Liberator3ScoreCell" class="ScoreData"><Text id="Liberator3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Liberator4ScoreCell" class="ScoreData"><Text id="Liberator4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="BeatingScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="BeatingScoreHeadingText">{en}Beating{zh-cn}满身疮痍{ko}패배자{es}Golpeando{fr}Battement{pt-br}Espancamento</Text>
+		</Row>
+		<Row id="BeatingScoreData" class="ScoreData">
+			<Cell id="Beating1ScoreCell" class="ScoreData"><Text id="Beating1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Beating2ScoreCell" class="ScoreData"><Text id="Beating2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Beating3ScoreCell" class="ScoreData"><Text id="Beating3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Beating4ScoreCell" class="ScoreData"><Text id="Beating4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="RelicScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="RelicScoreHeadingText">{en}Relic Hunter{zh-cn}圣器追猎者{ko}유물 사냥꾼{es}Cazador de Reliquias{fr}Chasseur de Reliques{pt-br}Caçador de Relíquia</Text>
+		</Row>
+		<Row id="RelicScoreData" class="ScoreData">
+			<Cell id="Relic1ScoreCell" class="ScoreData"><Text id="Relic1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Relic2ScoreCell" class="ScoreData"><Text id="Relic2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Relic3ScoreCell" class="ScoreData"><Text id="Relic3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Relic4ScoreCell" class="ScoreData"><Text id="Relic4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="RewardScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="RewardScoreHeadingText">{en}Faction Rewards{zh-cn}派系奖励{ko}세력 보상{es}Recompensas de Facción{fr}Récompenses de Faction{pt-br}Recompensa de Facção</Text>
+		</Row>
+		<Row id="RewardScoreData" class="ScoreData">
+			<Cell id="Reward1ScoreCell" class="ScoreData"><Text id="Reward1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Reward2ScoreCell" class="ScoreData"><Text id="Reward2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Reward3ScoreCell" class="ScoreData"><Text id="Reward3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Reward4ScoreCell" class="ScoreData"><Text id="Reward4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="CityScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="CityScoreHeadingText">{en}Conquered Cities{zh-cn}征服的城市{ko}정복한 도시{es}Ciudades Conquistadas{fr}Villes Conquises{pt-br}Cidades Conquistadas</Text>
+		</Row>
+		<Row id="CityScoreData" class="ScoreData">
+			<Cell id="City1ScoreCell" class="ScoreData"><Text id="City1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="City2ScoreCell" class="ScoreData"><Text id="City2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="City3ScoreCell" class="ScoreData"><Text id="City3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="City4ScoreCell" class="ScoreData"><Text id="City4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="TezlaScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="TezlaScoreHeadingText">{en}Faction Greatest Enemy{zh-cn}派系最大的敌人{ko}세력의 위대한 적{es}El Mayor Enemigo de la Facción{fr}Le Plus Grand Ennemi de la Faction{pt-br}Maior Inimigo da Facção</Text>
+		</Row>
+		<Row id="TezlaScoreData" class="ScoreData">
+			<Cell id="Tezla1ScoreCell" class="ScoreData"><Text id="Tezla1ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Tezla2ScoreCell" class="ScoreData"><Text id="Tezla2ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Tezla3ScoreCell" class="ScoreData"><Text id="Tezla3ScoreText" class="ScoreData"></Text></Cell>
+			<Cell id="Tezla4ScoreCell" class="ScoreData"><Text id="Tezla4ScoreText" class="ScoreData"></Text></Cell>
+		</Row>
+		<Row id="VolkareScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="VolkareScoreHeadingText">{en}General Volkare{zh-cn}沃里卡将军{ko}볼케어 장군{es}General Volkare{fr}Général Volkaré{pt-br}General Volkare</Text>
+		</Row>
+		<Row id="VolkareScoreData" class="ScoreData"><Cell columnSpan="4"><Text id="VolkareScoreText" class="ScoreData" alignment="MiddleCenter"></Text></Cell></Row>
+		<Row id="EfficiencyScoreHeading" class="ScoreHeading">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(0.8,0.7,0.1)"/>
+			<Text class="ScoreHeading" id="EfficiencyScoreHeadingText">{en}Efficiency{zh-cn}效率{ko}효율 점수{es}Eficiencia{fr}Efficacité{pt-br}Eficiência</Text>
+		</Row>
+		<Row id="EfficiencyScoreData" class="ScoreData"><Cell columnSpan="4"><Text id="EfficiencyScoreText" class="ScoreData" alignment="MiddleCenter"></Text></Cell></Row>
+		<Row class="ScoreHeading" color="rgb(0.6, 0.45, 0.1)">
+			<Image image="Sliced Button/Button New Active" type="Sliced" color="rgb(1.0,0.7,0.2)"/>
+			<Text class="ScoreHeading" id="TotalScoreText">{en}Total{zh-cn}合计{ko}총합{es}Total{fr}Le Total{pt-br}Total</Text>
+		</Row>
+		<Row id="CompScoreData" class="ScoreData" active="false" preferredHeight="30">
+			<Cell id="Total1ScoreCell" class="ScoreData"><Text id="Total1ScoreText" class="ScoreHeading" color="rgb(1,0.7,0.2)"></Text></Cell>
+			<Cell id="Total2ScoreCell" class="ScoreData"><Text id="Total2ScoreText" class="ScoreHeading" color="rgb(1,0.7,0.2)"></Text></Cell>
+			<Cell id="Total3ScoreCell" class="ScoreData"><Text id="Total3ScoreText" class="ScoreHeading" color="rgb(1,0.7,0.2)"></Text></Cell>
+			<Cell id="Total4ScoreCell" class="ScoreData"><Text id="Total4ScoreText" class="ScoreHeading" color="rgb(1,0.7,0.2)"></Text></Cell>
+		</Row>
+		<Row id="CoopScoreData" class="ScoreData" active="false" preferredHeight="30"><Text id="CoopScoreText" class="ScoreHeading" alignment="MiddleCenter" color="rgb(1,0.7,0.2)"></Text></Row>
+	</TableLayout>
+	<Button id="closeScoreButton" width="25" height="25" offsetXY="-3 -3" rectAlignment="UpperRight" color="#990000" textColor="#FFFFFF" Text="X" onClick="closePanel"/>
+</Panel>
+
+<Panel id="Mage1LevelBoard" active="false" offsetXY="-730 -150" width="230" height="340" hideAnimation="Shrink" showAnimation="Grow" class="Floating">
+	<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+	<VerticalLayout padding="4 4 4 4">
+		<Panel id="Mage1NamePanel" preferredHeight="35" color="rgb(0.3, 0.3, 0.3)">
+			<Text id="Mage1NameText" color="rgb(0, 0, 0)" class="Title" fontSize="22" alignment="MiddleCenter">Mage1Name</Text>
+		</Panel>
+		<Panel preferredHeight="35">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage1levelDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage1levelDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage1levelText" class="LevelData" alignment="MiddleCenter">{en}Start at Level {zh-cn}开始的级别：{ko}시작 레벨: {es}Empezar en el Nivel {fr}Début Niveau {pt-br}Iníciar no Nível </Text>
+					<Button id="Mage1levelUp" class="ScenarioTweak" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage1levelUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="85">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage1influenceDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage1influenceDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage1influenceText" class="LevelData" alignment="MiddleCenter">6 Influence Per Level</Text>
+					<Button id="Mage1influenceUp" class="ScenarioTweak" Text="+" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage1influenceUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+				<Row><Text id="Mage1influenceTotalText" class="LevelData">Influence to Spend :</Text></Row>
+				<Row><Text id="Mage1AdvancedActionFreeText" class="LevelData">1 Free Advanced Action(s)</Text></Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="125">
+			<VerticalLayout padding="7 7 2 2">
+				<Text id="Mage1AdvancedActionCostText" class="LevelData">0 Advanced Action(s) : -0</Text>
+				<Text id="Mage1RegularUnitCostText" class="LevelData">0 Regular Units(s) : -0</Text>
+				<Text id="Mage1SpellCostText" class="LevelData">0 Spell(s) : -0</Text>
+				<Text id="Mage1ArtifactCostText" class="LevelData">0 Artifact(s) : -0</Text>
+				<Text id="Mage1CrystalCostText" class="LevelData">0 Crystals(s) : -0</Text>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="70">
+			<VerticalLayout padding="4 4 2 2">
+				<Row><Text id="Mage1RemainingText" class="LevelData">Remaining : 12</Text></Row>
+				<Row><Button id="Mage1CompleteButton" height="30" shadow="rgb(0,0,0)" rectAlignment="MiddleCenter" onClick="cardPool">
+						<Image id="Mage1CompleteButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="Mage1CompleteText" class="LevelData" offsetXY="0 1">{en}Create Card Pool{zh-cn}创建卡池{ko}카드 풀 생성{es}Crear Grupo de Cartas{fr}Créer un Pool de Cartes{pt-br}Criar Conjunto de Cartas</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="Mage2LevelBoard" active="false" offsetXY="-730 250" width="230" height="340" hideAnimation="Shrink" showAnimation="Grow" class="Floating">
+	<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+	<VerticalLayout padding="4 4 4 4">
+		<Panel id="Mage2NamePanel" preferredHeight="35" color="rgb(0.3,0.3,0.3)">
+			<Text id="Mage2NameText" color="rgb(0, 0, 0)" class="Title" fontSize="22" alignment="MiddleCenter">Mage2Name</Text>
+		</Panel>
+		<Panel preferredHeight="35">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage2levelDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage2levelDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage2levelText" class="LevelData" alignment="MiddleCenter">{en}Start at Level {zh-cn}开始的级别：{ko}시작 레벨: {es}Empezar en el Nivel {fr}Début Niveau {pt-br}Iníciar no Nível </Text>
+					<Button id="Mage2levelUp" class="ScenarioTweak" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage2levelUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="85">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage2influenceDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage2influenceDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage2influenceText" class="LevelData" alignment="MiddleCenter">6 Influence Per Level</Text>
+					<Button id="Mage2influenceUp" class="ScenarioTweak" Text="+" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage2influenceUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+				<Row><Text id="Mage2influenceTotalText" class="LevelData">Influence to Spend : 18</Text></Row>
+				<Row><Text id="Mage2AdvancedActionFreeText" class="LevelData">1 Free Advanced Action(s)</Text></Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="125">
+			<VerticalLayout padding="7 7 2 2">
+				<Text id="Mage2AdvancedActionCostText" class="LevelData">0 Advanced Action(s) : -0</Text>
+				<Text id="Mage2RegularUnitCostText" class="LevelData">0 Regular Units(s) : -0</Text>
+				<Text id="Mage2SpellCostText" class="LevelData">0 Spell(s) : -0</Text>
+				<Text id="Mage2ArtifactCostText" class="LevelData">0 Artifact(s) : -0</Text>
+				<Text id="Mage2CrystalCostText" class="LevelData">0 Crystals(s) : -0</Text>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="70">
+			<VerticalLayout padding="4 4 2 2">
+				<Row><Text id="Mage2RemainingText" class="LevelData">Remaining : 12</Text></Row>
+				<Row><Button id="Mage2CompleteButton" height="30" shadow="rgb(0,0,0)" rectAlignment="MiddleCenter" onClick="cardPool">
+						<Image id="Mage2CompleteButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="Mage2CompleteText" class="LevelData" offsetXY="0 1">{en}Create Card Pool{zh-cn}创建卡池{ko}카드 풀 생성{es}Crear Grupo de Cartas{fr}Créer un Pool de Cartes{pt-br}Criar Conjunto de Cartas</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="Mage3LevelBoard" active="false" offsetXY="730 250" width="230" height="340" hideAnimation="Shrink" showAnimation="Grow" class="Floating">
+	<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+	<VerticalLayout padding="4 4 4 4">
+		<Panel id="Mage3NamePanel" preferredHeight="35" color="rgb(0.3,0.3,0.3)">
+			<Text id="Mage3NameText" color="rgb(0, 0, 0)" class="Title" fontSize="22" alignment="MiddleCenter">Mage3Name</Text>
+		</Panel>
+		<Panel preferredHeight="35">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage3levelDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage3levelDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage3levelText" class="LevelData" alignment="MiddleCenter">{en}Start at Level {zh-cn}开始的级别：{ko}시작 레벨: {es}Empezar en el Nivel {fr}Début Niveau {pt-br}Iníciar no Nível </Text>
+					<Button id="Mage3levelUp" class="ScenarioTweak" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage3levelUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="85">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage3influenceDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage3influenceDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage3influenceText" class="LevelData" alignment="MiddleCenter">6 Influence Per Level</Text>
+					<Button id="Mage3influenceUp" class="ScenarioTweak" Text="+" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage3influenceUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+				<Row><Text id="Mage3influenceTotalText" class="LevelData">Influence to Spend : 18</Text></Row>
+				<Row><Text id="Mage3AdvancedActionFreeText" class="LevelData">1 Free Advanced Action(s)</Text></Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="125">
+			<VerticalLayout padding="7 7 2 2">
+				<Text id="Mage3AdvancedActionCostText" class="LevelData">0 Advanced Action(s) : -0</Text>
+				<Text id="Mage3RegularUnitCostText" class="LevelData">0 Regular Units(s) : -0</Text>
+				<Text id="Mage3SpellCostText" class="LevelData">0 Spell(s) : -0</Text>
+				<Text id="Mage3ArtifactCostText" class="LevelData">0 Artifact(s) : -0</Text>
+				<Text id="Mage3CrystalCostText" class="LevelData">0 Crystals(s) : -0</Text>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="70">
+			<VerticalLayout padding="4 4 2 2">
+				<Row><Text id="Mage3RemainingText" class="LevelData">Remaining : 12</Text></Row>
+				<Row><Button id="Mage3CompleteButton" height="30" shadow="rgb(0,0,0)" rectAlignment="MiddleCenter" onClick="cardPool">
+						<Image id="Mage3CompleteButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="Mage3CompleteText" class="LevelData" offsetXY="0 1">{en}Create Card Pool{zh-cn}创建卡池{ko}카드 풀 생성{es}Crear Grupo de Cartas{fr}Créer un Pool de Cartes{pt-br}Criar Conjunto de Cartas</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="Mage4LevelBoard" active="false" offsetXY="730 -150" width="230" height="340"	hideAnimation="Shrink" showAnimation="Grow" class="Floating">
+	<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+	<VerticalLayout padding="4 4 4 4">
+		<Panel id="Mage4NamePanel" preferredHeight="35" color="rgb(0.3,0.3,0.3)">
+			<Text id="Mage4NameText" color="rgb(0, 0, 0)" class="Title" fontSize="22" alignment="MiddleCenter">Mage4Name</Text>
+		</Panel>
+		<Panel preferredHeight="35">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage4levelDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage4levelDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage4levelText" class="LevelData" alignment="MiddleCenter">{en}Start at Level {zh-cn}开始的级别：{ko}시작 레벨: {es}Empezar en el Nivel {fr}Début Niveau {pt-br}Iníciar no Nível </Text>
+					<Button id="Mage4levelUp" class="ScenarioTweak" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage4levelUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="85">
+			<VerticalLayout padding="4 4 2 2">
+				<Row>
+					<Button id="Mage4influenceDown" class="ScenarioTweak" rectAlignment="MiddleLeft" onClick="mageKnightLevel">
+						<Image id="Mage4influenceDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="Mage4influenceText" class="LevelData" alignment="MiddleCenter">6 Influence Per Level</Text>
+					<Button id="Mage4influenceUp" class="ScenarioTweak" Text="+" rectAlignment="MiddleRight" onClick="mageKnightLevel">
+						<Image id="Mage4influenceUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+				<Row><Text id="Mage4influenceTotalText" class="LevelData">Influence to Spend : 18</Text></Row>
+				<Row><Text id="Mage4AdvancedActionFreeText" class="LevelData">1 Free Advanced Action(s)</Text></Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="125">
+			<VerticalLayout padding="7 7 2 2">
+				<Text id="Mage4AdvancedActionCostText" class="LevelData">0 Advanced Action(s) : -0</Text>
+				<Text id="Mage4RegularUnitCostText" class="LevelData">0 Regular Units(s) : -0</Text>
+				<Text id="Mage4SpellCostText" class="LevelData">0 Spell(s) : -0</Text>
+				<Text id="Mage4ArtifactCostText" class="LevelData">0 Artifact(s) : -0</Text>
+				<Text id="Mage4CrystalCostText" class="LevelData">0 Crystals(s) : -0</Text>
+			</VerticalLayout>
+		</Panel>
+		<Panel preferredHeight="70">
+			<VerticalLayout padding="4 4 2 2">
+				<Row><Text id="Mage4RemainingText" class="LevelData">Remaining : 12</Text></Row>
+				<Row><Button id="Mage4CompleteButton" height="30" shadow="rgb(0,0,0)" rectAlignment="MiddleCenter" onClick="cardPool">
+						<Image id="Mage4CompleteButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="Mage4CompleteText" class="LevelData" offsetXY="0 1">{en}Create Card Pool{zh-cn}创建卡池{ko}카드 풀 생성{es}Crear Grupo de Cartas{fr}Créer un Pool de Cartes{pt-br}Criar Conjunto de Cartas</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="LevelUpRules" active="false" offsetXY="0 320" width="480" height="260" hideAnimation="Shrink" showAnimation="Grow" class="Floating">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<VerticalLayout padding="8 8 8 8">
+		<Text id="StartingAtAHigherLevelTitle" alignment="UpperCenter" class="Title">{en}Starting at a Higher Level{zh-cn}从更高的等级开始{ko}높은 레벨로 시작{es}Empezar en Nivel Más Alto{fr}Commencer à un Niveau Supérieur{pt-br}Iniciar em um Nível mais Alto</Text>
+		<Text fontSize="14" alignment="MiddleLeft">1)		Select the desired Starting level in your Mage Knight's panel.
+2)		Click the 'Create Card Pool' button to fill your hand with Cards you can choose from.
+3)		Optionaly, adjust the Influence per Level value. Increasing makes things easier.
+4)		Place cards and Crystals in your play area to update the amount you have spent.
+5)		Clicking 'Complete' lets everyone else know you’re ready.
+--------------
+Crystals							- 3 Influence each. (put in your inventory)
+Advanced Actions	- 6 influence each.
+Spells								- 9 influence or 7 Influence plus a crystal of the same color.
+Artifacts							- 12 influence each.
+Units								- Their normal influence cost.
+--------------
+*Put starting crystal from your inventory on the spell
+*When everyone clicks 'Complete', the game will finish setting up.</Text>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="PlayerSeating" active="false" rectAlignment="UpperRight" offsetXY="-219 -5" width="250" height="205">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<VerticalLayout padding="10 10 4 4">
+		<Text fontSize="15" id="PlayerSeatingText1">{en}This mod runs it own Turn System, which makes 'Hot Seat' unnecessary.{zh-cn}这个模组使用它自己的回合系统，所以你无需使用“热座”模式。{ko}이 모드는 자체 턴 시스템을 실행하므로 '핫 시트'를 따로 필요로 하지 않습니다.{es}Este mod lleva su propio sistema de turnos, lo que hace que el 'Hot Seat' sea innecesario.{fr}Ce mod exécute son propre système de virage, ce qui rend inutile le « siège chaud ».{pt-br}Este Mod usa seu próprio sistema de turnos, o que faz 'Hot sear' desnecessário.</Text>
+		<Text fontSize="15" id="PlayerSeatingText2">{en}To switch to another Mage Knight Click the name to the right and <b>'Change Color'</b>. For Multi Hand play you should choose the <b>Black Game Master Color</b> in the Center.{zh-cn}切换到另一个魔法骑士 点击右边的名字和<b>'改变颜色'</b>。 对于多人游戏，您应该在版图中间选<b>黑色</b>。{ko}다른 자리로 바꾸려면 우측 상단의 이름을 클릭하고 <b> '색상 변경'</b>을 클릭하세요. 다중 핸드로 플레이할 경우 중앙에서 <b> 검정(게임 마스터 색상) </b>을 선택하세요.{es}Para cambiar a otro Mage Knight pulsa el nombre a la derecha y <b>'Change Color'</b>. Para jugar con múltiples magos deberías escoger el <b>Black Game Master Color</b> en el centro.{fr}Pour passer à un autre Mage Cliquez sur le nom à droite et <b>'Changer de couleur'</b>. Pour le jeu à plusieurs mains, vous devez choisir la <b>Couleur Black Game Master</b> au centre.{pt-br}Para mudar para outro Mage Knight clique o nome a direita e <b>'Mudar Cor'</b>. Para jogar com multi jogadores escolha a <b>Cor Negra de Mestre de jogo</b> no Centro.</Text>
+		<Text fontSize="15" id="PlayerSeatingText3">{en}<b>Cooperative</b> Players should also choose the same team to see each others hands.{zh-cn}<b>合作模式</b> 玩家们应该选择同一支队伍以便看队友的手牌。{ko}<b> 협동 임무</b>  플레이시, 같은 팀을 선택해야 서로의 핸드를 볼 수 있습니다. {es}<b>Cooperativo</b> Los jugadores deberían elegir el mismo equipo para poder verse las manos.{fr}<b>Coopératif</b> Les joueurs doivent également choisir la même équipe pour se voir les mains.{pt-br}<b>Cooperativo</b> Jogadores deveriam também escolher o mesmo time para ver a mão um do outro.</Text>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="ObjectRotating" active="false" rectAlignment="UpperRight" offsetXY="-500 -75" width="200" height="50">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<VerticalLayout>
+		<Text fontSize="15" id="ObjectRotatingText">{en}<b>30deg</b> Rotation will allow everthing to align properly.{zh-cn}<b>30 度</b> 旋转将使所有东西正确对齐。{ko}편리한 정렬을 위해 <b> 30도 </b> 회전 세팅을 추천합니다.{es}La rotación de <b> 30 grados </b> permitirá que todo se alinee correctamente.{fr}<b>30 deg</b> La rotation permettra à tout de s'aligner correctement.{pt-br}Rotação de <b>30deg</b> permitirá que tudo se alinhe adequadamente.</Text>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="ResourceTracker"	active="false" class="Floating" rectAlignment="UpperLeft" offsetXY="135 -80" width="210" height="35">
+	<Panel height="35" rectAlignment="UpperCenter" outlineSize="0 0">
+		<Button id="DisplayResourceTrackerDetails" preferredWidth="210" onClick="resourceTracker">
+			<Image id="DisplayResourceTrackerDetailsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+			<VerticalLayout>
+				<Text fontSize="20" alignment="MiddleCenter" id="resourceTrackerText" offsetXY="0 1">{en}Resource Tracker{zh-cn}资源追踪器{ko}자원 추적표{es}Rastreador de Recursos{fr}Suivi des Ressources{pt-br}Rastreador de Recursos{de}Ressourcen-Tracker</Text>
+			</VerticalLayout>
+		</Button>
+	</Panel>
+	<Panel id="ResourceTrackerDetail" active="false" rectAlignment="LowerCenter" height="210" outlineSize="0 0">
+		<VerticalLayout childForceExpandHeight="false">
+			<Panel preferredHeight="30" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MovemAmountPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MovemAmountPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="150" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MovemAmountPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Move : 0</Text>
+						</Button>
+						<Button id="MovemAmountUpdate" preferredWidth="30" onClick="resourceTracker" class="ShortButton" tooltipPosition="Right" tooltipOffset="50" tooltip="This will update the move costs to use the current position of your Mage Knight">
+							<Image id="MovemAmountUpdateImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">#</Text>
+						</Button>
+						<Button id="MovemAmountPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MovemAmountPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+						<Button id="DisplayMoveCosts" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="DisplayMoveCostsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">v</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel id="MoveCosts" active="false" preferredHeight="240" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Plains : 2</Text>
+						</Button>
+						<Button id="MoveCostPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostHillsDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostHillsDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostHillsText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Hills : 3</Text>
+						</Button>
+						<Button id="MoveCostHillsUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostHillsUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostForesDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostForesDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostForesText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Forests : 3</Text>
+						</Button>
+						<Button id="MoveCostForesUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostForesUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostWasteDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostWasteDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostWasteText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Wastelands : 4</Text>
+						</Button>
+						<Button id="MoveCostWasteUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostWasteUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostDeserDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostDeserDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostDeserText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Deserts : 5</Text>
+						</Button>
+						<Button id="MoveCostDeserUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostDeserUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostSwampDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostSwampDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostSwampText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Swamps : 5</Text>
+						</Button>
+						<Button id="MoveCostSwampUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostSwampUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostLakesDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostLakesDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostLakesText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Lakes : X</Text>
+						</Button>
+						<Button id="MoveCostLakesUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostLakesUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="MoveCostMountDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostMountDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="MoveCostMountText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Mountains : X</Text>
+						</Button>
+						<Button id="MoveCostMountUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="MoveCostMountUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel preferredHeight="30" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="SiegeAmountPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="180" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="SiegeAmountPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Siege : {zh-cn}围攻 : {ko}공성 : {es}Asedio : {fr}Siège : {pt-br}Cerco : {de}Belagerung : </Text>
+						</Button>
+						<Button id="SiegeAmountPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+						<Button id="DisplaySiegeDetails" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="DisplaySiegeDetailsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">v</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel id="SiegeAmountDetails" active="false" preferredHeight="120" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="SiegeAmountPhysiDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountPhysiDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="SiegeAmountPhysiText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Physical : 0</Text>
+						</Button>
+						<Button id="SiegeAmountPhysiUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountPhysiImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="SiegeAmountFirexDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountFirexDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="SiegeAmountFirexText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Fire : 0</Text>
+						</Button>
+						<Button id="SiegeAmountFirexUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountFirexUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="SiegeAmountIcexxDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountIcexxDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="SiegeAmountIcexxText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Ice : 0</Text>
+						</Button>
+						<Button id="SiegeAmountIcexxUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountIcexxUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="SiegeAmountColdFDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountColdFDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="SiegeAmountColdFText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Cold Fire : 0</Text>
+						</Button>
+						<Button id="SiegeAmountColdFUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="SiegeAmountColdFUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel preferredHeight="30" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="RangeAmountPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="180" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="RangeAmountPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Range : 0</Text>
+						</Button>
+						<Button id="RangeAmountPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+						<Button id="DisplayRangeDetails" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="DisplayRangeDetailsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">v</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel id="RangeAmountDetails" active="false" preferredHeight="120" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="RangeAmountPhysiDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountPhysiDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="RangeAmountPhysiText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Physical : 0</Text>
+						</Button>
+						<Button id="RangeAmountPhysiUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountPhysiImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="RangeAmountFirexDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountFirexDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="RangeAmountFirexText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Fire : 0</Text>
+						</Button>
+						<Button id="RangeAmountFirexUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountFirexUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="RangeAmountIcexxDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountIcexxDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="RangeAmountIcexxText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Ice : 0</Text>
+						</Button>
+						<Button id="RangeAmountIcexxUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountIcexxUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="RangeAmountColdFDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountColdFDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="RangeAmountColdFText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Cold Fire : 0</Text>
+						</Button>
+						<Button id="RangeAmountColdFUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="RangeAmountColdFUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel preferredHeight="30" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="BlockAmountPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="180" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="BlockAmountPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Block : {zh-cn}阻止 : {ko}방어 : {es}Bloqueo : {fr}Blocage : {pt-br}Bloco : {de}Blockieren : 0</Text>
+						</Button>
+						<Button id="BlockAmountPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+						<Button id="DisplayBlockDetails" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="DisplayBlockDetailsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">v</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel id="BlockAmountDetails" active="false" preferredHeight="120" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="BlockAmountPhysiDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountPhysiDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="BlockAmountPhysiText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Physical : 0</Text>
+						</Button>
+						<Button id="BlockAmountPhysiUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountPhysiImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="BlockAmountFirexDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountFirexDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="BlockAmountFirexText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Fire : 0</Text>
+						</Button>
+						<Button id="BlockAmountFirexUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountFirexUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="BlockAmountIcexxDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountIcexxDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="BlockAmountIcexxText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Ice : 0</Text>
+						</Button>
+						<Button id="BlockAmountIcexxUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountIcexxUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="BlockAmountColdFDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountColdFDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="BlockAmountColdFText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Cold Fire : 0</Text>
+						</Button>
+						<Button id="BlockAmountColdFUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="BlockAmountColdFUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel preferredHeight="30" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="AttacAmountPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="180" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="AttacAmountPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Attack : {zh-cn}攻击 : {ko}공격 : {es}Ataque : {fr}Attaque : {pt-br}Ataque : {de}Angriff : </Text>
+						</Button>
+						<Button id="AttacAmountPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+						<Button id="DisplayAttacDetails" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="DisplayAttacDetailsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">v</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel id="AttacAmountDetails" active="false" preferredHeight="120" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="AttacAmountPhysiDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountPhysiDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="AttacAmountPhysiText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Physical : 0</Text>
+						</Button>
+						<Button id="AttacAmountPhysiUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountPhysiImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="AttacAmountFirexDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountFirexDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="AttacAmountFirexText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Fire : 0</Text>
+						</Button>
+						<Button id="AttacAmountFirexUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountFirexUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="AttacAmountIcexxDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountIcexxDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="AttacAmountIcexxText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Ice : 0</Text>
+						</Button>
+						<Button id="AttacAmountIcexxUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountIcexxUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="AttacAmountColdFDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountColdFDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="AttacAmountColdFText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Cold Fire : 0</Text>
+						</Button>
+						<Button id="AttacAmountColdFUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="AttacAmountColdFUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel preferredHeight="30" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="InfluAmountPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="180" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="InfluAmountPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Influence : {zh-cn}影响 : {ko}영향력 : {es}Influencia : {fr}Influence : {pt-br}Influência : {de}Beeinflussung : </Text>
+						</Button>
+						<Button id="InfluAmountPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+						<Button id="DisplayInfluDetails" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="DisplayInfluDetailsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">v</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel id="InfluAmountDetails" active="false" preferredHeight="90" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="InfluAmountPhysiDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountPhysiDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="InfluAmountPhysiText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Generated : {zh-cn}生成的 : {ko}사용 : {es}Generación : {fr}Généré : {pt-br}Gerado : {de}Erzeugt : </Text>
+						</Button>
+						<Button id="InfluAmountPhysiUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountPhysiImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="InfluAmountReputDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountReputDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="InfluAmountReputText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Reputation : 0</Text>
+						</Button>
+						<Button id="InfluAmountReputUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountReputUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="InfluAmountCitySDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountCitySDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="210" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="InfluAmountCitySText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}City Shields : 0</Text>
+						</Button>
+						<Button id="InfluAmountCitySUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="InfluAmountCitySUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+			<Panel preferredHeight="30" outlineSize="0 0">
+				<VerticalLayout>
+					<HorizontalLayout childForceExpandWidth="false">
+						<Button id="HealiAmountPlainDown" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="HealiAmountPlainDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+						</Button>
+						<Button preferredWidth="180" interactable="false" onClick="">
+							<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+							<Text id="HealiAmountPlainText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Healing : {zh-cn}疗伤 : {ko}치유 : {es}Curación : {fr}Guérison : {pt-br}Cicatrização : {de}Heilung : </Text>
+						</Button>
+						<Button id="HealiAmountPlainUp" preferredWidth="30" onClick="resourceTracker" class="ShortButton">
+							<Image id="HealiAmountPlainUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+						</Button>
+						<Button id="DisplayHealiDetails" preferredWidth="30" onClick="" class="ShortButton">
+							<Image id="DisplayHealiDetailsImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text fontSize="24" alignment="MiddleCenter" offsetXY="0 1"></Text>
+						</Button>
+					</HorizontalLayout>
+				</VerticalLayout>
+			</Panel>
+		</VerticalLayout>
+	</Panel>
+</Panel>
+
+<Panel id="Setup" active="false" width="1000" height="780" color="rgb(0.2, 0.2, 0.2)" outlineSize="3 -3" class="Floating">
+	<Panel outlineSize="1 -1" rectAlignment="UpperCenter" width="1000" height="40" color="rgb(0.3,0.3,0.3)">
+		<Text id="SetupTitle" color="White" class="Title" fontSize="30">{en}Mage Knight Plus (Highly Scripted) - Setup{zh-cn}魔法骑士 - 脚本设置{ko}메이지 나이트(하이 스크립트) - 설정{es}Mage Knight Plus (HS) - Configuración{fr}Mage Knight Plus (HS) - Installer{pt-br}Mage Knight Plus (HS) - Preparação{de}Mage Knight Plus (Hochgradig Gescriptet) - Einrichtung</Text>
+		<Button id="closeButton" width="25" height="25" offsetXY="-3 0" rectAlignment="MiddleRight" color="#990000" textColor="#FFFFFF" text="X" onClick="closePanel" />
+	</Panel>
+	<Button id="StartButton" interactable="False" rectAlignment="LowerLeft" width="1000" height="40" onClick="setupGame" class="LongButton">
+		<Image id="StartButtonImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+		<Text id="StartButtonText" fontSize="24">{en}Start - Select at least two Mage Knights first{zh-cn}开始 - 首先选择至少两位魔法骑士{ko}시작 - 먼저 두 명 이상의 플레이어를 선택하세요{es}Comenzar - Selecciona al menos dos Mage Knight {fr}Démarrer - Sélectionnez d'abord au moins deux Mages{pt-br}Início - Selecione ao menos dois Mage Knights primeiro{de}Start - Wähle vorher mindestens 2 Mage Knights</Text>
+	</Button>
+	<Button id="WarOfFourStartButton" interactable="true" active="false" rectAlignment="LowerRight" width="500" height="40" onClick="setupGame" class="LongButton">
+		<Image id="WarOfFourStartButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+		<Text id="SWarOfFourtartButtonText" fontSize="24" offsetXY="0 1">{en}Start - Competitive{zh-cn}开始 - 竞争模式{ko}시작 - 경쟁{es}Comenzar - Competitivo{fr}Démarrer - Compétitif{pt-br}Início - Competitivo</Text>
+	</Button>
+	<Panel outlineSize="0 0" rectAlignment="MiddleLeft" width="392" height="700">
+		<Image image="Sliced Button/Button New Active" type="Sliced"/>
+		<Panel id="ScenarioDetails" outlineSize="0 0" rectAlignment="UpperCenter" width="392" height="60" color="clear">
+			<VerticalLayout padding="0 0 0 0"><!-- childAlignment="MiddleCenter" color="rgb(0.8, 0.8, 0.8)"> -->
+				<TableLayout>
+					<Row preferredHeight="30" dontUseTableRowBackground="true" >
+						<Image image="Sliced Button/Title Border Tan" type="Sliced" width="392" height="30"/>
+						<Text id="ScenarioSettingsTitle" class="Title">{en}1. Scenario Selection{zh-cn}1. 情景选择{ko}1. 시나리오 선택{es}1. Selección del Escenario{fr}1. Sélection des Scénarios{pt-br}1. Seleção de Cenários{de}1. Auswahl des Szenarios</Text>
+						<Button id="randomButton" width="65" height="24" offsetXY="8 0" rectAlignment="MiddleLeft" color="#990000" onClick="randomSetup">
+							<Text Color="#FFFFFF" fontSize="15" alignment="MiddleCenter" id="RandomButtonText">{en}Random{zh-cn}随机设置{ko}무작위{es}Aleatorio{fr}Aléatoire{pt-br}Aleatório{de}Zufällig</Text>
+						</Button>
+					</Row>
+				</TableLayout>
+				<Row preferredHeight="30">
+					<Text id="ScenarioText" alignment="MiddleRight" offsetXY="-240 3">{en}Scenario:-{zh-cn}选择剧本{ko}시나리오{es}Escenario:-{fr}Scénario:-{pt-br}Cenário:-{de}Szenario:-</Text>
+					<Button id="ScenarioSelection" onClick="toggleDropDown" offsetXY="0 2" rectAlignment="MiddleRight" width="230" height="33" onMouseDown="" onMouseUp="">
+						<Image id="ScenarioSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="ScenarioSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Conquest</Text>
+					</Button>
+				</Row>
+			</VerticalLayout>
+		</Panel>
+		<Panel id="Setup1Details" outlineSize="0 0" rectAlignment="UpperCenter" offsetXY="0 -57" width="392" height="466" color="clear" active="True">
+			<TableLayout>
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="392" height="30"/>
+					<Text id="GameSettings1Title" class="Title">{en}2. Optional Variants{zh-cn}2. 可选变体{ko}2. 게임 설정{es}2. Variantes opcionales{fr}2. Variantes facultatives{pt-br}2. Variantes opcionais{de}2. Optionale Varianten</Text>
+				</Row>
+				<Row preferredHeight="30">
+					<Text id="Setup1Text" alignment="MiddleRight" offsetXY="-242 3" fontSize="18">{en}Setup Variants{zh-cn}设置变量{ko}세팅 설정{es}Variantes de Instalación{fr}Variantes d'Installation{pt-br}Variantes de Instalação{de}Setup-Varianten</Text>
+					<Button id="Setup2Selection" onClick="switchSetup" offsetXY="0 3" rectAlignment="MiddleRight" width="198" height="30" onMouseDown="ButtonClicked" onMouseUp="ButtonClicked">
+						<Image id="Setup2SelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="Setup2SelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1" fontSize="18">{en}Play Variants{zh-cn}玩法变体{ko}플레이 설정{es}Variantes de Juego{fr}Variantes de Jeu{pt-br}Variantes de Jogo{de}Spiel-Varianten</Text>
+					</Button>
+				</Row>
+			</TableLayout>
+			<Panel id="Setup1DetailsSub" outlineSize="0 0" rectAlignment="UpperCenter" offsetXY="0 -57" width="392" height="406" color="clear">
+				<VerticalLayout padding="6 0 0 0"><!-- childAlignment="MiddleCenter" color="rgb(0.8, 0.8, 0.8)"> -->
+					<Row><Toggle id="BlitzSelection" onValueChanged="BlitzSelection">{en}Blitz{zh-cn}快速征服{ko}기습{es}Relámpago{fr}Eclair{pt-br}Relâmpago{de}Blitz</Toggle></Row>
+					<Row><Toggle id="shadesOfTezlaPugs" onValueChanged="optionsUpdate">{en}Include 'Shades of Tezla' Monsters{zh-cn}特兹拉之影怪物{ko}테즐라의 그림자' 적 토큰 포함{es}Monstruos de 'Sombras de Tezla'{fr}Inclure les Monstres de 'Ombres de Tezla'{pt-br}Incluir Monstros de 'Sombras de Tezla'{de}Inklusive 'Tezlas Vermächtniss' Monster</Toggle></Row>
+					<Row><Toggle id="volkareCampAsCity" onValueChanged="optionsUpdate">{en}Volkare's Camp as a Possible City{zh-cn}沃里卡军营取代一个城市{ko}볼케어 진영을 도시 중 하나로 추가{es}El Campamento de Volkare Como una Posible Ciudad{fr}Le Camp de Volkare dans une Cité, Possible{pt-br}Campo do Volkare Como uma Possível Cidade{de}Volkares Lager als Mögliche Stadt</Toggle></Row>
+		            <Row><Toggle id="mageKnightLevels" onValueChanged="optionsUpdate">{en}Start at a Higher Level{zh-cn}开始于更高等级{ko}높은 레벨로 시작하기{es}Comenzar en un Nivel Superior{fr}Débuter Avec un Meilleur Niveau{pt-br}Começar em um Nível Mais Alto{de}Auf Höherem Level Starten</Toggle></Row>
+					<Row><Toggle id="startAtNight" onValueChanged="optionsUpdate">{en}Start at Night{zh-cn}开始于夜晚{ko}야간 도착{es}Empezar de Noche{fr}La Nuit Commence{pt-br}Iniciar a Noite{de}In Nacht Starten</Toggle></Row>
+		            <Row><Toggle id="removeLostLegionExpansion" onValueChanged="optionsUpdate">{en}Remove Lost Legion{zh-cn}移除失落军团扩展{ko}사라진 군단 확장 제거{es}Eliminar Legión Perdida{fr}Retirer Légion Perdue{pt-br}Remover Legião Perdida{de}Entferne Verschollene legion</Toggle></Row>
+					<Row><Toggle id="removeBonusCards" onValueChanged="optionsUpdate">{en}Remove Ultimate Edition Cards{zh-cn}移除双色行动卡牌{ko}UE 카드 제거{es}Quitar Cartas de la ED{fr}Retirer les Cartes UE{pt-br}Remover Cartas da ED{de}Entferne UE Karten</Toggle></Row>
+					<Row><Toggle id="includeYmirgh" onValueChanged="optionsUpdate" textColor="brown">{en}Add custom Mage Knights{zh-cn}添加自定义法师骑士{ko}커스텀 마법사 기사 추가{es}Añadir Caballeros Mago personalizados{fr}Ajouter des chevaliers mages personnalisés{pt-br}Adicionar Mage Knights personalizados{de}Magier-Ritter hinzufügen</Toggle></Row>
+					<Row><Toggle id="removeTerrain" onValueChanged="optionsUpdate" textColor="brown">{en}Remove Easier Terrain Tiles 1 and 2{zh-cn}移除简易地形图 1 和 2{ko}쉬운 지형 타일 1, 2 제거{es}Eliminar las Baldosas de Terreno más Fáciles 1 y 2{fr}Supprimer les Tuiles 1 et 2 du Terrain le Plus Facile{pt-br}Remover os Blocos de Terreno Mais Fáceis 1 e 2{de}Einfachere Geländekacheln 1 und 2 Entfernen</Toggle></Row>
+					<Row><Toggle id="useAlternatePugs" onValueChanged="optionsUpdate" textColor="brown">{en}Use Alternate Monster Tokens{zh-cn}使用备用怪物代币{ko}몬스터 토큰 대체{es}Usar Fichas de Monstruo Alternativas{fr}Utiliser des Jetons de Monstres Alternatifs{pt-br}Use Fichas de Monstro Alternativas{de}Alternative Monstermarken Verwenden</Toggle></Row>
+				</VerticalLayout>
+			</Panel>
+		</Panel>
+		<Panel id="Setup2Details" outlineSize="0 0" rectAlignment="UpperCenter" offsetXY="0 -57" width="392" height="466" color="clear" active="false">
+			<TableLayout>
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="392" height="30"/>
+					<Text id="GameSettings2Title" class="Title">{en}2. Optional Variants{zh-cn}2. 可选变体{ko}2. 게임 설정{es}2. Variantes opcionales{fr}2. Variantes facultatives{pt-br}2. Variantes opcionais{de}2. Optionale Varianten</Text>
+				</Row>
+				<Row preferredHeight="30">
+					<Text id="Setup2Text" alignment="MiddleRight" offsetXY="-54 3" fontSize="18">{en}Play Variants{zh-cn}玩法变体{ko}플레이 설정{es}Variantes de Juego{fr}Variantes de Jeu{pt-br}Variantes de Jogo{de}Spiel-Varianten</Text>
+					<Button id="Setup1Selection" onClick="switchSetup" offsetXY="0 3" rectAlignment="MiddleLeft" width="198" height="30" onMouseDown="ButtonClicked" onMouseUp="ButtonClicked">
+						<Image id="Setup1SelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="Setup1SelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1" fontSize="18">{en}Setup Variants{zh-cn}设置变量{ko}세팅 설정{es}Variantes de Instalación{fr}Variantes d'Installation{pt-br}Variantes de Instalação{de}Setup-Varianten</Text>
+					</Button>
+				</Row>
+			</TableLayout>
+			<Panel id="Setup2DetailsSub" outlineSize="0 0" rectAlignment="UpperCenter" offsetXY="0 -57" width="392" height="406" color="clear">
+				<VerticalLayout padding="6 8 0 0"><!-- childAlignment="MiddleCenter" color="rgb(0.8, 0.8, 0.8)"> -->
+					<Row><Toggle id="randomTileOrientation" onValueChanged="optionsUpdate">{en}Random Terrain Tile Orientation{zh-cn}随机的地图板块朝向{ko}타일 방향 무작위로 놓기{es}Orientación del Terreno al Azar{fr}Orientation Aléatoire des Tuiles de Terrain{pt-br}Orientação Aleatória de Peças de Mapa{de}Zufällige Ausrichtung der Geländekacheln</Toggle></Row>
+					<Row><Toggle id="randomCities" onValueChanged="optionsUpdate">{en}Random Cities{zh-cn}随机城市{ko}무작위의 도시들{es}Ciudades Aleatorias{fr}Citées Aléatoire{pt-br}Cidades Aleatórias{de}Zufällige Städte</Toggle></Row>
+					<Row><Toggle id="RampageSelection" onValueChanged="RampageSelection">{en}Rampage!{zh-cn}怪物肆虐！{ko}광분하라!{es}Al Acecho!{fr}Déchainement!{pt-br}Tempos de Violência!{de}Amoklauf!</Toggle>
+						<Toggle id="MoreRampageSelection" onValueChanged="MoreRampageSelection" offsetXY="190 0">{en}More Rampage!{zh-cn}怪物横行！{ko}더욱더 광분하라!{es}Máximo Acecho!{fr}Plus de Déchainement!{pt-br}Mais Violência!{de}Mehr Rampage!</Toggle></Row>
+					<Row><Toggle id="rampageAmbush" onValueChanged="optionsUpdate">{en}Ambushing Rampager{zh-cn}易怒的敌人{ko}매복하는 적{es}Emboscada de Acechadores{fr}Saccageurs Embusqués{pt-br}Irascível Emboscador{de}Hinterhalt Rampager</Toggle></Row>
+					<Row><Toggle id="rampagePursuit" onValueChanged="optionsUpdate">{en}Pursuing Rampager{zh-cn}怪物追击{ko}추적하는 적{es}Acechadores Perseguidores{fr}Poursuivre les Saccageurs{pt-br}Irascível Perseguidor{de}Rampager Verfolgen</Toggle></Row>
+					<Row><Toggle id="darknessComing" onValueChanged="optionsUpdate">{en}Darkness is Coming{zh-cn}黑夜降临{ko}어둠의 도래{es}La Oscuridad se Acerca{fr}Les Ombres Arrivent{pt-br}Trevas Chegando{de}Es Wird Dunkel</Toggle></Row>
+					<Row><Toggle id="weatherMod" onValueChanged="optionsUpdate" textColor="brown">{en}Atlantean Weather Custom Mod{zh-cn}亚特兰蒂斯天气{ko}아틀란티안 날씨{es}Tiempo Atlante{fr}Météo Atlante{pt-br}Clima Atlânteano{de}Atlantisches Wetter</Toggle></Row>
+		            <Row><Toggle id="questMod" onValueChanged="optionsUpdate" textColor="brown">{en}Quest Cards Custom Mod{zh-cn}探索模组{ko}퀘스트 카드{es}Cartas de Misión{fr}Cartes de Quête{pt-br}Cartas de Missão{de}Quest Karten</Toggle></Row>
+					<Row><Toggle id="itemShopMod" onValueChanged="optionsUpdate" textColor="brown">{en}Item Shop Custom Mod{zh-cn}项目商店{ko}아이템 상점{es}Tienda de artículos{fr}Boutique d'articles{pt-br}Loja de itens{de}Artikel Shop</Toggle></Row>
+					<Row preferredHeight="30">
+						<Text id="ROTFText" alignment="MiddleRight" offsetXY="-160 0" Color="brown">{en}Rise of the Forgemasters -{zh-cn}伪造者崛起{ko}라이즈 오브 포지마스터{es}El Ascenso de los Forjadores - {fr}L'essor des Maîtres de Forge -{pt-br}Ascensão dos Forjadores -{de}Aufstieg der Schmiedemeister -</Text>
+						<Button id="ROTFSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="150" height="30" onMouseDown="" onMouseUp="">
+							<Image id="ROTFSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+							<Text id="ROTFSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Not Used{zh-cn}未使用{ko}사용 안 함{es}No se Utiliza{fr}Non Utilisé{pt-br}Não Utilizado{de}Nicht Verwendet</Text>
+						</Button>
+					</Row>
+				</VerticalLayout>
+			</Panel>
+		</Panel>
+		<Panel id="MageKnightDetails" outlineSize="0 0" rectAlignment="LowerCenter" width="392" height="180" color="clear">
+			<TableLayout preferredHeight="180">
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="392" height="30"/>
+					<Text id="MageAssignmentTitle" class="Title">{en}3. Mage Knight Assignment{zh-cn}3。选择出场的魔法骑士{ko}3. 메이지 나이트 선택{es}3. Asignación de Mage Knight{fr}3. Affectation du Mage Knight{pt-br}3. Seleção de Mage Knight{de}3. Mage Knight Auftrag</Text>
+				</Row>
+				<Row preferredHeight="30">
+					<Text alignment="MiddleRight" offsetXY="-140 0" id="FirstPosText">{en}1st Position Mage Knight -{zh-cn}1号位魔法骑士：{ko}메이지 나이트 플레이어 1 -{es}Primer Mage Knight -{fr}1ère position Mage Knight -{pt-br}Mage Knight da 1ª Posição -</Text>
+					<Button id="firstMKSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="130" height="30" onMouseDown="" onMouseUp="">
+						<Image id="firstMKSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="firstMKSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">nobody</Text>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Text alignment="MiddleRight" offsetXY="-140 0" id="SecondPosText">{en}2nd Position Mage Knight -{zh-cn}2号位魔法骑士：{ko}메이지 나이트 플레이어 2 -{es}Segundo Mage Knight -{fr}2ème position Mage Knight -{pt-br}Mage Knight da 2ª Posição -</Text>
+					<Button id="secondMKSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="130" height="30" onMouseDown="" onMouseUp="">
+						<Image id="secondMKSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="secondMKSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">nobody</Text>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Text alignment="MiddleRight" offsetXY="-140 0" id="ThirdPosText">{en}3rd Position Mage Knight -{zh-cn}3号位魔法骑士：{ko}메이지 나이트 플레이어 3 -{es}Tercer Mage Knight -{fr}3ème position Mage Knight -{pt-br}Mage Knight da 3ª Posição -</Text>
+					<Button id="thirdMKSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="130" height="30" onMouseDown="" onMouseUp="">
+						<Image id="thirdMKSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="thirdMKSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">nobody</Text>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Text alignment="MiddleRight" offsetXY="-140 0" id="FourthPosText">{en}4th Position Mage Knight -{zh-cn}4号位魔法骑士：{ko}메이지 나이트 플레이어 4 -{es}Cuarto Mage Knight -{fr}4ème Position Mage Knight -{pt-br}Mage Knight da 4ª Posição -</Text>
+					<Button id="fourthMKSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="130" height="30" onMouseDown="" onMouseUp="">
+						<Image id="fourthMKSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="fourthMKSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">nobody</Text>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Text alignment="MiddleRight" offsetXY="-140 0" id="DummyPosText">{en}Dummy Mage Knight -{zh-cn}虚拟玩家：{ko}가상 플레이어 -{es}Mage Knight Virtual -{fr}Mage fantôme -{pt-br}Mage Knight Fictício -</Text>
+					<Button id="dummyMKSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="130" height="30" onMouseDown="" onMouseUp="">
+						<Image id="dummyMKSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="dummyMKSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">nobody</Text>
+					</Button>
+				</Row>
+				<Row id="VolkareLevelSelectionRow" active="false" preferredHeight="30">
+					<Text alignment="MiddleRight" offsetXY="-140 0" id="VolkareCombatText">{en}Volkare's Combat Level -{zh-cn}沃里卡的战斗级别：{ko}볼케어 전투 레벨 -{es}Nivel de Combate de Volkare -{fr}Niveau de Combat de Volkare -{pt-br}Nível de combate de Volkare -{de}Volkare´s Kampf Level -</Text>
+					<Button id="VolkareLevelSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="130" height="30" onMouseDown="" onMouseUp="">
+						<Image id="VolkareLevelSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="VolkareLevelSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Daring{zh-cn}勇者{ko}웅장한{es}Atrevido{fr}Audacieux{pt-br}Ousado{de}Gewagt</Text>
+					</Button>
+				</Row>
+				<Row id="VolkareRaceSelectionRow" active="false" preferredHeight="30">
+					<Text alignment="MiddleRight" offsetXY="-140 0" id="VolkareRaceText">{en}Volkare's Race Level -{zh-cn}沃里卡的速度级别：{ko}볼케어 레이스 레벨 -{es}Nivel de Carrera de Volkare -{fr}Niveau de Course Volkare -{pt-br}Nível da Corrida de Volkare -{de}Volkares Rennstufe -</Text>
+					<Button id="VolkareRaceSelection" onClick="toggleDropDown" offsetXY="0 0" rectAlignment="MiddleRight" width="130" height="30" onMouseDown="" onMouseUp="">
+						<Image id="VolkareRaceSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text id="VolkareRaceSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Fair{zh-cn}正常的{ko}평범한{es}Justo{fr}Équitable{pt-br}Justo{de}Messe</Text>
+					</Button>
+				</Row>
+			</TableLayout>
+		</Panel>
+	</Panel>
+	<Panel id="IntroBoard" outlineSize="0 0" rectAlignment="MiddleRight" width="610" height="700">
+		<Image image="Sliced Button/Button New Active" type="Sliced"/>
+		<VerticalLayout spacing="5" padding="8 8 8 8">
+			<Text fontSize="26">Welcome to my Mage Knight Highly Scripted Table</Text>
+			<Text alignment="MiddleLeft">Use this menu to configure your game, and have it setup for you. Mage Knight has lots of Variants and Adjustments experienced players can apply to increase the challenge if they wish. Despite this, the default settings are recomended for most games.</Text>
+			<Text alignment="MiddleLeft">During the Game, a LOT of things are automated. I tried to make things intuitive to use, or work with multiple play styles. I recommend not being shy, and just experimenting. The scripts save their data properly, making the 'Rewind' button safe to use.</Text>
+			<Text alignment="MiddleLeft">My work on this Table is never ending and feels like it's constantly evolving. I'm always keen to hear of ways I can improve things, or new ideas entirely. You can leave me a comment using the feedback button (top left of Screen), or on the workshop page.</Text>
+			<Text alignment="MiddleLeft">Mage Knight is designed by Vlaada Chvátil and published by the good folk at WizKids Games using amazing art from J.Lonnee. It is highly encouraged you purchase a copy for yourself.</Text>
+			<Text alignment="MiddleLeft" fontStyle="Bold">----------------------
+1. Choose your Scenario and any Options.
+2. Pick the Mage Knights that are playing.
+3. Customize the Scenario if desired.
+4. Click Start.
+----------------------</Text>
+			<Text alignment="MiddleLeft">The Start Button unlocks when you have two or more Mage Knights selected. Picking a Dummy Mage Knight implies you are playing Solo or Cooperative, otherwise it's Competative.</Text>
+			<Button id="NewUser" interactable="true" shadowDistance="0 0" rectAlignment="UpperCenter" preferredHeight="15" onClick="setupGame" class="LongButton">
+				<Image id="NewUserImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="newPlayerText" fontSize="20" offsetXY="0 1">{en}I'm a new Player and want the Walkthrough Scenario{zh-cn}我是一名新玩家，开始“首次勘察”剧本{ko}입문자를 위한 튜토리얼 시나리오{es}Soy un jugador novel y quiero el escenario de introducción{fr}Je suis un nouveau joueur et je veux le scénario pas à pas{pt-br}Sou um jogador novo e quero o Cenário Tutorial{de}Ich bin ein neuer Spieler und möchte das Walkthrough-Szenario</Text>
+			</Button>
+			<Button id="RandomGame" interactable="true" shadowDistance="0 0" rectAlignment="BottomCenter" preferredHeight="15" onClick="setupGame" class="LongButton">
+				<Image id="RandomGameImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="RandomGameButtonText" fontSize="20" offsetXY="0 1">{en}Give me a Mystery Solo Setup{zh-cn}帮我设置一局神秘的单人游戏{ko}랜덤 솔로 시나리오 빠른 시작{es}Dame una preparación misteriosa en Solitario{fr}Donnez-moi une configuration aléatoire Solo{pt-br}Me dê um Cenário Misterioso Aleatório{de}Gib mir ein Mystery-Solo-Setup</Text>
+			</Button>
+		</VerticalLayout>
+	</Panel>
+	<Panel id="ScenarioDetails"	active="false" outlineSize="0 0" rectAlignment="MiddleRight" width="610" height="700">
+		<Image image="Sliced Button/Button New Active" type="Sliced"/>
+		<VerticalLayout padding="8 8 0 0" childForceExpandHeight="False">
+			<TableLayout preferredHeight="30">
+				<Image image="Sliced Button/Title Border Tan" type="Sliced" width="610" height="30" rectAlignment="UpperCenter"/>
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Text id="ScenarioName" class="Title"><b>Script Modifies</b></Text>
+				</Row>
+			</TableLayout>
+			<Text id="ScenarioPurpose" alignment="MiddleLeft" width="595" padding="5 5 0 0">Purpose - Your task is to find and conquer all cities in the rounds provided.</Text>
+			<TableLayout preferredHeight="45">
+				<Row preferredHeight="15"></Row>
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="610" height="30"/>
+					<Text id="ScenarioEndText">{en}Scenario End{zh-cn}剧本结束{ko}시나리오 종료{es}Fin del Escenario{fr}Fin du Scénario{pt-br}Fim do Cenário{de}Szenario Ende</Text>
+				</Row>
+			</TableLayout>
+			<Text id="ScenarioEnd" alignment="MiddleLeft">Scenario End - </Text>
+			<TableLayout preferredHeight="45">
+				<Row preferredHeight="15"></Row>
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="610" height="30"/>
+					<Text id="ScenarioPlayerLimitText">{en}Scenario Player Limit{zh-cn}情景球员上限{ko}시나리오 플레이어 수{es}Escenario Límite de Jugadores{fr}Scénario Limite de Joueurs{pt-br}Limite de Jogadores do Cenário{de}Szenario Spielerlimit</Text>
+				</Row>
+			</TableLayout>
+			<Text id="PlayerCount" alignment="MiddleLeft">Players - 1 to 4</Text>
+		</VerticalLayout>
+		<Panel active="true" outlineSize="0 0" rectAlignment="LowerCenter" width="610" height="208">
+			<TableLayout preferredHeight="208">
+				<Row preferredHeight="28" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="610" height="30"/>
+					<Text id="scenarioTweaksText" class="Title">{en}4. Optional Scenario Tweaks{zh-cn}4. 可选情景调整{ko}4. 시나리오 조정4. Ajustes Opcionales del Escenario{fr}4. Ajustements Facultatifs du Scénario{pt-br}4. Ajustes Opcionais do Cenário{de}4. Optionale Änderungen am Szenario</Text>
+				</Row>
+				<Row preferredHeight="30">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced" width="594" height="30"/>
+					<Button id="RoundsDown" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" width="28" height="30">
+						<Image id="RoundsDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+					</Button>
+					<Text id="ScenarioLength" offsetXY="0 1">Length - 6 Rounds</Text>
+					<Button id="RoundsUp" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" width="28" height="30">
+						<Image id="RoundsUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced" width="594" height="30"/>
+					<Button id="MapDown" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" width="28" height="30">
+						<Image id="MapDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="&#60;"/>
+					</Button>
+					<Text id="ScenarioShape" offsetXY="0 1">Map Shape - Wedge</Text>
+					<Button id="MapUp" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" width="28" height="30">
+						<Image id="MapUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="&#62;"/>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced" width="594" height="30"/>
+					<Button id="CountryDown" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" width="28" height="30">
+						<Image id="CountryDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+					</Button>
+					<Text id="ScenarioCountry" offsetXY="0 1">Country Tiles - 7</Text>
+					<Button id="CountryUp" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" width="28" height="30">
+						<Image id="CountryUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced" width="594" height="30"/>
+					<Button id="CoreDown" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" width="28" height="30">
+						<Image id="CoreDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+					</Button>
+					<Text id="ScenarioCore" offsetXY="0 1">Core Tiles - 2</Text>
+					<Button id="CoreUp" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" width="28" height="30">
+						<Image id="CoreUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+					</Button>
+				</Row>
+				<Row preferredHeight="30">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced" width="570" height="30"/>
+					<Button id="CityDown" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" width="28" height="30">
+						<Image id="CityDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+					</Button>
+					<Text id="ScenarioCity" offsetXY="0 1">City Tiles - 2</Text>
+					<Button id="CityUp" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" width="28" height="30">
+						<Image id="CityUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+						<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+					</Button>
+				</Row>
+				<Row preferredHeight="30" id="CityLevelsRow" active="true">
+					<TableLayout id="CityLevelschange" active="false" columnWidths="28 0 0 28" cellBackgroundColor="Clear">
+						<Image image="Sliced Button/Button New Deactive" type="Sliced" width="570" height="30"/>
+						<Row>
+							<Cell id="MegapolisLeft" active="true">
+								<Row>
+									<Button id="MegapolisUp" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" onClick="baseValueTweak" width="28" height="30">
+										<Image id="MegapolisUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="&#60;"/>
+									</Button>
+								</Row>
+							</Cell>
+							<Cell id="CL1" active="true">
+								<Row>
+									<Button id="CityLevel1Down" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel1DownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+									</Button>
+									<Text id="ScenarioCity1Level" offsetXY="0 1">City 5</Text>
+									<Button id="CityLevel1Up" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel1UpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+									</Button>
+								</Row>
+							</Cell>
+							<Cell id="CL2" active="true">
+								<Row>
+									<Button id="CityLevel2Down" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel2DownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+									</Button>
+									<Text id="ScenarioCity2Level" offsetXY="0 1">City 5</Text>
+									<Button id="CityLevel2Up" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel2UpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+									</Button>
+								</Row>
+							</Cell>
+							<Cell id="CL3" active="true">
+								<Row>
+									<Button id="CityLevel3Down" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel3DownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+									</Button>
+									<Text id="ScenarioCity3Level" offsetXY="0 1">City 5</Text>
+									<Button id="CityLevel3Up" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel3UpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+									</Button>
+								</Row>
+							</Cell>
+							<Cell id="CL4" active="true">
+								<Row>
+									<Button id="CityLevel4Down" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel4DownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+									</Button>
+									<Text id="ScenarioCity4Level" offsetXY="0 1">City 5</Text>
+									<Button id="CityLevel4Up" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel4UpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+									</Button>
+								</Row>
+							</Cell>
+							<Cell id="CL5" preferredWidth="30">
+								<Row>
+									<Button id="CityLevel5Down" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleLeft" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel5DownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="-"/>
+									</Button>
+									<Text id="ScenarioCity5Level" offsetXY="0 1">City 5</Text>
+									<Button id="CityLevel5Up" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" onClick="baseValueTweak" width="28" height="30">
+										<Image id="CityLevel5UpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="+"/>
+									</Button>
+								</Row>
+							</Cell>
+							<Cell id="MegapolisRight" active="true">
+								<Row>
+									<Button id="MegapolisDown" class="ScenarioTweak" offsetXY="0 0" rectAlignment="MiddleRight" onClick="baseValueTweak" width="28" height="30">
+										<Image id="MegapolisDownImage" image="Sliced Button/Button New Active" type="Sliced"/>
+										<Text class="LevelData" alignment="MiddleCenter" offsetXY="0 1" text="&#62;"/>
+									</Button>
+								</Row>
+							</Cell>
+						</Row>
+					</TableLayout>
+				</Row>
+				<Row preferredHeight="30" id="CityDescriptionRow" active="false">
+					<Image image="Sliced Button/Button New Deactive" type="Sliced" width="610"/>
+					<Text id="CityNote" offsetXY="0 1">City Level(s) - No attacking</Text>
+				</Row>
+			</TableLayout>
+		</Panel>
+	</Panel>
+	<Panel id="toolTip"	active="false" offsetXY="-670 0" width="320" height="200" outlineSize="1 -1" >
+		<Image image="Sliced Button/Button New Active" type="Sliced"/>
+		<VerticalLayout padding="6 6 0 6">
+			<TableLayout preferredHeight="34">
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="320" height="30" rectAlignment="UpperCenter"/>
+					<Text id="toolTipTitle" fontSize="18" class="Title">{en}Scenario Info{zh-cn}剧本信息{ko}시나리오 정보{es}Información del escenario{fr}Informations sur le scénario{pt-br}Informação do cenário</Text>
+				</Row>
+			</TableLayout>
+			<Text id="toolTipText" alignment="UpperLeft" fontSize="16">Game Reminder Text Box</Text>
+		</VerticalLayout>
+	</Panel>
+	<Panel id="MegapolisReminder" active="false" offsetXY="670 -242" width="320" height="190" outlineSize="1 -1">
+		<Image image="Sliced Button/Button New Active" type="Sliced"/>
+		<VerticalLayout padding="6 6 0 6">
+			<TableLayout preferredHeight="34">
+				<Row preferredHeight="30" dontUseTableRowBackground="true" >
+					<Image image="Sliced Button/Title Border Tan" type="Sliced" width="320" height="30" rectAlignment="UpperCenter"/>
+					<Text id="MegapolisReminderTitle" fontSize="18" class="Title">{en}Megapolis Available{zh-cn}大型城市模式可用{ko}거대도시 옵션{es}Megapolis Disponible{fr}Megapolis Disponible{pt-br}Megalópole Disponível{de}Metropole Vorhanden</Text>
+				</Row>
+			</TableLayout>
+			<Text id="MegapolisReminderText1" fontSize="16" alignment="MiddleCenter">{en}Use the arrows next to the City Levels, to change a City into a Megapolis.{zh-cn}使用城市级别左边的书名号箭头可将普通城市更改为大型城市。{ko}거대도시를 사용하려면, 도시 레벨 옆 화살표를 누르세요.{es}Usa las flechas al lado de los niveles de la ciudad para convertir una ciudad en una Megapolis.{fr}Utilisez les flèches à côté des niveaux de la ville pour transformer une ville en Mégapole.{pt-br}Use as setas próximas ao níveis da Cidade, para transformar uma Cidade em uma Megalópole.{de}Verwenden Sie die Pfeile neben den Stadtebenen, um eine Stadt in eine Metropole zu verwandeln.</Text>
+			<Text id="MegapolisReminderText2" fontSize="16" alignment="MiddleCenter">{en}When a city deploys in game, a second random city also deploys with it (each at half the level chosen here). Their two garrisons combine and get the bonuses from both cities applied.{zh-cn}当一个城市在游戏中部署时，另一个随机城市也会随之部署（每个城市的等级都是这里所选等级的一半）。你需要面对大型城市中所有的守军，这些敌人全部具有城防，并同时受到两座城市的战斗奖励{ko}도시가 놓일 때, 두 번째 도시가 무작위로 선택되어 좌측에 같이 놓입니다.(각각 절반의 레벨)두 도시의 수비대가 합쳐지고 두 도시의 전투 보너스를 동시에 적용받습니다.{es}Cuando una ciudad se despliega en el juego, también se despliega una segunda ciudad aleatoria con ella (cada una a la mitad del nivel elegido aquí). Sus dos guarniciones se combinan y se aplican las bonificaciones de ambas ciudades.{fr}Lorsqu'une ville se déploie en jeu, une seconde ville aléatoire se déploie également avec elle (chacune à la moitié du niveau choisi ici). Leurs deux garnisons se combinent et obtiennent les bonus des deux villes appliqués.{pt-br}Quando uma cidade é implementada no jogo, uma segunda cidade aleatória também é implementada com ela (cada uma a metade do nível escolhido aqui). Suas duas Guarnições combinam e ganham os bônus de ambas as cidades.{de}Wenn eine Stadt im Spiel aufgestellt wird, wird auch eine zweite zufällige Stadt aufgestellt (jeweils auf der Hälfte des hier gewählten Levels). Ihre beiden Garnisonen verbinden sich und bekommen die Boni aus beiden Städten zugerechnet.</Text>
+			<Text id="MegapolisReminderText4" fontSize="16" alignment="MiddleCenter">{en}After conquering the Megapolis, interactions from either city can be accessed.{zh-cn}征服大型城市后，任何一个城区的都可以互动。{ko}정복된 후, 플레이어는 도시 어느 부분에 있던지 두 도시의 모든 교류 혜택을 사용할 수 있습니다.{es}Después de conquistar la Megalópolis, se puede acceder a las interacciones de cualquiera de las ciudades.{fr}Après avoir conquis la Mégapole, les interactions de l'une ou l'autre ville sont accessibles.{pt-br}Depois de conquistar a Megalópolis, interações de ambras cidades podem ser acessadas.{de}Nach der Eroberung der Metropole kann auf Interaktionen aus beiden Städten zugegriffen werden.</Text>
+		</VerticalLayout>
+	</Panel>
+	<Panel id="DropDown" active="false" offsetXY="-100 -275" width="120" outlineSize="1 -1" scale="1">
+		<TableLayout>
+			<Row id="nobodyRow">
+				<Button id="nobodySelection" onClick="PlayerChosen">
+					<Image id="nobodySelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="nobodySelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">nobody</Text>
+				</Button>
+			</Row>
+			<Row id="RANDOMRow">
+				<Button id="RANDOMSelection" onClick="PlayerChosen">
+					<Image id="RANDOMSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="RANDOMSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Random</Text>
+				</Button>
+			</Row>
+			<Row id="AllSkillsRow">
+				<Button id="AllSkillsSelection" onClick="PlayerChosen">
+					<Image id="AllSkillsSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="AllSkillsSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">All Skills</Text>
+				</Button>
+			</Row>
+			<Row id="ArytheaRow">
+				<Button id="ArytheaSelection" onClick="PlayerChosen">
+					<Image id="ArytheaSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ArytheaSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Arythea</Text>
+				</Button>
+			</Row>
+			<Row id="GoldyxRow">
+				<Button id="GoldyxSelection" onClick="PlayerChosen">
+					<Image id="GoldyxSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="GoldyxSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Goldyx</Text>
+				</Button>
+			</Row>
+			<Row id="NorowasRow">
+				<Button id="NorowasSelection" onClick="PlayerChosen">
+					<Image id="NorowasSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="NorowasSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Norowas</Text>
+				</Button>
+			</Row>
+			<Row id="TovakRow">
+				<Button id="TovakSelection" onClick="PlayerChosen">
+					<Image id="TovakSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TovakSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Tovak</Text>
+				</Button>
+			</Row>
+			<Row id="BraevalarRow">
+				<Button id="BraevalarSelection" onClick="PlayerChosen">
+					<Image id="BraevalarSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="BraevalarSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Braevalar</Text>
+				</Button>
+			</Row>
+			<Row id="KrangRow">
+				<Button id="KrangSelection" onClick="PlayerChosen">
+					<Image id="KrangSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="KrangSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Krang</Text>
+				</Button>
+			</Row>
+			<Row id="WolfhawkRow">
+				<Button id="WolfhawkSelection" onClick="PlayerChosen">
+					<Image id="WolfhawkSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="WolfhawkSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Wolfhawk</Text>
+				</Button>
+			</Row>
+			<Row id="JormundRow">
+				<Button id="JormundSelection" onClick="PlayerChosen">
+					<Image id="JormundSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="JormundSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Jormund</Text>
+				</Button>
+			</Row>
+			<Row id="YmirghRow">
+				<Button id="YmirghSelection" onClick="PlayerChosen">
+					<Image id="YmirghSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="YmirghSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Ymirgh</Text>
+				</Button>
+			</Row>
+			<Row id="MevokRow">
+				<Button id="MevokSelection" onClick="PlayerChosen">
+					<Image id="MevokSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="MevokSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Mevok</Text>
+				</Button>
+			</Row>
+			<Row id="DusceniaRow">
+				<Button id="DusceniaSelection" onClick="PlayerChosen">
+					<Image id="DusceniaSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="DusceniaSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Duscenia</Text>
+				</Button>
+			</Row>
+			<Row id="DaringRow">
+				<Button id="DaringSelection" onClick="VolkareLevelSelection">
+					<Image id="DaringSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="DaringSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Daring{zh-cn}勇者{ko}웅장한{es}Atrevido{fr}Audacieux{pt-br}Ousado{de}Gewagt</Text>
+				</Button>
+			</Row>
+			<Row id="HeroicRow">
+				<Button id="HeroicSelection" onClick="VolkareLevelSelection">
+					<Image id="HeroicSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="HeroicSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Heroic{zh-cn}英雄{ko}영웅적{es}Heroico{fr}Héroïque{pt-br}Heróico{de}Heroisch</Text>
+				</Button>
+			</Row>
+			<Row id="LegendaryRow">
+				<Button id="LegendarySelection" onClick="VolkareLevelSelection">
+					<Image id="LegendarySelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="LegendarySelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Legendary{zh-cn}传奇{ko}전설적{es}Legendario{fr}Légendaire{pt-br}Lendário{de}Legendär</Text>
+				</Button>
+			</Row>
+			<Row id="FairRow">
+				<Button id="FairSelection" onClick="VolkareRaceSelection">
+					<Image id="FairSelectionImage" image="Sliced Button/Button New Active" type="Sliced"/>
+					<Text id="FairSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Fair{zh-cn}正常的{ko}평범한{es}Justo{fr}Équitable{pt-br}Justo{de}Messe</Text>
+				</Button>
+			</Row>
+			<Row id="TightRow">
+				<Button id="TightSelection" onClick="VolkareRaceSelection">
+					<Image id="TightSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TightSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Tight{zh-cn}紧急的{ko}빠듯한{es}Apretado{fr}Serré{pt-br}Acirrado{de}Dichtes</Text>
+				</Button>
+			</Row>
+			<Row id="ThrillingRow">
+				<Button id="ThrillingSelection" onClick="VolkareRaceSelection">
+					<Image id="ThrillingSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ThrillingSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Thrilling{zh-cn}狂飙的{ko}스릴있는{es}Emocionante{fr}Palpitant{pt-br}Emocionante{de}Spannend</Text>
+				</Button>
+			</Row>
+			<Row id="ConquestRow">
+				<Button id="ConquestSelection" onClick="scenarioSelection">
+					<Image id="ConquestSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ConquestSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Conquest</Text>
+				</Button>
+			</Row>
+			<Row id="FirstReconnaissanceRow">
+				<Button id="FirstReconnaissanceSelection" onClick="scenarioSelection">
+					<Image id="FirstReconnaissanceSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="FirstReconnaissanceSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">First Reconnaissance</Text>
+				</Button>
+			</Row>
+			<Row id="FirstConquestRow">
+				<Button id="FirstConquestSelection" onClick="scenarioSelection">
+					<Image id="FirstConquestSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="FirstConquestSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">First Conquest</Text>
+				</Button>
+			</Row>
+			<Row id="MinesLiberationRow">
+				<Button id="MinesLiberationSelection" onClick="scenarioSelection">
+					<Image id="MinesLiberationSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="MinesLiberationSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Mines Liberation</Text>
+				</Button>
+			</Row>
+			<Row id="DruidNightsRow">
+				<Button id="DruidNightsSelection" onClick="scenarioSelection">
+					<Image id="DruidNightsSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="DruidNightsSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Druid Nights</Text>
+				</Button>
+			</Row>
+			<Row id="DungeonLordsRow">
+				<Button id="DungeonLordsSelection" onClick="scenarioSelection">
+					<Image id="DungeonLordsSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="DungeonLordsSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Dungeon Lords</Text>
+				</Button>
+			</Row>
+			<Row id="ConquerAndHoldRow">
+				<Button id="ConquerAndHoldSelection" onClick="scenarioSelection">
+					<Image id="ConquerAndHoldSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ConquerAndHoldSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Conquer and Hold</Text>
+				</Button>
+			</Row>
+			<Row id="OneToReturnRow">
+				<Button id="OneToReturnSelection" onClick="scenarioSelection">
+					<Image id="OneToReturnSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="OneToReturnSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">One to Return</Text>
+				</Button>
+			</Row>
+			<Row id="VolkaresReturnRow">
+				<Button id="VolkaresReturnSelection" onClick="scenarioSelection">
+					<Image id="VolkaresReturnSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="VolkaresReturnSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Volkare's Return</Text>
+				</Button>
+			</Row>
+			<Row id="VolkaresQuestRow">
+				<Button id="VolkaresQuestSelection" onClick="scenarioSelection">
+					<Image id="VolkaresQuestSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="VolkaresQuestSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Volkare's Quest</Text>
+				</Button>
+			</Row>
+			<Row id="LifeAndDeathRow">
+				<Button id="LifeAndDeathSelection" onClick="scenarioSelection">
+					<Image id="LifeAndDeathSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="LifeAndDeathSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Life and Death</Text>
+				</Button>
+			</Row>
+			<Row id="TheRealmOfTheDeadRow">
+				<Button id="TheRealmOfTheDeadSelection" onClick="scenarioSelection">
+					<Image id="TheRealmOfTheDeadSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TheRealmOfTheDeadSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">The Realm of the Dead</Text>
+				</Button>
+			</Row>
+			<Row id="TheHiddenValleyRow">
+				<Button id="TheHiddenValleySelection" onClick="scenarioSelection">
+					<Image id="TheHiddenValleySelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TheHiddenValleySelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">The Hidden Valley</Text>
+				</Button>
+			</Row>
+			<Row id="TheLostRelicRow">
+				<Button id="TheLostRelicSelection" onClick="scenarioSelection">
+					<Image id="TheLostRelicSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TheLostRelicSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">The Lost Relic</Text>
+				</Button>
+			</Row>
+			<Row id="TheGauntletRow">
+				<Button id="TheGauntletSelection" onClick="scenarioSelection">
+					<Image id="TheGauntletSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TheGauntletSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">The Gauntlet</Text>
+				</Button>
+			</Row>
+			<Row id="QuestForTheGoldenGrailRow">
+				<Button id="QuestForTheGoldenGrailSelection" onClick="scenarioSelection">
+					<Image id="QuestForTheGoldenGrailSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="QuestForTheGoldenGrailSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Quest for the Golden Grail</Text>
+				</Button>
+			</Row>
+			<Row id="TheChaosRiftRow">
+				<Button id="TheChaosRiftSelection" onClick="scenarioSelection">
+					<Image id="TheChaosRiftSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TheChaosRiftSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">The Chaos Rift</Text>
+				</Button>
+			</Row>
+			<Row id="LadyhawkeRow">
+				<Button id="LadyhawkeSelection" onClick="scenarioSelection">
+					<Image id="LadyhawkeSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="LadyhawkeSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Ladyhawke</Text>
+				</Button>
+			</Row>
+			<Row id="UltimateConquestRow">
+				<Button id="UltimateConquestSelection" onClick="scenarioSelection">
+					<Image id="UltimateConquestSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="UltimateConquestSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Ultimate Conquest</Text>
+				</Button>
+			</Row>
+			<Row id="FastForwardedConquestRow">
+				<Button id="FastForwardedConquestSelection" onClick="scenarioSelection">
+					<Image id="FastForwardedConquestSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="FastForwardedConquestSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Fast Forwarded Conquest</Text>
+				</Button>
+			</Row>
+			<Row id="TheWarOfFourRow">
+				<Button id="TheWarOfFourSelection" onClick="scenarioSelection">
+					<Image id="TheWarOfFourSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="TheWarOfFourSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">The War of Four</Text>
+				</Button>
+			</Row>
+			<Row id="RaidersOfTheCrusaderTempleRow">
+				<Button id="RaidersOfTheCrusaderTempleSelection" onClick="scenarioSelection">
+					<Image id="RaidersOfTheCrusaderTempleSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="RaidersOfTheCrusaderTempleSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Raiders of the Crusader Temple</Text>
+				</Button>
+			</Row>
+			<Row id="CustomRow">
+				<Button id="CustomSelection" onClick="scenarioSelection">
+					<Image id="CustomSelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="CustomSelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">Custom</Text>
+				</Button>
+			</Row>
+			<Row id="ROTF0Row">
+				<Button id="ROTF0Selection" onClick="riseOfTheForgemastersOption">
+					<Image id="ROTF0SelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ROTF0SelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}Not Used{zh-cn}未使用{ko}사용 안 함{es}No se Utiliza{fr}Non Utilisé{pt-br}Não Utilizado{de}Nicht Verwendet</Text>
+				</Button>
+			</Row>
+			<Row id="ROTF1Row">
+				<Button id="ROTF1Selection" onClick="riseOfTheForgemastersOption">
+					<Image id="ROTF1SelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ROTF1SelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}1. New Beginning{zh-cn}新的开始{ko}1.새로운 시작{es}1. Un nuevo comienzo{fr}1. Nouveau départ{pt-br}1. Novo Começo{de}1. Neubeginn</Text>
+				</Button>
+			</Row>
+			<Row id="ROTF2Row">
+				<Button id="ROTF2Selection" onClick="riseOfTheForgemastersOption">
+					<Image id="ROTF2SelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ROTF2SelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}2. Spoils of War{zh-cn}战利品{ko}2.전쟁의 전리품{es}2. Botín de Guerra{fr}2. Butin de Guerre{pt-br}2. Despojos de Guerra{de}2. Kriegsbeute</Text>
+				</Button>
+			</Row>
+			<Row id="ROTF3Row">
+				<Button id="ROTF3Selection" onClick="riseOfTheForgemastersOption">
+					<Image id="ROTF3SelectionImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+					<Text id="ROTF3SelectionText" class="LevelData" alignment="MiddleCenter" offsetXY="0 1">{en}3. Elixir of Life{zh-cn}长生不老{ko}3.생명의 엘릭서{es}3. El Elixir de la Vida{fr}3. Élixir de vie{pt-br}3. Elixir da Vida{de}3. Lebenselixier</Text>
+				</Button>
+			</Row>
+		</TableLayout>
+	</Panel>
+</Panel>
+
+<Panel id="GameReminder" active="false" rectAlignment="UpperLeft" offsetXY="90 -75" width="300" height="100">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<VerticalLayout padding="8 8 0 5">
+		<TableLayout preferredHeight="30">
+			<Row preferredHeight="30" dontUseTableRowBackground="true" >
+				<Image image="Sliced Button/Title Border Tan" type="Sliced" width="300" height="30" rectAlignment="UpperCenter"/>
+				<Text id="GameReminderTitleText" fontSize="18" class="Title">{en}Scenario Info{zh-cn}场景信息{ko}시나리오 정보{es}Información del escenario{fr}Informations sur le scénario{pt-br}Informação do cenário</Text>
+			</Row>
+		</TableLayout>
+		<Text id="GameReminderText" fontSize="16">Game Reminder Text Box</Text>
+	</VerticalLayout>
+</Panel>
+
+<Panel id="welcome" width="960" height="735" color="rgb(0, 0, 0)">
+    <Button id="splashButton" interactable="true" onClick="closeSplash">
+		<Image image="Cover" preserveAspect="true" height="735" width="960" rectAlignment="MiddleCenter"/>
+	</Button>
+</Panel>
+
+<Panel id="AutoFlipButton" active="false" rectAlignment="UpperLeft" offsetXY="130 -35" width="110" height="30" outlineSize="0 0">
+	<Button id="AutoFlipButtonReal" onClick="autoflip" tooltipPosition="Below" tooltipOffset="5" tooltip="Dropping a Mage Knight next to a Fortified site will reveal the Garrisons for you.">
+		<Image id="AutoFlipButtonRealImage" image="Sliced Button/Button New Deactive" type="Sliced"/>
+		<Text id="AutoFlipButtonRealText" offsetXY="0 1">{en}Auto Flip{zh-cn}自动翻转{ko}자동 공개{es}Volteo Automático{pt-br}Auto-Virar</Text>
+	</Button>
+</Panel>
+
+<Panel id="sendBugReportButton"	active="false" visibility="Admin" rectAlignment="UpperLeft" offsetXY="130 -5" width="110" height="30" outlineSize="0 0">
+	<Button id="sendBugReportButtonReal" onClick="bugReport">
+		<Image id="sendBugReportButtonImage" image="Sliced Button/Button New Active" type="Sliced"/>
+		<Text id="sendBugReportButtonText" offsetXY="0 1">{en}Feedback{zh-cn}反  馈{ko}문의{es}Realimentación{fr}Retour{pt-br}Comentários</Text>
+	</Button>
+</Panel>
+
+<Panel id="SendBugRequest" active="false" visibility="Admin" class="Floating" rectAlignment="UpperLeft" offsetXY="90 -350" width="350" height="160">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<Panel rectAlignment="LowerLeft" offsetXY="0 156" width="350" height="35" outlineSize="0 0">
+		<Image image="Sliced Button/Title Border Tan" type="Sliced"/>
+		<Text id="FeedbackTitle" fontSize="20" alignment="MiddleCenter">{en}Feedback{zh-cn}反馈{ko}피드백{es}Realimentación{fr}Retour{pt-br}Comentários{de}Feedback</Text>
+	</Panel>
+	<VerticalLayout padding="5 5 5 5">
+		<Text id="FeedbackText1" fontSize="14">{en}I'm just one guy, and I can't test every possible combination of this mod before releasing a patch. Your feedback is appreciated, and will improve the mod for everyone else.{zh-cn}我只是一个人，我不能在发布补丁之前测试这个mod的所有可能的组合。感谢您的反馈，这将改善所有人的游戏体验。{ko}피드백 해주셔서 감사합니다. 모든 사항이 패치에 반영되지 않을 수 있음에 양해바랍니다.{es}Solo soy un tipo y no puedo probar todas las combinaciones posibles de este mod antes de lanzar un parche. Se agradecen sus comentarios y mejorarán la modificación para todos los demás.{fr}Je ne suis qu'un gars, et je ne peux pas tester toutes les combinaisons possibles de ce mod avant de sortir un patch. Vos commentaires sont appréciés et amélioreront le mod pour tout le monde.{pt-br}Eu sou apenas um cara, e Eu não posso testar cada possível combinação deste mod antes de liberar uma atualização. Seu comentário é apreciado e melhorará o mod para todo mundo.{de}Ich bin nur ein Typ, und ich kann nicht jede mögliche Kombination dieses Mods testen, bevor ich einen Patch veröffentliche. Ihr Feedback wird geschätzt und wird den Mod für alle anderen verbessern.</Text>
+		<Text id="FeedbackText2" fontSize="14">{en}Let me know anything, big or small, that has caused you problems, or could make your game better. I have programmed for the way I play, so I may not have considered every interaction possible.{zh-cn}让我知道任何事情，无论大小，如果已经造成你的困扰，或者你有好的建议。我已经形成了我自己的游戏套路，所以可能没有考虑到其他的可能性，如果你能提出来，非常感谢{ko}심각하거나 사소하거나, 어떤 버그나 질문이 있다면 스크립트의 발전을 위해 보고해주세요.  만약 직접 답변을 원한다면, 스팀워크샵에 문의하세요.{es}Dime cualquier cosa, grande o pequeña, que te haya causado problemas o que pueda mejorar tu juego. He programado para mi forma de jugar, por lo que es posible que no haya considerado todas las interacciones posibles.{fr}Faites-moi savoir tout ce qui, petit ou grand, vous a causé des problèmes ou pourrait améliorer votre jeu. J'ai programmé pour ma façon de jouer, donc je n'ai peut-être pas envisagé toutes les interactions possibles.{pt-br}deixe-me saber de tudo, coisas grandes ou pequenas, que causaram problemas, ou poderia fazer seu jogo melhor. Eu tenho programado pela forma que Eu jogo, então Eu posso não ter considerado toda interação possível.{de}Lassen Sie mich alles wissen, ob groß oder klein, das Ihnen Probleme bereitet hat oder Ihr Spiel verbessern könnte. Ich habe für meine Spielweise programmiert, also habe ich vielleicht nicht jede Interaktion für möglich gehalten</Text>
+		<Text id="FeedbackText3" fontSize="14">{en}While I read all the Feedback, if you want me to reply about your problem, it's best to post to the Mod's Workshop page instead.{zh-cn}我会阅读所有反馈，如果你希望我回复你，欢迎到mod的留言区与我互动{ko}한국어 번역에 문의 사항이 있다면, chamena1110@gmail.com으로 메일하시면 피드백 드리겠습니다.{es}Mientras leo todos los comentarios, si quieres que te responda sobre tu problema, lo mejor es publicar en la página del taller del mod.{fr}Pendant que je lis tous les commentaires, si vous voulez que je réponde à votre problème, il est préférable de poster à la place sur la page de l'atelier du mod.{pt-br}Apesar de eu ler todos os comentários, se você me quiser respondendo sobre o seu problema, é melhor postá-lo na página do Mod na Oficina.{de}Ich lese zwar das gesamte Feedback, aber wenn Sie möchten, dass ich auf Ihr Problem antworte, ist es am besten, stattdessen auf der Mod-Workshop-Seite zu posten.</Text>
+	</VerticalLayout>
+	<Panel rectAlignment="LowerCenter" offsetXY="0 -60" width="350" height="60" outlineSize="0 0">
+		<InputField id="SendBugComment" lineType="MultiLineNewLine" height="60" width="350" onEndEdit="updateComment"></InputField>
+	</Panel>
+	<Panel rectAlignment="LowerLeft" offsetXY="0 -90" width="175" height="30" outlineSize="0 0">
+		<Button id="SendBugRequestYes" onClick="SendDataRequest">
+			<Image id="SendBugRequestYesImage" image="Sliced Button/Button New Active" type="Sliced"/>
+			<Text id="SendBUGRequestYesText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Send Feedback{zh-cn}发送反馈{ko}피드백 전송{es}Enviar comentarios{fr}Envoyer des commentaires{pt-br}Envie Comentário{de}Feedback Senden</Text>
+		</Button>
+	</Panel>
+	<Panel rectAlignment="LowerRight" offsetXY="0 -90" width="175" height="30" outlineSize="0 0">
+		<Button id="SendBugRequestNo" onClick="SendDataRequest">
+			<Image id="SendBugRequestNoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+			<Text id="SendBugRequestNoText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Cancel{zh-cn}取消{ko}취소{es}Cancelar{fr}Annuler{pt-br}Cancelar{de}Abbrechen</Text>
+		</Button>
+	</Panel>
+</Panel>
+
+<Panel id="SendScoreRequest" active="false"	visibility="Admin" class="Floating"	rectAlignment="UpperLeft" offsetXY="90 -350" width="300" height="160">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<Panel rectAlignment="LowerLeft" offsetXY="0 156" width="300" height="35" outlineSize="0 0">
+		<Image image="Sliced Button/Title Border Tan" type="Sliced"/>
+		<Text id="SendScoreRequestText1" fontSize="20" alignment="MiddleCenter">{en}Record Your Score{zh-cn}记录你的分数{ko}점수 기록{es}Registre su puntaje{fr}Enregistrez votre score{pt-br}Grave Sua Pontuação{de}Punktzahl Aufzeichnen</Text>
+	</Panel>
+	<VerticalLayout padding="5 5 5 5">
+		<Text id="SendScoreRequestText2" fontSize="14" fontStyle="Normal">{en}Would you like to record this games score(s) on the Public List? (Find a link to it on the Mod's Workshop Page){zh-cn}你想公开你的比赛成绩吗（你可以在我的mod页面看到这个链接）{ko}공개 리스트에 점수를 기록할까요? (스팀 워크샵에 링크가 있습니다){es}¿Le gustaría registrar la (s) puntuación (s) de este juego en la lista pública? (Encuentre un enlace en la página de taller del Mod){fr}Souhaitez-vous enregistrer le(s) score(s) de ce jeu sur la liste publique ? (Trouvez un lien vers celui-ci sur la page de l'atelier du mod){pt-br}Você gostaria de gravar a pontuação destes jogos numa lista pública? (Encontre um link para ele na página da Oficina do Mod){de}Möchten Sie diese Spielergebnisse in die öffentliche Liste aufnehmen? (Einen Link dazu finden Sie auf der Workshop-Seite des Mods)</Text>
+		<Text id="SendScoreRequestText3" fontSize="14" fontStyle="Normal">{en}The list contains the game setups and scores of other players across the world. You can see how well you did compared to others. See what the average score is for a scenario. Try to beat your existing score.{zh-cn}这个列表包含了世界上其他玩家的游戏设置和分数。你可以看到你比别人做得多好。看看一个场景的平均得分是多少。试着打败你现有的分数。{ko}공개 리스트는 전세계의 플레이어들의 점수를 기록합니다. 평균 점수를 확인하고 비교해보세요. 그리고 기존 기록을 갱신해보세요.{es}La lista contiene las configuraciones del juego y las puntuaciones de otros jugadores de todo el mundo. Puede ver lo bien que lo hizo en comparación con los demás. Vea cuál es la puntuación media de un escenario. Intenta superar tu puntuación actual.{fr}La liste contient les configurations de jeu et les scores des autres joueurs à travers le monde. Vous pouvez voir à quel point vous avez réussi par rapport aux autres. Voyez quel est le score moyen pour un scénario. Essayez de battre votre score existant.{pt-br}A lista contém as configurações dos jogos e pontuações dos jogadores ao redor do mundo. Você pode ver o quão bem você foi comparado aos outros. Veja qual a pontuação média de um cenário. Tente derrotar sua pontuação existente.{de}Die Liste enthält die Spielaufbauten und Punktzahlen anderer Spieler auf der ganzen Welt. Sie können sehen, wie gut Sie im Vergleich zu anderen abgeschnitten haben. Sehen Sie, was die durchschnittliche Punktzahl für ein Szenario ist. Versuchen Sie, Ihre vorhandene Punktzahl zu schlagen.</Text>
+		<Text id="SendScoreRequestText4" fontSize="14" fontStyle="Normal">{en}Optionally type something to help you find your entry in the list. Ie 'Volkare killed by epic fireball attack'{zh-cn}随意输入些什么来帮助你在列表里找到你想要的条目{ko}리스트에서 쉽게 찾으려면, '정의의 검으로 볼케어 뚝배기를 깼다'와 같은 특별한 메모를 하셔도 됩니다.{es}Opcionalmente, escriba algo que le ayude a encontrar su entrada en la lista. Es decir, 'Volkare asesinado por un épico ataque con bola de fuego'{fr}Tapez éventuellement quelque chose pour vous aider à trouver votre entrée dans la liste. C'est-à-dire 'Volkare tué par une attaque épique de boule de feu'{pt-br}Opcionalmente digite algo para ajudar você a encontrar sua entrada na lista. Ex. 'Volkare morto por ataque épico de Bola de fogo'{de}Geben Sie optional etwas ein, das Ihnen hilft, Ihren Eintrag in der Liste zu finden. Dh 'Volkare durch epischen Feuerballangriff getötet'</Text>
+	</VerticalLayout>
+	<Panel rectAlignment="LowerCenter" offsetXY="0 -60" width="300" height="60" outlineSize="0 0">
+		<InputField id="SendScoreComment" lineType="MultiLineNewLine" height="60" width="300" onEndEdit="updateComment"></InputField>
+	</Panel>
+	<Panel rectAlignment="LowerLeft" offsetXY="0 -90" width="150" height="30" outlineSize="0 0">
+		<Button id="SendScoreRequestYes" onClick="SendDataRequest">
+			<Image id="SendScoreRequestYesImage" image="Sliced Button/Button New Active" type="Sliced"/>
+			<Text id="SendScoreRequestYesText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Send Score{zh-cn}上传分数{ko}점수 입력{es}Enviar puntuación{fr}Envoyer la note{pt-br}Enviar pontuação{de}Punkte Eintragen</Text>
+		</Button>
+	</Panel>
+	<Panel rectAlignment="LowerRight" offsetXY="0 -90" width="150" height="30" outlineSize="0 0">
+		<Button id="SendScoreRequestNo" onClick="SendDataRequest">
+			<Image id="SendScoreRequestNoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+			<Text id="SendScoreRequestNoText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}No Thanks{zh-cn}暂时不{ko}다음에{es}No, gracias{fr}Non merci{pt-br}Não, obrigado{de}Nein Danke</Text>
+		</Button>
+	</Panel>
+</Panel>
+
+<Panel id="CoopAssault"	active="false" class="Floating" rectAlignment="UpperLeft" offsetXY="90 -350" width="525" height="230">
+	<Image image="Sliced Button/Button New Active" type="Sliced"/>
+	<TableLayout id="CoopAssaultMainTable"
+		columnWidths="135 85 100 85 120"
+		cellSpacing="0"
+		autoCalculateHeight="false"
+		cellPadding="3 3 0 0"
+		cellBackgroundColor="Clear"
+		rectAlignment="UpperCenter">
+		<Row id="CoopAssaultMainTableHeading" preferredHeight="90" dontUseTableRowBackground="true" color="rgb(0.3,0.3,0.3)">
+			<Image image="Sliced Button/Title Border Tan" type="Sliced"/>
+			<Cell columnSpan="5">
+				<VerticalLayout>
+					<Text id="CoopAssaultMainTableText1" fontSize="20" class="Title">{en}Combined Assault Possible{zh-cn}可能的联合攻击{ko}협력 강습 가능{es}Asalto Combinado Posible{fr}Assaut Combiné Possible{pt-br}Ataque Combinado Possível{de}Kombinierter Angriff möglich</Text>
+					<Text id="CoopAssaultMainTableText2" fontSize="14">{en}Nearby Mage Knights can Choose to join the assault. This tool randomly gives the amount of defenders chosen to each player, while also flipping their Turn Order Token face down.{zh-cn}附近的法师骑士可以选择加入突击。 该工具随机为每个玩家提供选择的防御者数量，同时还翻转他们的回合指令标记面朝下。{ko}근처의 메이지 나이트들은 이 강습에 참여할 수 있습니다. 이 툴은 참여한 각 플레이어에게 무작위로 선택된 수비자 토큰을 배분합니다. 그리고 라운드 순서 토큰을 뒤집습니다.{es}Los caballeros magos cercanos pueden elegir unirse al asalto. Esta herramienta da al azar la cantidad de defensores elegidos para cada jugador, mientras que también coloca boca abajo su Ficha de Orden de Turno.{fr}Les chevaliers mages à proximité peuvent choisir de se joindre à l'assaut. Cet outil donne au hasard le nombre de défenseurs choisis à chaque joueur, tout en retournant son jeton d'ordre du tour face cachée.{pt-br}Os Mage Knights próximos podem escolher se juntar ao ataque. Esta ferramenta fornece aleatoriamente a quantidade de defensores escolhidos para cada jogador, ao mesmo tempo que vira a ficha de ordem do turno para baixo.{de}Magierritter in der Nähe können sich dem Angriff anschließen. Mit diesem Werkzeug erhält jeder Spieler zufällig die gewählte Anzahl an Verteidigern und dreht gleichzeitig sein Zugreihenfolgeplättchen um.</Text>
+					<Text id="CoopAssaultMainTableText3" fontSize="14">{en}(Remember to pay movement costs){zh-cn}（记得支付移动费用）{ko}(이동 비용 지불을 잊지마세요.){es}(Recuerde pagar los costos de movimiento){fr}(N'oubliez pas de payer les frais de déplacement){pt-br}(Lembre-se de pagar os custos de movimentação){de}(Denken Sie daran, die Bewegungskosten zu bezahlen)</Text>
+				</VerticalLayout>
+			</Cell>
+		</Row>
+		<Row>
+			<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+			<Cell><Text id="Mage1AssaulterMageName" class="mageAssaulter" alignment="MiddleRight" offsetXY="0 1">Wolfhawk fights</Text></Cell>
+			<Cell><Text id="Mage1AssaulterAmountOne" class="mageAssaulter" offsetXY="0 1">All</Text></Cell>
+			<Cell><Text id="Mage1AssaulterOpponentType" class="mageAssaulter" alignment="MiddleCenter" offsetXY="0 1">Regular and</Text></Cell>
+			<Cell id="Mage1VolkareCellOne" active="true"><Text id="Mage1AssaulterAmountTwo" class="mageAssaulter" offsetXY="0 1">All</Text></Cell>
+			<Cell id="Mage1VolkareCellTwo" active="true"><Text id="Mage1AssaulterOpponentTypeTwo" class="mageAssaulter" alignment="MiddleLeft" offsetXY="0 1">Elite Units</Text></Cell>
+		</Row>
+		<Row>
+			<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+			<Button id="Mage2AssaultAdjustPrimDo" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="137 0" onClick="assaultAdjust" class="ShortButton">
+				<Image id="Mage2AssaultAdjustPrimDoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+			</Button>
+			<Button id="Mage2AssaultAdjustPrimUp" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="194 0" onClick="assaultAdjust" class="ShortButton" >
+				<Image id="Mage2AssaultAdjustPrimUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+			</Button>
+			<Button id="Mage2AssaultAdjustSecoDo" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="322 0" onClick="assaultAdjust" class="ShortButton">
+				<Image id="Mage2AssaultAdjustSecoDoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+			</Button>
+			<Button id="Mage2AssaultAdjustSecoUp" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="380 0" onClick="assaultAdjust" class="ShortButton" >
+				<Image id="Mage2AssaultAdjustSecoUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+			</Button>
+			<Cell><Text id="Mage2AssaulterMageName" class="mageAssaulter" alignment="MiddleRight" offsetXY="0 1">Wolfhawk</Text></Cell>
+			<Cell><Text id="Mage2AssaulterAmountOne" class="mageAssaulter" offsetXY="0 1"></Text></Cell>
+			<Cell><Text id="Mage2AssaulterOpponentType" class="mageAssaulter" alignment="MiddleLeft" offsetXY="0 1"></Text></Cell>
+			<Cell id="Mage2VolkareCellOne" active="true"><Text id="Mage2AssaulterAmountTwo" class="mageAssaulter" offsetXY="0 1"></Text></Cell>
+			<Cell id="Mage2VolkareCellTwo" active="true"><Text id="Mage2AssaulterOpponentTypeTwo" class="mageAssaulter" alignment="MiddleLeft" offsetXY="0 1">not Assaulting</Text></Cell>
+		</Row>
+		<Row id="Mage3Assault" active="true">
+			<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+			<Button id="Mage3AssaultAdjustPrimDo" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="137 0" onClick="assaultAdjust" class="ShortButton">
+				<Image id="Mage3AssaultAdjustPrimDoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+			</Button>
+			<Button id="Mage3AssaultAdjustPrimUp" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="194 0" onClick="assaultAdjust" class="ShortButton" >
+				<Image id="Mage3AssaultAdjustPrimUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+			</Button>
+			<Button id="Mage3AssaultAdjustSecoDo" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="322 0" onClick="assaultAdjust" class="ShortButton">
+				<Image id="Mage3AssaultAdjustSecoDoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+			</Button>
+			<Button id="Mage3AssaultAdjustSecoUp" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="380 0" onClick="assaultAdjust" class="ShortButton" >
+				<Image id="Mage3AssaultAdjustSecoUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+			</Button>
+			<Cell><Text id="Mage3AssaulterMageName" class="mageAssaulter" alignment="MiddleRight" offsetXY="0 1">Wolfhawk</Text></Cell>
+			<Cell><Text id="Mage3AssaulterAmountOne" class="mageAssaulter" offsetXY="0 1"></Text></Cell>
+			<Cell><Text id="Mage3AssaulterOpponentType" class="mageAssaulter" alignment="MiddleLeft" offsetXY="0 1"></Text></Cell>
+			<Cell id="Mage3VolkareCellOne" active="true"><Text id="Mage3AssaulterAmountTwo" class="mageAssaulter" offsetXY="0 1"></Text></Cell>
+			<Cell id="Mage3VolkareCellTwo" active="true"><Text id="Mage3AssaulterOpponentTypeTwo" class="mageAssaulter" alignment="MiddleLeft" offsetXY="0 1">not Assaulting</Text></Cell>
+		</Row>
+		<Row id="Mage4Assault" active="true">
+			<Image image="Sliced Button/Button New Deactive" type="Sliced"/>
+			<Button id="Mage4AssaultAdjustPrimDo" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="137 0" onClick="assaultAdjust" class="ShortButton">
+				<Image id="Mage4AssaultAdjustPrimDoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+			</Button>
+			<Button id="Mage4AssaultAdjustPrimUp" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="194 0" onClick="assaultAdjust" class="ShortButton" >
+				<Image id="Mage4AssaultAdjustPrimUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+			</Button>
+			<Button id="Mage4AssaultAdjustSecoDo" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="322 0" onClick="assaultAdjust" class="ShortButton">
+				<Image id="Mage4AssaultAdjustSecoDoImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">-</Text>
+			</Button>
+			<Button id="Mage4AssaultAdjustSecoUp" active="true" width="24" shadowDistance="0 0" rectAlignment="MiddleLeft" offsetXY="380 0" onClick="assaultAdjust" class="ShortButton" >
+				<Image id="Mage4AssaultAdjustSecoUpImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" offsetXY="0 1">+</Text>
+			</Button>
+			<Cell><Text id="Mage4AssaulterMageName" class="mageAssaulter" alignment="MiddleRight" offsetXY="0 1">Wolfhawk</Text></Cell>
+			<Cell><Text id="Mage4AssaulterAmountOne" class="mageAssaulter" offsetXY="0 1"></Text></Cell>
+			<Cell><Text id="Mage4AssaulterOpponentType" class="mageAssaulter" alignment="MiddleLeft" offsetXY="0 1"></Text></Cell>
+			<Cell id="Mage4VolkareCellOne" active="true"><Text id="Mage4AssaulterAmountTwo" class="mageAssaulter" offsetXY="0 1"></Text></Cell>
+			<Cell id="Mage4VolkareCellTwo" active="true"><Text id="Mage4AssaulterOpponentTypeTwo" class="mageAssaulter" alignment="MiddleLeft" offsetXY="0 1">not Assaulting</Text></Cell>
+		</Row>
+		<Row>
+			<Button id="startAssault" active="true" shadowDistance="0 0" rectAlignment="MiddleCenter" onClick="attackCity" class="LongButton">
+				<Image id="startAssaultImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="startAssaultText" fontSize="20" alignment="MiddleCenter" offsetXY="0 1">{en}Begin Assault{zh-cn}开始突击{ko}강습 시작{es}Empezar Asalto{fr}Commencer l'Assaut{pt-br}Comece o Assalto{de}Sturmangriff beginnen</Text>
+			</Button>
+		</Row>
+	</TableLayout>
+</Panel>
+
+<Panel id="cameraControl" class="Floating" active="false" rectAlignment="UpperRight" offsetXY="-50 -180" width="150" height="35">
+	<Panel height="35" rectAlignment="UpperCenter" outlineSize="0 0">
+		<VerticalLayout>
+			<Button id="cameraControlStart" preferredWidth="210" preferredHeight="278" onClick="cameraControl">
+				<Image id="cameraControlStartImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text fontSize="20" alignment="MiddleCenter" id="cameraControlText" offsetXY="0 1">{en}Camera Control{zh-cn}摄像机控制{ko}카메라 제어{es}Control de la cámara{fr}Contrôle de la caméra{pt-br}Controle de câmera{de}Kamera-Steuerung</Text>
+			</Button>
+		</VerticalLayout>
+	</Panel>
+	<Panel id="cameraControlDetail" active="false" rectAlignment="LowerCenter" height="35" outlineSize="0 0">
+		<VerticalLayout>
+			<Button id="tacticView" active="true" interactable="true" onClick="cameraControl">
+				<Image id="tacticViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="tacticViewText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Tactics{zh-cn}战术{ko}전술{es}Tácticas{fr}Tactique{pt-br}Táticas{de}Taktik</Text>
+			</Button>
+			<Button id="mapView" interactable="true" onClick="cameraControl">
+				<Image id="mapViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="mapViewText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Map{zh-cn}地图{ko}맵{es}Mapa{fr}Carte{pt-br}Mapa{de}Karte</Text>
+			</Button>
+			<Button id="playAreaView" interactable="true" onClick="cameraControl">
+				<Image id="playAreaViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="playAreaViewText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Player Board{zh-cn}玩家板{ko}플레이어 보드{es}Tablero del jugador{fr}Tableau des joueurs{pt-br}Quadro do jogador{de}Spielertafel</Text>
+			</Button>
+			<Button id="offerView" interactable="true" onClick="cameraControl">
+				<Image id="offerViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="offerViewText" fontSize="16" alignment="MiddleCenter" offsetXY="0 1">{en}Card Offers{zh-cn}卡片优惠{ko}카드 공급처{es}Ofertas de cartas{fr}Offres de cartes{pt-br}Ofertas de cartas{de}Kartenangebote</Text>
+			</Button>
+			<Button id="siteInfoView" interactable="true" onClick="cameraControl">
+				<Image id="siteInfoViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="siteInfoViewText" fontSize="16" color="Purple" alignment="MiddleCenter" offsetXY="0 1">{en}Site Info{zh-cn}网站信息{ko}장소 정보{es}Información{fr}Site Info{pt-br}Informações do site{de}Standort-Infos</Text>
+			</Button>
+			<Button id="monsterInfoView" interactable="true" onClick="cameraControl">
+				<Image id="monsterInfoViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="monsterInfoViewText" fontSize="16" color="Purple" alignment="MiddleCenter" offsetXY="0 1">{en}Monster Info{zh-cn}怪物信息{ko}몬스터 정보{es}Monstruos{fr}Infos sur les monstres{pt-br}Informações sobre monstros{de}Monster-Infos</Text>
+			</Button>
+			<Button id="fameView" interactable="true" onClick="cameraControl">
+				<Image id="fameViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="fameViewText" fontSize="16" color="Brown" alignment="MiddleCenter" offsetXY="0 1">{en}Fame Board{zh-cn}名誉板{ko}명성 보드{es}Fama{fr}Tableau de la renommée{pt-br}Quadro da Fama{de}Ruhm-Tafel</Text>
+			</Button>
+			<Button id="rulesView" interactable="true" onClick="cameraControl">
+				<Image id="rulesViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="rulesViewText" fontSize="16" color="Brown" alignment="MiddleCenter" offsetXY="0 1">{en}Rules{zh-cn}规则{ko}규칙서{es}Reglas{fr}Règles{pt-br}Regras{de}Regeln</Text>
+			</Button>
+			<Button id="dummyView" interactable="true" onClick="cameraControl">
+				<Image id="dummyViewImage" image="Sliced Button/Button New Active" type="Sliced"/>
+				<Text id="dummyViewText" fontSize="16" color="Brown" alignment="MiddleCenter" offsetXY="0 1">{en}Dummy Board{zh-cn}虚拟棋盘{ko}가상 플레이어{es}Tablero Dummy{fr}Tableau factice{pt-br}Quadro de bonecos{de}Dummy-Brett</Text>
+			</Button>
+			<Row preferredHeight="50"><Toggle id="topDownView" fontSize="16" preferredHeight="20" onValueChanged="cameraControlTopDown">{en}Top Down View{zh-cn}俯视图{ko}탑뷰{es}Vista superior{fr}Vue de haut en bas{pt-br}Visão de cima para baixo{de}Ansicht von oben nach unten</Toggle></Row>
+		</VerticalLayout>
+	</Panel>
+</Panel>

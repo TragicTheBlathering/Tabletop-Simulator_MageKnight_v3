@@ -10,10 +10,14 @@ local knightSelect_variables = {}
         player_ControlMarker={pos=Vector(-107.26, 2.61, -68.35), rot=Vector(0, 180, 0), forzen=true},
         player_QuestMarker={pos=Vector(-110.60, 2.60, -71.16), rot=Vector(0, 180, 0), forzen=true},
         PlayerSkill_Token={pos=Vector(-108.67, 3.01, -73.77), rot=Vector(0, 180, 0), forzen=true},
+        PlayerBoard={pos=Vector(-98.00, 2.52, -74.62), rot=Vector(0, 180, 180), not_interactive=true},
+
         SkillCard_A={pos=Vector(-124.64, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
         SkillCard_B={pos=Vector(-121.29, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
-        SkillCard_Small={pos=Vector(-121.30, 2.01, -91.62), rot=Vector(0, 180, 0), forzen=true},
-        PlayerBoard={pos=Vector(-98.00, 2.52, -74.62), rot=Vector(0, 180, 180), not_interactive=true}
+        SkillCard_C={pos=Vector(-124.64, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
+        SkillCard_D={pos=Vector(-121.29, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
+
+        playerMarker_TurnOrder={pos=Vector(15.27, 2.3, -33.70), rot=Vector(0, 180, 0)}
     }
 
     knightSelect_variables.generic = {

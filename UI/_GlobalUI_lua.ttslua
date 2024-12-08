@@ -1,0 +1,11 @@
+local globalUI_lua = {}
+
+    function globalUI_lua.closeSplash()
+        UI.hide("splashScreen")
+    end
+
+    function globalUI_lua.openSetupMenu()
+        UI.show("setupMenu")
+    end
+
+return globalUI_lua

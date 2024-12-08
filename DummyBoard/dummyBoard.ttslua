@@ -1,0 +1,6 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+local ShowDebug = false
+
+function onLoad(save_state)
+    --print('!!!!!')
+end
