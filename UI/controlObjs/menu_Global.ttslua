@@ -1,0 +1,285 @@
+--7656e0
+local dprint = require("/_libs/debug/dPrint").dprint
+local gameSettings = {blitz=false, volkare=false, core=true, legion=true, tesla=false, tut=false, spells=true, ultimate=true, solo=true}
+local buttonCol = {} --buttonCol.settings runSetUp textColor
+local menuEdit = {}
+local tc = {}
+local buttonInfo = {}
+
+function onload() setStringList() end -- string lists moved to bottom of script
+--- Filter Menu Clicks and send to functios ------------------------------------
+--- This is what is called by every button in the menu -------------------------
+--- The ID is used as a text key for a table of functions ----------------------
+function menuAction(player, leftClick, id)
+    local key = id:gsub("set_", "")
+    if tonumber(leftClick) == -1 then leftClick = true else leftClick = false end
+    if leftClick and player.admin then
+        if key == 'minMAX' then
+            menuEdit.minMAX()
+        else
+            menuEdit.toggleButton(id, key, gameSettings[key])
+        end
+    end
+end
+--******************************************************************************
+--***** Button Code *** ********************************************************
+--******************************************************************************
+--- Minimise the entire menu ---------------------------------------------------
+function menuEdit.minMAX()
+    if stringToBool(UI.getAttribute('panel_setupMenu', 'active')) then
+        UI.hide('panel_setupMenu')
+        UI.show("panel_setupMenu_Min")
+    else
+        UI.hide('panel_setupMenu_Min')
+        UI.show("panel_setupMenu")
+    end
+end
+
+function menuEdit.toggleButton(id, key, value) --settings={off="#cccccc|#dddddd|#444444|#00000000", on="#298115|#33a11a|#2a4c0e|#00000000"}
+    local red = false
+    if key == 'solo' then red = true end
+    if gameSettings[key] then
+        gameSettings[key] = false
+        UI.setAttributes(id, buttonData(value, red))
+        currentSettingDisplay()
+    else
+        gameSettings[key] = true
+        UI.setAttributes(id, buttonData(value, red))
+        currentSettingDisplay()
+    end
+
+    if key=='blitz' or key=='volkare' then
+        local count = 0; if gameSettings.blitz then count = count +1 end; if gameSettings.volkare then count = count +1 end
+        count = tostring(count)
+        UI.setAttribute('setting_blitz', 'text', "Units / Mana +"..count)
+    end
+end
+
+
+function buttonData(switch, red) --redButton={notReady="#990000|#ad0000|#6b0000|#00000000", on="#298115|#33a11a|#2a4c0e|#00000000", textColor="white"},
+    local buttonData = {}
+    if switch then
+        if red then
+            buttonData.colors = buttonCol.redButton.off
+            buttonData.textColor = buttonCol.redButton.textColor
+        else
+            buttonData.colors = buttonCol.settings.off
+            buttonData.textColor = buttonCol.textColor.off
+        end
+    else
+        if red then
+            buttonData.colors = buttonCol.redButton.on
+            buttonData.textColor = buttonCol.redButton.textColor
+        else
+            buttonData.colors = buttonCol.settings.on
+            buttonData.textColor = buttonCol.textColor.on
+        end
+    end
+    return buttonData
+end
+
+function currentSettingDisplay()
+    local blitzCount, blitz = 0, {}
+    if gameSettings.blitz then blitzCount = blitzCount + 1 blitz.blitz = tc.green..[[ON]]..tc.c else blitz.blitz = tc.orange..[[OFF]]..tc.c end
+    if gameSettings.volkare then blitzCount = blitzCount + 1 blitz.volkare = tc.green..[[ON]]..tc.c else blitz.volkare = tc.orange..[[OFF]]..tc.c end
+    blitzCount = "Units / Volkare "..tc.yellow.."+"..tostring(blitzCount)..tc.c.." (Blitz : "..blitz.blitz.." / Volkare : "..blitz.volkare..")"
+
+    local monsters = "Monster Pool :"
+    if not gameSettings.core and not gameSettings.legion and not gameSettings.tesla then
+        monsters = monsters.." : "..tc.yellow.."You have to select at least 1 Set of Monsters!"..tc.c
+    else
+        if gameSettings.core   then monsters = monsters.."\n: "..tc.green.."Core"..tc.c end
+        if gameSettings.legion then monsters = monsters.."\n: "..tc.green.."Lost Legion"..tc.c end
+        if gameSettings.tesla  then monsters = monsters.."\n: "..tc.green.."Shades of Tesla"..tc.c end
+    end
+
+    local cards = "Card Pool :"
+    if not gameSettings.tut and not gameSettings.spells and not gameSettings.ultimate then
+        --print('ALl OFF')
+        cards = cards.." : "..tc.yellow.."No modification to the core Card Pool"..tc.c
+    else
+        if gameSettings.tut   then cards = cards.."\n: "..tc.green.."First Reconnaissance"..tc.c end
+        if gameSettings.spells then cards = cards.."\n: "..tc.green.."Compeditive Spells"..tc.c end
+        if gameSettings.ultimate  then cards = cards.."\n: "..tc.green.."Ultimate Editions's Duel Colour Cards"..tc.c end
+    end
+
+    local solo = "Solo Turn Order Mode : "
+    if gameSettings.solo then solo = solo..tc.green..[[ON]]..tc.c else solo = solo..tc.orange..[[OFF]]..tc.c end
+
+    local ready = "These are your current settings. "..tc.pink.."Remeber to select your Mage Knights before you continue"..tc.c..". Running the install will build the decks, monster pools, shuffle everything and then you will be ready to play!\n\nYou can minimise this tool btw."
+    local settingDisplay = tc.teal..[[Current Game Settings]]..tc.c..[[\n
+                                    ]]..blitzCount..[[\n
+                                    ]]..monsters..[[\n
+                                    ]]..cards..[[\n
+                                    ]]..solo..[[\n
+                                    ]]..ready
+
+    local xml = UI.getXml()
+    UI.setXml(editXML(xml, settingDisplay))
+end
+
+--******************************************************************************
+--***** Mouse Over Code ********************************************************
+--******************************************************************************
+--- Mouse Over Text Changes ----------------------------------------------------
+function onMouseEnter(player, value, id)
+    menuEdit.onMouseHover(player, id, true)
+end
+
+function onMouseExit(player, value, id)
+    menuEdit.onMouseHover(player, id, false)
+end
+
+function menuEdit.onMouseHover(player, id, enter)
+    local key = id:gsub("set_", "")
+    if enter then
+        if key == 'blitz' then -- gameSettings = {blitz=false, volkare=false
+            local infoText = editBlitzCounter(buttonInfo[key], gameSettings.blitz, gameSettings.volkare)
+            local xml = UI.getXml()
+            UI.setXml(editXML(xml, infoText))
+        elseif key == 'volkare' then
+            local infoText = editBlitzCounter(buttonInfo[key], gameSettings.blitz, gameSettings.volkare)
+            local xml = UI.getXml()
+            UI.setXml(editXML(xml, infoText))
+        else
+            local xml = UI.getXml()
+            UI.setXml(editXML(xml, buttonInfo[key]))
+        end
+    else
+        local xml = UI.getXml()
+        UI.setXml(editXML(xml, buttonInfo.welcome))
+    end
+end
+
+function editXML(oldString, newSubstring)
+    local startTag = [[<Text id="infoText" alignment="UpperLeft" fontSize="15" color="#FFFFFF">]]
+    local endTag = [[</Text>]]
+    -- Find the start and end positions of the tags
+    local startPos = oldString:find(startTag)
+    local endPos = oldString:find(endTag, startPos)
+
+    if startPos and endPos then
+        -- Replace the content between the start and end tag with the new substring
+        local newString = oldString:sub(1, startPos + #startTag - 1) .. newSubstring .. oldString:sub(endPos)
+        return newString
+    else
+        -- If tags are not found, return the original string
+        return oldString
+    end
+end
+--******************************************************************************
+--**** Tools *******************************************************************
+--******************************************************************************
+function editBlitzCounter(inputString, blitzON, volkareON)
+    local blitz = {
+        on = [[Blitz is <textcolor color="#3eff00">ON</textcolor>]],
+        off = [[Blitz is <textcolor color="#fd9d44">OFF</textcolor>]]
+    }
+    local volkare = {
+        on = [[Volkare is <textcolor color="#3eff00">ON</textcolor>]],
+        off = [[Volkare is <textcolor color="#fd9d44">OFF</textcolor>]]
+    }
+
+    local outputString = inputString
+
+    -- Handle Blitz replacement
+    local blitzSearch = blitzON and blitz.off or blitz.on
+    local blitzReplace = blitzON and blitz.on or blitz.off
+    local startPos = outputString:find(blitzSearch, 1, true)
+    if startPos then
+        outputString = outputString:sub(1, startPos - 1) ..
+            blitzReplace ..
+            outputString:sub(startPos + #blitzSearch)
+    end
+
+    -- Handle Volkare replacement
+    local volkareSearch = volkareON and volkare.off or volkare.on
+    local volkareReplace = volkareON and volkare.on or volkare.off
+    startPos = outputString:find(volkareSearch, 1, true)
+    if startPos then
+        outputString = outputString:sub(1, startPos - 1) ..
+            volkareReplace ..
+            outputString:sub(startPos + #volkareSearch)
+    end
+
+    return outputString
+end
+
+function stringToBool(value)
+    return value == "true"
+end
+--******************************************************************************
+--**** String Lists *******************************************************************
+--******************************************************************************
+function setStringList() --00f3ff 3eff00 ff8dfa ecff00 fd9d44 ff0000
+    tc.teal   = [[<textcolor color="#00f3ff">]]
+    tc.green  = [[<textcolor color="#3eff00">]]
+    tc.pink   = [[<textcolor color="#ff8dfa">]]
+    tc.yellow = [[<textcolor color="#ecff00">]]
+    tc.orange = [[<textcolor color="#fd9d44">]]
+    tc.red = [[<textcolor color="#ff2d2d">]]
+    tc.c  = [[</textcolor>]]
+
+    buttonCol = {settings={off="#cccccc|#dddddd|#444444|#00000000", on="#298115|#33a11a|#2a4c0e|#00000000"},
+                 redButton={off="#990000|#ad0000|#6b0000|#00000000", on="#298115|#33a11a|#2a4c0e|#00000000", textColor="white"},
+                 textColor={on='White', off='Black'}
+                }
+
+    buttonInfo.welcome = [[Welcome to a ]]..tc.teal..[[Tragic Mage Knight Mod]]..tc.c..[[, (Version 3)\n
+                           Much of this mod is based on Tuff’s excellent ]]..tc.green..[[Mage Knight Highly Scripted Mod]]..tc.c..[[. Including component scans and the like. It is a fantastic mod and well worth your time to check out.\n
+                           There is a ]]..tc.pink..[[video tutorial]]..tc.c..[[ on how to use this mod. ]]..tc.yellow..[[Please check the workshop page, or get the link form the NoteBook]]..tc.c..[[. (see the Menu Bar at the top of screen). Watching the full video will make playing this mod a breeze. I ask you to please watch the full video before asking questions.\n]]
+                           ..tc.orange..[[\n--== Dediction ==--]]..tc.c..
+                           [[\nI dedicate this mod to Jason Germain, whose passing deeply affected his brother, family and freinds. I knew him from BGG as an avid Mage Knight player and a great mind for discussing the deeper design of board games. He was intelligent, gifted, and his absence has diminished all who knew him.]]
+
+
+    buttonInfo.ultimate = [[Add the ]]..tc.teal..[[Ultimate Edition Promo Cards]]..tc.c..[[ to their associated Decks!\n
+                           This will add the ]]..tc.green..[[4 New Advanced Action Cards]]..tc.c..[[ as well as ]]..tc.orange..[[1 New Artefact card]]..tc.c..[[ that came with the Ultimate Edition to the general card pool. These cards are generally considered to be very powerful and some purists like to remove them from the game completely, for balancing reasons.\n
+                           At this time there is not an option in this mod to add the AA Cards and Artifact Card separately. Though if people really want it I will add it to my ToDoList.]]
+
+    buttonInfo.spells = [[Add the ]]..tc.teal..[[Compeditive Spell Cards]]..tc.c..[[ to the spell Decks!\n
+                          This will add ]]..tc.green..[[4 extra Compeditive Spells]]..tc.c..[[ to the Spell Deck. ]]..tc.pink..[[These spell are not to be used in cooperative scenarios]]..tc.c..[[, but when playing competitive scenarios the default rules ask them to be included. So in most cases you will probably want to add these spells to the decks if you are playing a competitive scenario.\n
+                          At this time there is not an option in this mod to add the AA Cards and Artifact Card separately. Though if people really want it I will add it to my ToDoList.]]
+
+    buttonInfo.tut = [[Run the ]]..tc.teal..[[Mage Knight Tutorial Scenario]]..tc.c..[[!\n
+                       ]]..tc.green..[[This option simply removes cards from the Card Pool as per the instructions in the ]]..tc.c..tc.orange..[[Walkthrough Rule Book]]..tc.c..[[.\n
+                       Mage Knight has a Tutorial Scenario that, supposedly, will teach you how to play the game. This Walkthrough has it's own rule book and requires you to play as you read. It will slowly introduce you to the concepts of the game and, hopefully, prepare you for a fully fledged scenario, like ]]..tc.pink..[[Full Conquest]]..tc.c..[[\n
+                       Once you have learnt how to play you will likely never use this option again. ]]
+
+    buttonInfo.tesla = [[Add the ]]..tc.teal..[[Shades of Tesla Monster Tokens ]]..tc.c..[[to the General Monster Pool!\n
+                         This will add the Shades of Tesla Monster Tokens to the General Monster Pools, without changing the ]]..tc.green..[[Tesla Specific Draw Piles]]..tc.c..[[ found elsewhere on the table. Use this option if you want to be able to randomly draw Tesla Tokens, for they will be mixed in with all the standard draw tokens for each monster type.\n
+                         It should be noted that the ]]..tc.yellow..[[Tesla Monsters greatly changed how a game of Mage Knight runs by modifying influence gain and the early game difficulty ramp]]..tc.c..[[. The Tesla Tokens have high stats and low influence rewards.\n
+                         So keep that in mind, as you will need to modify your playstyle.]]
+
+    buttonInfo.legion = [[Add the ]]..tc.teal..[[Lost Legion Monster Tokens ]]..tc.c..[[to the General Monster Pool!\n
+                          This will add or remove the Lost Legion Monster Tokens to the General Monster Pools.\n
+                          It should be noted that the Lost Legion Monster Tokens are not simply "additional content" but designed by the creator of Mage Knight,]]..tc.yellow..[[ Vlaada Chvátil]]..tc.c..[[, for balancing. Chvátil has stated that ]]..tc.green..[[these tokens should be mixed into the core set tokens and never removed]]..tc.c..[[.\n
+                          Even so, in my last version of this mod, a lot of people asked for a quick way to remove them, so I have added this function to version 3!]]
+
+    buttonInfo.core = [[Add the ]]..tc.teal..[[Core Set Monster Tokens]]..tc.c..[[ to the General Monster Pool!\n
+                        This will add or remove the Core Set Monster Tokens to the General Monster Pools.\n
+                        I have no idea why anyone would do this, but again, I was asked for this by users of the last version of my Mod, so here you go!.\n
+                        ]]..tc.pink..[[You must have at least one of the monster pools selected to play the game!]]..tc.c
+
+    buttonInfo.blitz = tc.teal..[[Enable : ]]..tc.c..[[ ]]..tc.green..[[BLITZ]]..tc.c..[[\n
+                       When Volkare is enabled 1 extra Die will be added to the Source and 1 extra Unit will be added to the Unit Offer.\n
+                       This effect will stack with the ]]..tc.teal..[[VOLKARE]]..tc.c..[[ setting.\n
+                       ]]..tc.green..[[: Current Settings :]]..tc.c..[[\nBlitz is ]]..tc.orange..[[OFF]]..tc.c..[[ / Volkare is ]]..tc.orange..[[OFF]]..tc.c
+
+    buttonInfo.volkare = tc.teal..[[Enable : ]]..tc.c..[[ ]]..tc.green..[[BLITZ / VOLKARE]]..tc.c..[[\n
+                       When Vokare is enabled 1 extra Die will be added to the Source and 1 extra Unit will be added to the Unit Offer.\n
+                       This effect will stack with the ]]..tc.teal..[[BLITZ]]..tc.c..[[ setting.\n
+                       This setting just adds the Die and the Unit, ]]..tc.orange..[[it dose not automatically setup a Volkare Scenario, but If you plan to play a Volkare Scenario then you must have at least 1 extra Die or Unit]]..tc.c..[[. So either this or the Blitz setting should be enabled.\n
+                       The purpose of having the Blitz and a Volkare options separated like this is so you can choose to have 2 extra Die and 2 extra Units in any scenario. Currently you can only have a maximum modifier of +2 for the die and the units.\n\n]]
+                       ..tc.green..[[: Current Settings :]]..tc.c..[[\nBlitz is ]]..tc.orange..[[OFF]]..tc.c..[[ / Volkare is ]]..tc.orange..[[OFF]]..tc.c
+
+    buttonInfo.solo = [[Try out my new ]]..tc.teal..[[Solo Turn Control Mode]]..tc.c..[[!\n
+                        This mode, along with a modular approach to facilitate custom component creation, is the main reason for this mod to exist. As you may know, TTS has a hotseat mode that helps to play solo, but it has a lot of draw backs and a few major problems. So much so that most people don't actually use it.\n
+                        This option will load up a ]]..tc.yellow..[[Custom Turn Order Control UI]]..tc.c..[[ that will function as a replacement for the traditional HotSeat Mode.\n
+                        It is designed for solo play, so ]]..tc.pink..[[it is best to switch to the Black Admin Player]]..tc.c..[[, though it will function as a traditional hotseat mode if you wish.\n
+                        As this replaces the turn order controls, ]]..tc.orange..[[please hide them by pressing CTRL+F3.]]..tc.c
+
+
+
+
+    buttonInfo.runSetup = 'Run the table setup, using the options set to green\n\nYou need to select your Mage Knights before pressing this button!'
+end

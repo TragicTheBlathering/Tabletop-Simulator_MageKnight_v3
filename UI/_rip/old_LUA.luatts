@@ -1,0 +1,119 @@
+--7656e0
+local dprint = require("/_libs/debug/dPrint").dprint
+local menuEdit = {}
+
+local butColours = {on="#30cb1b|#208212|#C8C8C8", off="#C8C8C8|#8a8a8a|#30cb1b"}
+local gameSettings = {blitz=false, volkare=false, core=true, legion=true, tesla=false, tutorial=false, spells=false, ultimate=false}
+
+local buttonInfo = {}
+buttonInfo.welcome = "Welcome to my Tragic Mage Knight Mod, Version 3.\n\nMuch of this mod is based on Tuff’s excellent “Mage Knight Highly Scripted” mod. Including component scans and the like. It is a fantastic mod and well worth your time to check out.\n\nPlease check my workshop page for this mod, or the Notebook inside TTS, for a link to a video tutorial on how to use this mod. Watching the full video will make playing this mod a breeze.\n\nI would like to dedicate this mod to Jason Germain, whose death greatly affected his loving brother and the rest of his family. I knew him through BGG as an avid Mage Knight player and a great mind to talk with about the deeper game design in board gameing. He was an intelligent and gifted young man whose absence has left anyone who knew him diminished."
+buttonInfo.blitz = 'When enabled 1 extra Die will be added to the source and 1 extra Unit to the unit offer.'
+buttonInfo.volkare = 'When enabled 1 extra Die will be added to the source and 1 extra Unit to the unit offer.'
+buttonInfo.core = 'The General Monster Pool will also conating the CORE SET Monsters.'
+buttonInfo.legion = 'The General Monster Pool will also conating the LOST LEGION Monsters.'
+buttonInfo.tesla = 'The General Monster Pool will also conating the SHADES OF TESLA Monsters.'
+buttonInfo.spells = 'Add the Compeditive Spells to the Spell Deck.'
+buttonInfo.tutorial = 'Set up the Spells and Advanced Action Card decks to match the tutorial sceario \"First Reconnencense\"'
+buttonInfo.runSetup = 'Run the table setup, using the options set to green\n\nYou need to select your Mage Knights before pressing this button!'
+
+function runSetUp()
+    dprint('Run SetUp')
+end
+
+function uiBut_setGameSettings(player, leftClick, id)
+    local key = id:gsub("set_", "")
+    if tonumber(leftClick) == -1 then leftClick = true else leftClick = false end
+    if leftClick and player.admin then
+        if key == 'spells' or key == 'tutorial' then
+            menuEdit.tutorial_spells(player, leftClick, id, key)
+        elseif id == 'runSetup' then
+            runSetUp()
+        else
+            menuEdit.changeButtonColour(player, leftClick, id, key)
+            menuEdit.buttonInfo(player, leftClick, id, key)
+        end
+    end
+end
+
+
+function onMouseEnter(player, leftClick, id)
+    print('Mouse Enter')
+end
+
+function onMouseExit(player, leftClick, id)
+    print('Mouse Exit')
+end
+
+function setUnitOfferValue()
+    local str = "\n\n: Current Setting : \n    "
+    local value = 0
+    if gameSettings.blitz then
+        str = str..'Blitz is ON'
+        value = value + 1
+    else
+        str = str..'Blitz is OFF'
+    end
+
+    if gameSettings.volkare then
+        str = str..' / Volkare is ON'
+        value = value + 1
+    else
+        str = str..' / Volkare is OFF'
+    end
+--&#xA;&#xA;
+    str = str..'\n\nA Total of '..value..' Extra Die will be added to the source'
+    str = str..'\nA Total of '..value..' Extra Units will be added to the offer'
+
+    return str
+end
+
+function menuEdit.buttonInfo(player, leftClick, id, key)
+    buttonInfo.blitz = buttonInfo.blitz..setUnitOfferValue()
+    buttonInfo.volkare = buttonInfo.volkare..setUnitOfferValue()
+
+    local newTxt = buttonInfo[key]
+    UI.setAttribute('buttonInfo', "text", buttonInfo[key])
+end
+
+function menuEdit.tutorial_spells(player, leftClick, id, key)
+    local id_tut = "set_tutorial"
+    local id_spells = "set_spells"
+
+    if UI.getAttribute(id, 'colors') == butColours.off then
+        UI.setAttribute(id, "colors", butColours.on)
+        gameSettings[key] = true
+
+        if key == "spells" then
+            UI.setAttribute(id_tut, "colors", butColours.off)
+            gameSettings[key] = false
+        else
+            UI.setAttribute(id_spells, "colors", butColours.off)
+            gameSettings[key] = false
+        end
+
+    else
+        UI.setAttribute(id, "colors", butColours.off)
+        gameSettings[key] = false
+    end
+    dprint('gameSettings',gameSettings)
+end
+
+function menuEdit.changeButtonColour(player, leftClick, id, key)
+    if UI.getAttribute(id, 'colors') == butColours.off then
+        UI.setAttribute(id, "colors", butColours.on)
+        gameSettings[key] = true
+    else
+        UI.setAttribute(id, "colors", butColours.off)
+        gameSettings[key] = false
+    end
+    dprint('gameSettings',gameSettings)
+end
+
+function onload()end
+
+--[[
+dprint('Inside Menu Object\n')
+print(UI.getAttribute('set_blitz', 'colors'))
+UI.setAttribute("set_blitz", "colors", butColours.on)
+print(UI.getAttribute('set_blitz', 'colors'))
+]]

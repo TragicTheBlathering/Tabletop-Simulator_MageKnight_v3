@@ -1,1 +1,79 @@
-<Panel id="setupMenu" width="250" height="250" color="rgb(1, 1, 1)"> </Panel>
+<!-- (normalColor|highlightedColor|pressedColor|disabledColor) -->
+<Defaults>
+    <Text class="Title" fontSize="30" alignment="Center" font="Fonts/MKCardTittle" color="#FFFFFF" /> <!-- fontStyle="Bold" -->
+    <Text class="SettingTitle" alignment="Center" fontSize="22" font="Fonts/MKCardText" color="#000000" />
+
+    <Button class="default_windowControl" width="25" height="25" offsetXY="0 0" colors="#990000|#ad0000|#6b0000|#00000000" textColor="#FFFFFF" onCLick="7656e0/menuAction" />
+
+    <Button class="settingSolo" width="100" height="26" text="placeHolder" textColor="White" colors="#298115|#33a11a|#2a4c0e|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2" onClick="7656e0/menuAction" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" />
+
+    <Button class="settingButton_ON"  width="334" height="25" text="placeHolder" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" textColor="White" colors="#298115|#33a11a|#2a4c0e|#00000000" fontStyle="Bold" onClick="7656e0/menuAction" outLineColor="#111111" outLineSize="2 2 2 2" />
+    <Button class="settingButton_OFF" width="334" height="25" text="placeHolder" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" textColor="Black" colors="#cccccc|#dddddd|#444444|#00000000" fontStyle="Bold" onClick="7656e0/menuAction" outLineColor="#111111" outLineSize="2 2 2 2" />
+
+    <Button class="settingRun" width="345" height="65" offsetXY="0 -153" text="placeHolder" textColor="White" colors="#990000|#ad0000|#6b0000|#00000000" fontStyle="Bold" onClick="doNothing" outLineColor="#111111" outLineSize="2 2 2 2" />
+</Defaults>
+<!-- ======================================================================= -->
+<!-- SetUpMenu -->
+<Panel id="panel_setupMenu" width="756" height="436" color="#000000" rectAlignment="UpperRight" allowDragging="false" active="false" >
+    <!-- Title -->
+    <Panel offsetXY="-3 -3" width="750" height="40" color="#757575" rectAlignment="UpperRight" allowDragging="false" active="true" >
+        <Text class="Title" text="Mage Knight (Tragic Edition v3)" />
+        <Button id="minMAX" onCLick="7656e0/menuAction" class="default_windowControl" rectAlignment="MiddleRight" offsetXY="-3 0" text="_"/>
+        <Button id="set_solo" class="settingSolo" text="Solo Mode" offsetXY="-310 0"/>
+    </Panel>
+    <!-- Area Under Title -->
+    <Panel offsetXY="-3 -46" width="750" height="387" color="#926a41" rectAlignment="UpperRight" allowDragging="false" active="true" >
+        <!-- Option Buttons ALl Pannel -->
+        <Panel offsetXY="-3 -3" width="350" height="381" color="#4b4b4b" rectAlignment="UpperRight" allowDragging="false" active="true" >
+            <!-- Units / Mana +0 -->
+            <Panel offsetXY="-8 -8" width="336" height="25" color="#dd9b30" rectAlignment="UpperRight" allowDragging="false" active="true" >
+                <Text id="setting_blitz" class="SettingTitle" text="Units / Mana +0" />
+                <GridLayout id="orderList" columns="1" width="100%" cellsize="325 25" rectAlignment="UpperCenter" offsetXY="5 -27" visibility="" >
+                    <Button id="set_blitz" class="settingButton_OFF" text="Blitz" />
+                    <Button id="set_volkare" class="settingButton_OFF" text="Blitz / Volkare" />
+                </GridLayout>
+            </Panel>
+            <!-- Edit General Monster Pool -->
+            <Panel offsetXY="-8 -94" width="336" height="25" color="#dd9b30" rectAlignment="UpperRight" allowDragging="false" active="true" >
+                <Text id="setting_monsterPool" class="SettingTitle" text="Edit General Monster Pool" />
+                <GridLayout id="orderList" columns="1" width="100%" cellsize="325 25" rectAlignment="UpperCenter" offsetXY="5 -27" visibility="" >
+                    <Button id="set_core" class="settingButton_ON" text="Core Set" />
+                    <Button id="set_legion" class="settingButton_ON" text="Lost Legion" />
+                    <Button id="set_tesla" class="settingButton_OFF" text="Tesla" />
+                </GridLayout>
+            </Panel>
+            <!-- Edit Card Pool -->
+            <Panel offsetXY="-8 -205" width="336" height="25" color="#dd9b30" rectAlignment="UpperRight" allowDragging="false" active="true" >
+                <Text id="setting_cardPool" class="SettingTitle" text="Edit Card Pools" />
+                <GridLayout id="orderList" columns="1" width="100%" cellsize="325 25" rectAlignment="UpperCenter" offsetXY="5 -27" visibility="" >
+                    <Button id="set_tut" class="settingButton_OFF" text="First Reconnaissance" />
+                    <Button id="set_spells" class="settingButton_ON" text="Competitive Spells" />
+                    <Button id="set_ultimate" class="settingButton_ON" text="Ultimate Cards" />
+                </GridLayout>
+            </Panel>
+            <!-- Run Setup Button -->
+            <Button id="run_Settings" class="settingRun" text="Clean Up Table and Apply Settings" />
+        </Panel>
+        <!-- Text Info Area 351 -->
+        <Panel padding="5 5 5 5" offsetXY="-356 -3" width="391" height="381" color="#4b4b4b" rectAlignment="UpperRight" allowDragging="false" active="true" >
+            <Text id="infoText" alignment="UpperLeft" fontSize="15" color="#FFFFFF">
+                Welcome to a <textcolor color="#00f3ff">Tragic Mage Knight Mod</textcolor>, (Version 3)
+
+                Much of this mod is based on Tuff’s excellent <textcolor color="#3eff00">Mage Knight Highly Scripted Mod</textcolor>. Including component scans and the like. It is a fantastic mod and well worth your time to check out.
+
+                There is a <textcolor color="#ff8dfa">video tutorial</textcolor> on how to use this mod. <textcolor color="#ecff00">Please check the workshop page, or get the link form the NoteBook</textcolor>. (see the Menu Bar at the top of screen). Watching the full video will make playing this mod a breeze. I ask you to please watch the full video before asking questions.
+
+                <textcolor color="#fd9d44">--== Dediction ==--</textcolor>
+                I dedicate this mod to Jason Germain, whose passing deeply affected his brother, family and freinds. I knew him from BGG as an avid Mage Knight player and a great mind for discussing the deeper design of board games. He was intelligent, gifted, and his absence has diminished all who knew him.
+            </Text>
+        </Panel>
+    </Panel>
+</Panel>
+<!-- ======================================================================= &#xA; -->
+<!-- Minimised Version of the SetUpMenu width="31" height="40"-->
+<Panel id="panel_setupMenu_Min" width="35" height="35" offsetXY="0 -3" color="#000000" rectAlignment="UpperRight" allowDragging="false" active="false" >
+    <Panel offsetXY="0 0" width="31" height="31" color="#4b4b4b" rectAlignment="UpperRight" allowDragging="false" active="true" >
+        <Button id="minMAX" class="default_windowControl" rectAlignment="MiddleRight" offsetXY="-3 0" /> <!-- text="☐" textAlignment="MiddleCenter" -->
+        <Text id="minMAX_txt" color="#ffffff" fontSize="16" text="☐" offsetXY= "0.1 0" />
+    </Panel>
+</Panel>
