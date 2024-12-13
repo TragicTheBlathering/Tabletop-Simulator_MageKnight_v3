@@ -1,6 +1,6 @@
 --7656e0
 local dprint = require("/_libs/debug/dPrint").dprint
-local gameSettings = {blitz=false, volkare=false, core=true, legion=true, tesla=false, tut=false, spells=true, ultimate=true, solo=true}
+local gameSettings = {allowRun=true, blitz=false, volkare=false, core=true, legion=true, tesla=false, tut=false, spells=true, ultimate=true, solo=true}
 local buttonCol = {} --buttonCol.settings runSetUp textColor
 local menuEdit = {}
 local tc = {}
@@ -16,11 +16,104 @@ function menuAction(player, leftClick, id)
     if leftClick and player.admin then
         if key == 'minMAX' then
             menuEdit.minMAX()
+
+        elseif id == 'run_Setup' then
+            menuEdit.button_setupScript()
+
+        elseif id == 'set_tut' then
+            menuEdit.tutorialSetting(id, key, gameSettings[key])
+
+        elseif id=='set_spells' or id=='set_ultimate' then
+            menuEdit.noTutorial(id, key, gameSettings[key])
+
         else
             menuEdit.toggleButton(id, key, gameSettings[key])
         end
     end
 end
+
+function menuEdit.noTutorial(id, key, setting)
+    local off = {colors=buttonCol.settings.off, textColor=buttonCol.textColor.off}
+
+    gameSettings['tut'] = false
+    UI.setAttributes('set_tut', off)
+
+    menuEdit.toggleButton(id, key, setting)
+    currentSettingDisplay()
+end
+
+function menuEdit.tutorialSetting(id, key, setting)
+    local off = {colors=buttonCol.settings.off, textColor=buttonCol.textColor.off}
+
+    gameSettings['legion'] = false
+    UI.setAttributes('set_legion', off)
+
+    gameSettings['tesla'] = false
+    UI.setAttributes('set_tesla', off)
+
+    gameSettings['spells'] = false
+    UI.setAttributes('set_spells', off)
+
+    gameSettings['ultimate'] = false
+    UI.setAttributes('set_ultimate', off)
+
+    menuEdit.toggleButton(id, key, setting)
+    currentSettingDisplay()
+end
+
+function callSetup()
+    UI.hide('panel_setupMenu')
+
+    local unitOffer = getObjectFromGUID('3d355c')
+    unitOffer.call('call_saveData', gameSettings)
+
+    local obj = getObjectFromGUID('ee7d85')
+    obj.call('runSetUpScript', gameSettings)
+
+    Global.call("menuHasBeenRun")
+end
+
+function menuEdit.button_setupScript() --gameSettings{blitz=false, volkare=false, core=true, legion=true, tesla=false, tut=false, spells=true, ultimate=true, solo=true}
+    checkGameState()
+    if gameSettings.allowRun then
+        local data = {colors=buttonCol.redButton.on, text="Clean up Table and Apply Settings", onCLick="7656e0/callSetup", textColor=buttonCol.redButton.textColor} --,
+        UI.setAttributes('run_Setup', data)
+        currentSettingDisplay()
+    else
+        broadcastToAll("---== Game Settings are Invalid ==---", 'Red')
+    end
+end
+
+function checkGameState()
+    gameSettings.allowRun = true
+    if not gameSettings.core and not gameSettings.legion and not gameSettings.tesla then
+        --dprint('No Monsters Selected')
+        gameSettings.allowRun = false
+    end
+
+    local playerBoards = getObjectsWithTag('PlayerBoard')
+    gameSettings.boards = {}
+    for k,v in pairs(playerBoards) do
+        gameSettings.boards[v.getName()] = v
+    end
+
+    if tableSize(gameSettings.boards) == 0 then
+        --dprint('No Mage Knights')
+        gameSettings.allowRun = false
+        gameSettings.boards = false
+    end
+end
+
+function tableSize(t)
+    local count = 0
+    if t then
+        if t ~= nil or t ~= {} then
+            for key,value in pairs(t) do count = count + 1 end
+        end
+    end
+    return count
+end
+
 --******************************************************************************
 --***** Button Code *** ********************************************************
 --******************************************************************************
@@ -53,6 +146,10 @@ function menuEdit.toggleButton(id, key, value) --settings={off="#cccccc|#dddddd|
         count = tostring(count)
         UI.setAttribute('setting_blitz', 'text', "Units / Mana +"..count)
     end
+
+    local data = {colors=buttonCol.redButton.off, text="Check Settings", onCLick="7656e0/menuAction", textColor=buttonCol.redButton.textColor} --,
+    UI.setAttributes('run_Setup', data)
+
 end
 
 
@@ -78,7 +175,36 @@ function buttonData(switch, red) --redButton={notReady="#990000|#ad0000|#6b0000|
     return buttonData
 end
 
-function currentSettingDisplay()
+function currentSettingDisplay() --PlayerBoard_Dummy
+    checkGameState()
+
+    local knightCount = tableSize(gameSettings.boards)
+
+    local mageKnights = "Mage Knights : "..tc.yellow..knightCount..tc.c
+    if knightCount == 0 then
+        mageKnights = mageKnights..tc.pink.."\nYou have no Mage Knights Selected"..tc.c
+    else
+        local orderedList = {}
+        for k,v in pairs(gameSettings.boards) do
+            table.insert(orderedList, k)
+        end
+        table.sort(orderedList)
+        mageKnights = mageKnights..[[\n]]
+        for k,v in pairs(orderedList) do
+            mageKnights = mageKnights.." : "..tc.green..v..tc.c
+        end
+    end
+
+    local dummy = getObjectsWithTag('PlayerBoard_Dummy')
+    local dummtText = "Dummy Board : "
+    if dummy[1] then
+        dummtText = dummtText..tc.green.."Being Used"..tc.c
+    else
+        dummtText = dummtText..tc.pink.."Not being Used"..tc.c.." : "..tc.yellow.." Drag it onto the table!"..tc.c
+    end
+
+
+
     local blitzCount, blitz = 0, {}
     if gameSettings.blitz then blitzCount = blitzCount + 1 blitz.blitz = tc.green..[[ON]]..tc.c else blitz.blitz = tc.orange..[[OFF]]..tc.c end
     if gameSettings.volkare then blitzCount = blitzCount + 1 blitz.volkare = tc.green..[[ON]]..tc.c else blitz.volkare = tc.orange..[[OFF]]..tc.c end
@@ -86,7 +212,7 @@ function currentSettingDisplay()
 
     local monsters = "Monster Pool :"
     if not gameSettings.core and not gameSettings.legion and not gameSettings.tesla then
-        monsters = monsters.." : "..tc.yellow.."You have to select at least 1 Set of Monsters!"..tc.c
+        monsters = monsters.." : "..tc.yellow.."You have to select at least one Set of Monsters!"..tc.c
     else
         if gameSettings.core   then monsters = monsters.."\n: "..tc.green.."Core"..tc.c end
         if gameSettings.legion then monsters = monsters.."\n: "..tc.green.."Lost Legion"..tc.c end
@@ -106,14 +232,27 @@ function currentSettingDisplay()
     local solo = "Solo Turn Order Mode : "
     if gameSettings.solo then solo = solo..tc.green..[[ON]]..tc.c else solo = solo..tc.orange..[[OFF]]..tc.c end
 
-    local ready = "These are your current settings. "..tc.pink.."Remeber to select your Mage Knights before you continue"..tc.c..". Running the install will build the decks, monster pools, shuffle everything and then you will be ready to play!\n\nYou can minimise this tool btw."
+    --local ready = "These are your current settings. "..tc.pink.."Remeber to select your Mage Knights before you continue"..tc.c..". Running the install will build the decks, monster pools, shuffle everything and then you will be ready to play!\n\nYou can minimise this tool btw."
     local settingDisplay = tc.teal..[[Current Game Settings]]..tc.c..[[\n
+                                    ]]..mageKnights..[[\n
+                                    ]]..dummtText..[[\n
                                     ]]..blitzCount..[[\n
                                     ]]..monsters..[[\n
                                     ]]..cards..[[\n
-                                    ]]..solo..[[\n
-                                    ]]..ready
-
+                                    ]]..solo
+                                    --..[[\n]]..ready
+    local validSetting = ""
+    if not gameSettings.allowRun then
+        validSetting = tc.yellow.."---== GAME SETTINGS ARE INVALID ==---"..tc.c..[[\n\n]]
+        if not gameSettings.core and not gameSettings.legion and not gameSettings.tesla then
+            validSetting = validSetting..tc.pink.."• You must choose at least 1 of the Monster Pools!"..tc.c..[[\n]]
+        end
+        if not gameSettings.boards then
+            validSetting = validSetting..tc.pink.."• You have no Mage Knight Selected!"..tc.c..[[\n]]
+        end
+        validSetting = validSetting..[[\n]]
+    end
+    settingDisplay = validSetting..settingDisplay
     local xml = UI.getXml()
     UI.setXml(editXML(xml, settingDisplay))
 end
@@ -131,7 +270,9 @@ function onMouseExit(player, value, id)
 end
 
 function menuEdit.onMouseHover(player, id, enter)
+    --print(id)
     local key = id:gsub("set_", "")
+    --print(key)
     if enter then
         if key == 'blitz' then -- gameSettings = {blitz=false, volkare=false
             local infoText = editBlitzCounter(buttonInfo[key], gameSettings.blitz, gameSettings.volkare)
@@ -141,6 +282,8 @@ function menuEdit.onMouseHover(player, id, enter)
             local infoText = editBlitzCounter(buttonInfo[key], gameSettings.blitz, gameSettings.volkare)
             local xml = UI.getXml()
             UI.setXml(editXML(xml, infoText))
+        elseif key == "run_Setup" then
+            currentSettingDisplay()
         else
             local xml = UI.getXml()
             UI.setXml(editXML(xml, buttonInfo[key]))
@@ -281,5 +424,5 @@ function setStringList() --00f3ff 3eff00 ff8dfa ecff00 fd9d44 ff0000
 
 
 
-    buttonInfo.runSetup = 'Run the table setup, using the options set to green\n\nYou need to select your Mage Knights before pressing this button!'
+    buttonInfo.run_Setup = tc.teal..[[Clear and Setup Table]]..tc.c..[[!]]
 end

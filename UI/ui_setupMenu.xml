@@ -10,13 +10,13 @@
     <Button class="settingButton_ON"  width="334" height="25" text="placeHolder" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" textColor="White" colors="#298115|#33a11a|#2a4c0e|#00000000" fontStyle="Bold" onClick="7656e0/menuAction" outLineColor="#111111" outLineSize="2 2 2 2" />
     <Button class="settingButton_OFF" width="334" height="25" text="placeHolder" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" textColor="Black" colors="#cccccc|#dddddd|#444444|#00000000" fontStyle="Bold" onClick="7656e0/menuAction" outLineColor="#111111" outLineSize="2 2 2 2" />
 
-    <Button class="settingRun" width="345" height="65" offsetXY="0 -153" text="placeHolder" textColor="White" colors="#990000|#ad0000|#6b0000|#00000000" fontStyle="Bold" onClick="doNothing" outLineColor="#111111" outLineSize="2 2 2 2" />
+    <Button class="run_Setup" width="345" height="65" offsetXY="0 -153" text="placeHolder" textColor="White" colors="#990000|#ad0000|#6b0000|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2" onClick="7656e0/menuAction" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" />
 </Defaults>
 <!-- ======================================================================= -->
 <!-- SetUpMenu -->
-<Panel id="panel_setupMenu" width="756" height="436" color="#000000" rectAlignment="UpperRight" allowDragging="false" active="false" >
+<Panel id="panel_setupMenu" width="756" height="436" color="#000000" alignment="MiddleCenter" active="false" raycastTarget = "true">
     <!-- Title -->
-    <Panel offsetXY="-3 -3" width="750" height="40" color="#757575" rectAlignment="UpperRight" allowDragging="false" active="true" >
+    <Panel offsetXY="-3 -3" width="750" height="40" color="#757575" rectAlignment="UpperRight" allowDragging="false" active="true">
         <Text class="Title" text="Mage Knight (Tragic Edition v3)" />
         <Button id="minMAX" onCLick="7656e0/menuAction" class="default_windowControl" rectAlignment="MiddleRight" offsetXY="-3 0" text="_"/>
         <Button id="set_solo" class="settingSolo" text="Solo Mode" offsetXY="-310 0"/>
@@ -52,7 +52,7 @@
                 </GridLayout>
             </Panel>
             <!-- Run Setup Button -->
-            <Button id="run_Settings" class="settingRun" text="Clean Up Table and Apply Settings" />
+            <Button id="run_Setup" class="run_Setup" text="Check Setting" />
         </Panel>
         <!-- Text Info Area 351 -->
         <Panel padding="5 5 5 5" offsetXY="-356 -3" width="391" height="381" color="#4b4b4b" rectAlignment="UpperRight" allowDragging="false" active="true" >
@@ -71,8 +71,8 @@
 </Panel>
 <!-- ======================================================================= &#xA; -->
 <!-- Minimised Version of the SetUpMenu width="31" height="40"-->
-<Panel id="panel_setupMenu_Min" width="35" height="35" offsetXY="0 -3" color="#000000" rectAlignment="UpperRight" allowDragging="false" active="false" >
-    <Panel offsetXY="0 0" width="31" height="31" color="#4b4b4b" rectAlignment="UpperRight" allowDragging="false" active="true" >
+<Panel id="panel_setupMenu_Min" offsetXY="360 198" width="35" height="35" color="#000000" alignment="MiddleCenter" allowDragging="true" returnToOriginalPositionWhenReleased="false" active="false" raycastTarget = "true">
+    <Panel offsetXY="-2 -2" width="31" height="31" color="#4b4b4b" rectAlignment="UpperRight" allowDragging="false" active="true" >
         <Button id="minMAX" class="default_windowControl" rectAlignment="MiddleRight" offsetXY="-3 0" /> <!-- text="☐" textAlignment="MiddleCenter" -->
         <Text id="minMAX_txt" color="#ffffff" fontSize="16" text="☐" offsetXY= "0.1 0" />
     </Panel>

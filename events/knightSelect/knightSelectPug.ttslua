@@ -1,4 +1,5 @@
 local dprint = require("/_libs/debug/dPrint").dprint
+local ShowDebug = true
 function onload()end
 
 function onCollisionEnter(collision_info)
@@ -23,7 +24,7 @@ function fetchKnight(playerSlot, contactObject)
 
     start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
 
-    Wait.frames(function() destroyObject(self); cleanup(contactObject, destroyBagList, 'move') end, 2)
+    if not ShowDebug then Wait.frames(function() destroyObject(self); cleanup(contactObject, destroyBagList, 'move') end, 2) end
 end
 
 function start_KnightFetch(setUpBags, playerSlot, boardPosOffset, contactObject, destroyBagList)
@@ -281,7 +282,7 @@ function cleanup(contactObject, bagList, move)
                 destroyObject(o)
             end
         end, 1)
-        destroyObject(contactObject)
+        if not ShowDebug then destroyObject(contactObject) end
     end
 end
 

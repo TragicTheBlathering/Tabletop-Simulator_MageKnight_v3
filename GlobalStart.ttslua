@@ -1,20 +1,46 @@
+local dprint = require("/_libs/debug/dPrint").dprint
 local uiFunc = require("/MageKnightV3/UI/_GlobalUI_lua")
 local tool = {}
       tool.onModLoad=require("/_libs/onModLoad/onModLoad")
       --tool.setupZone=require("/_libs/setUpZones/setUpZones")
       tool.DiceEffect=require("/MageKnightV3/events/event_DiceInHand").startTiemr
 
-
-local setupObjects = nil
-
-function onLoad()
-    uiFunc.closeSplash()
-    uiFunc.openSetupMenu()
-    math.randomseed(os.time())
-    tool.onModLoad.MegaFreeze() -- You can also add GUIDs via {'guid1', 'guid2'....}
-    tool.onModLoad.FixHandZones(8)
-    tool.DiceEffect()
+function onSave()
+    local data_to_save = {menu=showSettingsMenu}
+    saved_data = JSON.encode(data_to_save)
+    --saved_data = "" --Remove -- at start & save to clear save data
+    return saved_data
 end
+
+function onload(saved_data)
+
+    -- Loads the tracking for if the game has started yet
+    if saved_data ~= "" then
+        local loaded_data = JSON.decode(saved_data)
+        showSettingsMenu = loaded_data.menu
+
+    else
+        showSettingsMenu = true
+    end
+
+  menuControl()
+  math.randomseed(os.time())
+  tool.onModLoad.MegaFreeze() -- You can also add GUIDs via {'guid1', 'guid2'....}
+  tool.onModLoad.FixHandZones(8)
+  tool.DiceEffect()
+end
+
+function menuControl()
+    uiFunc.closeSplash()
+    if showSettingsMenu then
+        uiFunc.openSetupMenu()
+    end
+end
+
+function menuHasBeenRun()
+    showSettingsMenu = false
+end
+
 
 --[[
 function getSetupObj(find)

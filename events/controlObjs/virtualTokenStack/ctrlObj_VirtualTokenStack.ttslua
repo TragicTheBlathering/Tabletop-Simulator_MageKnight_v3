@@ -33,7 +33,7 @@ function processVirtualStack(args) -- {bag=bag, obj=obj, variableData=variableDa
         if value.type.url then
             for tag, v in pairs(value.tags) do
                 if bag.hasTag(tag) then
-                    print(tag)
+                    --print(tag)
                     table.insert(value.tagID, tag)
                     --value.tagID = tag
                     --break

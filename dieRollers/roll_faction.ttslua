@@ -76,7 +76,7 @@ function onload(saved_data)
     else
         spawnedDice = {}
     end
-    if Vector.equals(Vector(-65.30, 2.13, -5.49), self.getPosition()) then
+    if Vector.equals(Vector(-65.30, 2.13, -21.67), self.getPosition()) then
         setting.rotation = -120
         setting.radius = 5
     end

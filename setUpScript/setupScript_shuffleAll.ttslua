@@ -1,0 +1,32 @@
+local setupScript_shuffleAll = {}
+local setupScript_setDecks = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+local ShowDebug = false
+local finshedRunningScript = false
+
+function setupScript_shuffleAll.all()
+    shuffleALL()
+    Wait.frames(function()
+        shuffleALL()
+        Wait.frames(function()
+            shuffleALL()
+            Wait.frames(function()
+                finshedRunningScript = true
+            end, 30)
+        end, 30)
+    end, 30)
+end
+
+function setupScript_shuffleAll.wait()
+    --print(finshedRunningScript)
+    return finshedRunningScript
+end
+
+function shuffleALL()
+    local found_ShuffleList = getObjectsWithAnyTags({'Cards_PlayerCard', 'Cards_Units', 'eventID_monsterDrawBag', 'eventID_teslaTokenDrawBag'})
+    for k, obj in pairs(found_ShuffleList) do
+        obj.shuffle()
+    end
+end
+
+return setupScript_shuffleAll

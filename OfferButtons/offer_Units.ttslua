@@ -9,17 +9,6 @@ local tool = {} -- Various Tools (definitions at bottom of script)
 local ShowCast = false
 local printBug = false
 local functionStopped = {resetDecks = false, drawCards = false, clearOffer = false}
-local gameSettings = {
-        unitOfferCount=nil, blitz=nil, playerCount=2, plusTwo=2, set=false -- Player Set : Units = Player Count + 2 + (blitz) (Blitz == +1, volkaire = +1, if both on then +2)
-    }
---gameSettings.unitOfferCount
-local unitOffer = { --unitOffer.overflowValues{total=nil, silver=0, gold=0, overflow=false},
-    gold = {on = false, char=nil, pos=nil, ticked={char='9673', pos=Vector(-2.6,0.5,-0.115)}, unticked={char='9678', pos=Vector(-2.6,0.5,-0.14)}},
-    automatic = {on=true, tooltip='Automatic Gold Units : ON\n(right click to remove button)', col='White', buttonRemoved=false},
-    overflowValues = {total=nil, silver=0, gold=0, overflow=false},
-    overflow = false,
-    drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'},
-    }
 
 local cardData = { --cardData.cardOfferPos
     cardOfferPos = { -- Position of cards in the offer
@@ -57,9 +46,71 @@ local cardData = { --cardData.cardOfferPos
     stack_AA = 0,
 } -- End cardData = {}
 
-function onLoad(saved_data)
-    --print(' -- Code : Unit Offer Round Reset [W.I.P]')
+--[[
+function onSave()
+    local data_to_save = {b=BlitzCount, p=PlayerCount, o=ButtonOption}
+    saved_data = JSON.encode(data_to_save)
+    --saved_data = "" --Remove -- at start & save to clear save data
+    return saved_data
+end
+]]
+
+function call_saveData(setup) --gameSettings = {unitOfferCount=nil, blitz=nil, playerCount=2, plusTwo=2, set=false}
+    local blitz = setup.blitz and 1 or 0
+    local volkare = setup.volkare and 1 or 0
+    gameSettings.blitz = 0 + blitz + volkare
+    gameSettings.playerCount = tool.tableSize(setup.boards)
+    gameSettings.unitOfferCount = gameSettings.blitz + gameSettings.playerCount + gameSettings.plusTwo
+    gameSettings.set=true
+
+    updateSave()
+end
+
+function updateSave()
+    local data_to_save = {settings=gameSettings, offer=unitOffer}
+    saved_data = JSON.encode(data_to_save)
+    self.script_state = saved_data
+    --self.script_state = "" -- Clear All Data
+end
+
+function onload(saved_data)
+    if saved_data ~= "" then
+        --dprint("saved_data ~=")
+        local loaded_data = JSON.decode(saved_data)
+        --Set up information off of loaded_data
+        gameSettings = loaded_data.settings
+        unitOffer = loaded_data.offer
+    else
+        --dprint("saved_data ~= else")
+        --Set up information for if there is no saved saved data
+        defaultSaveValues()
+    end
+
+    if not gameSettings or not unitOffer then
+        defaultSaveValues()
+    end
+
     setButtons.init()
+end
+
+function defaultSaveValues()
+    gameSettings = {unitOfferCount=nil, blitz=nil, playerCount=2, plusTwo=2, set=false} -- Player Set : Units = Player Count + 2 + (blitz) (Blitz == +1, volkaire = +1, if both on then +2)
+    unitOffer = { --unitOffer.overflowValues{total=nil, silver=0, gold=0, overflow=false},
+                gold = {on = false, char=nil, pos=nil, ticked={char='9673', pos=Vector(-2.6,0.5,-0.115)}, unticked={char='9678', pos=Vector(-2.6,0.5,-0.14)}},
+                automatic = {on=true, tooltip='Automatic Gold Units : ON\n(right click to remove button)', col='White', buttonRemoved=false},
+                overflowValues = {total=nil, silver=0, gold=0, overflow=false},
+                overflow = false,
+                drawType = {'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver', 'silver'},}
+end
+
+function gameState_init() -- initilise game settings, this needs to be edited for the "SetUP Script" at the momment it is a default value
+    if not gameSettings.blitz or not gameSettings.playerCount or gameSettings.set then
+        broadcastToAll('ERROR : You have not run the SETUP SCRIPT.. using Default Values. (2 PLayers + 1 Blitz)', 'Red')
+        gameSettings.blitz=1
+        gameSettings.playerCount=2
+        gameSettings.set=true
+        gameSettings.unitOfferCount = gameSettings.blitz + gameSettings.playerCount + gameSettings.plusTwo
+    end
 end
 
 --******************************************************************************
@@ -76,7 +127,7 @@ function b_mainDrawFunction(obj, color, alt_click)
 end
 
 function setGameState(...)
-    if not gameSettings.set or not unitOffer then gameSettings.init() end
+    if not gameSettings.set or not unitOffer then gameState_init() end
     local keys = {...}
     if tool.tableSize(keys) == 0 then
         keys = false
@@ -604,16 +655,6 @@ function setGoldSilver(card)
     if card.hasTag('Cards_UnitSilver') then return 'silver'
     elseif card.hasTag('Cards_UnitGold') then return 'gold'
     else return false end
-end
-
-gameSettings.init = function() -- initilise game settings, this needs to be edited for the "SetUP Script" at the momment it is a default value
-    if not gameSettings.blitz or not gameSettings.playerCount or gameSettings.set then
-        print('***** gameSettings.init\n***** (needs editing, these are debug default values)')
-        gameSettings.blitz=1
-        gameSettings.playerCount=2
-        gameSettings.set=true
-        gameSettings.unitOfferCount = gameSettings.blitz + gameSettings.playerCount + gameSettings.plusTwo
-    end
 end
 
 -- Table Size ------------------------------------------------------------------

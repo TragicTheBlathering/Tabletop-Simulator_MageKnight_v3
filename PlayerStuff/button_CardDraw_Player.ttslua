@@ -1,3 +1,4 @@
+local dprint = require("/_libs/debug/dPrint").dprint
 local ShowCast = false
 local tagIDs = false
 local wait_ids = {}
@@ -13,18 +14,6 @@ local tagKey = false
 function onload()
     setVariables()
     makeButtons()
-end
-
-function dprint(txt, var)
-    txt = txt or '-------'
-    var = var or false
-    if self.hasTag('trashID_PlayerDiscard_p2') then
-        if var then
-            print(logString(var, '\n--- '..txt))
-        else
-            print('\n'..txt)
-        end
-    end
 end
 
 function setVariables()
@@ -115,7 +104,16 @@ function setHandZoneLimit(draw)
     return handsize, count
 end
 
+function autoAdjustHandCount()
+    --dprint()
+    --baseCount = 5
+    local shields = cast(self.getPosition(), 'shields')
+    baseCount = shields + 5 -- you can adjust this to make a new deault.
+    --dprint('shields', shields)
+end
+
 function b_Draw_HandSize(obj, color, alt_click)
+    autoAdjustHandCount()
     local draw = cast(self.getPosition(), 'drawDeck')
     makeButtons('drawHand')
     local waitForObjs = {}
@@ -157,19 +155,6 @@ function addTrashTag(card)
         end
     end
 end
-
---[[
---print('AddTrrashTags')
-for k, tag in ipairs(card.getTags()) do
-    if string.find(string.lower(tag), string.lower('trashID_'), 1, true) then
-        card.removeTag(tag)
-        card.addTag(tagIDs.player)
-        card.addTag(tagIDs.remove)
-        card.addTag(tagIDs.active)
-        break
-    end
-end
-]]
 
 function objectsAreMoving(...)
     local args = {...}
@@ -275,7 +260,29 @@ function cast(castOrigin, switch)
                            ,direction={0,1,0}, type=3, max_distance=0, size=Vector(2,2,2)
                            ,debug=ShowCast})
        return processCast_findDrawDeck(zone)
+
+   elseif switch == 'shields' then
+       --dprint()
+       zone = Physics.cast({origin=castOrigin + Vector(15,7,0)
+                           ,direction={0,1,0}, type=3, max_distance=0, size=Vector(45,2,40)
+                           ,debug=ShowCast})
+
+       return processCast_findShields(zone)
    end
+end
+
+function processCast_findShields(zone)
+    local count = 0
+    for k, v in pairs(zone) do
+        local obj = v.hit_object
+        if obj.hasTag('player_CommandToken') then
+            local n = tonumber(string.match(obj.getGMNotes(), "%d+"))
+            if n then
+                count = count + n
+            end
+        end
+    end
+    return count
 end
 
 function processCast_findDrawDeck(zone)
@@ -349,8 +356,8 @@ function makeButtons(disable)
                  ,scale={0.75,0.75,0.75}
                  , color=bData.b_Draw_HandSize.c, font_color=bData.b_Draw_HandSize.t,
                  };table.insert(buttons, button)
-        -- Set Base Hand Size.
-        button = {label=bData.draw.base, click_function="b_setBaseCount", function_owner=self
+        -- Set Base Hand Size. (b_setBaseCount)
+        button = {label=bData.draw.base, click_function="b_disable", function_owner=self
                  ,position={5.75,2,-4.8}, rotation={0,180,0}, height=400, width=450, font_size=250
                  , scale={0.75,0.75,0.75}, tooltip='Hand Size'
                  ,color='Green', font_color='White',

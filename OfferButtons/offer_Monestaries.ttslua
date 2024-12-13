@@ -1,7 +1,7 @@
 local cardData = {}
 local wait_ids = {}
 local functionStopped = {resetDeck = false}
-local ShowCast = true
+local ShowCast = false
 function process()
     --print(' -- Code : Monstaries Drop [W.I.P]')
     setGameState()

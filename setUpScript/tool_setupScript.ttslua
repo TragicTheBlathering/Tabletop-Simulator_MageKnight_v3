@@ -1,0 +1,34 @@
+--gameSettings == {blitz=false, volkare=false, core=true, legion=true, tesla=false, tut=false, spells=true, ultimate=true, solo=true}
+function onload() end --ee7d85
+local dprint = require("/_libs/debug/dPrint").dprint
+local ShowDebug = false
+
+local setup = {}
+      setup.proccessTokens = require("/MageKnightV3/setUpScript/setupScript_getTokens")
+      setup.proccessDecks = require("/MageKnightV3/setUpScript/setupScript_setDecks")
+      setup.shuffle = require("/MageKnightV3/setUpScript/setupScript_shuffleAll")
+
+local waitObjects = {}
+
+function runSetUpScript(gameSettings) --saveDataObj
+    --[[
+    ]]
+    local drawBags = setup.proccessTokens.fetch(gameSettings)
+    waitFor(setup.proccessTokens.wait, setup.proccessDecks.build, gameSettings)
+    waitFor(setup.proccessDecks.wait, setup.shuffle.all)
+
+    ----------------------------------------------------------------------------
+    --dprint('drawBags', drawBags)
+    --dprint('setup', setup)
+    --waitFor(setup.shuffle.wait, testWait)
+end
+
+function waitFor(waitFunc, runFunc, gameSettings)
+    gameSettings = gameSettings or false
+    Wait.condition(function() runFunc(gameSettings) end, function() return waitFunc() end)
+end
+
+function testWait()
+    local obj = getObjectFromGUID('796411')
+    obj.setPositionSmooth(Vector(-36.79, 2.01, 19.31)+Vector(0,8,0), false, false)
+end

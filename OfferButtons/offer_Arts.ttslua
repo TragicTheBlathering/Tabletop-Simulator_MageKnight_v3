@@ -37,7 +37,7 @@ end
 function processOffer(count)
     setButtonDisabled()
     --count = count+1; if count < 2 then count = 2 elseif count > 5 then count = 5 end
-    count = count or false; if count then if count == 1 then count = 2 end end
+    count = count or false--; if count then if count == 1 then count = 2 end end
     cardData.drawCount = count
     setGameState() --print(logString(cardData, '\n---- cardData'))
 

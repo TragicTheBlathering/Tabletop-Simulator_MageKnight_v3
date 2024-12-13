@@ -1,0 +1,157 @@
+local setupScript_setDecks = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+local ShowDebug = false
+
+local waitObjects = {}
+local finshedRunningScript = false
+
+function setupScript_setDecks.build(gameSettings)
+    --dprint('setupScript_setDecks.build(gameSettings)')
+    local cardPool = getCardPool()
+    setUpDecks(cardPool, gameSettings)
+end
+
+function setupScript_setDecks.wait()
+    return finshedRunningScript
+end
+
+---*****************************************************************************
+---****** Build Decks Script ***************************************************
+---*****************************************************************************
+function setUpDecks(cardPool, gameSettings)
+    local deckSettings = {tut=gameSettings.tut, compeditiveSpells=gameSettings.spells, ultimate=gameSettings.ultimate}
+    local drawDecks = {silver=cardPool.silver.silver,
+                       gold=cardPool.gold.gold,
+                       core=cardPool.aa.core,
+                       spells=cardPool.spells.spells,
+                       arts=cardPool.arts.arts}
+
+    local optionalDecks = {aa=cardPool.aa.tut,
+                           aaU=cardPool.aa.ultimate,
+                           spells=cardPool.spells.compeditive,
+                           artU=cardPool.arts.ultimate}
+
+    local waitForAllDecks = {}
+    for k, deck in pairs(drawDecks) do
+        table.insert(waitForAllDecks, deck)
+        local pos = deck.getPosition()
+        deck.setPositionSmooth(pos+Vector(0,4,0), false, false)
+        deck.setRotationSmooth(Vector(0,180,180), false, false)
+        Wait.condition(function()
+            local bounds = deck.getBounds().size.y/2+0.1
+            deck.setPositionSmooth(pos, false, false)
+        end, function() return isSmooth(deck) end)
+    end
+
+    Wait.condition(function()
+        if deckSettings.tut then
+            destroyObject(optionalDecks.spells)
+            destroyObject(optionalDecks.aaU)
+            destroyObject(optionalDecks.artU)
+            destroyObject(optionalDecks.aa)
+        else
+            drawDecks.core.putObject(optionalDecks.aa)
+
+            if deckSettings.compeditiveSpells then
+                drawDecks.spells.putObject(optionalDecks.spells)
+            else
+                destroyObject(optionalDecks.spells)
+            end
+
+            if deckSettings.ultimate then
+                drawDecks.core.putObject(optionalDecks.aaU)
+                drawDecks.arts.putObject(optionalDecks.artU)
+            else
+                destroyObject(optionalDecks.aaU)
+                destroyObject(optionalDecks.artU)
+            end
+        end
+        Wait.frames(function() setAsDone() end, 40)
+    end, function() return isSmoothMove_objList(waitForAllDecks) end)
+end
+
+function setAsDone()
+    finshedRunningScript = true
+end
+
+---*****************************************************************************
+---****** Get Variable Data ****************************************************
+---*****************************************************************************
+function getCardPool()
+    local silver = getObjectsWithTag('Cards_UnitSilver')
+    local tmpTable = {}
+    for k, o in pairs(silver) do
+        tmpTable.pos = o.getPosition()
+        tmpTable.silver = o
+    end
+    silver = tmpTable
+    local gold = getObjectsWithTag('Cards_UnitGold')
+    local tmpTable = {}
+    for k, o in pairs(gold) do
+        tmpTable.pos = o.getPosition()
+        tmpTable.gold = o
+    end
+    gold = tmpTable
+
+    local aaCards = getObjectsWithTag('Cards_AAcards')
+    tmpTable = {}
+    for k, o in pairs(aaCards) do
+        if o.getName() == 'Ultimate AA Cards' then
+            tmpTable.ultimate = o
+        elseif o.getName() == 'Advanced Action Cards' then
+            tmpTable.core = o
+            tmpTable.pos = o.getPosition()
+        elseif o.getName() == 'Removed for First Reconnaissance' then
+            tmpTable.tut = o
+        end
+    end
+    aaCards = tmpTable
+
+    local spells = getObjectsWithTag('Cards_Spells')
+    tmpTable = {}
+        for k, o in pairs(spells) do
+            if o.getName() == 'Spells' then
+                tmpTable.spells = o
+                tmpTable.pos = o.getPosition()
+            elseif o.getName() == 'Compeditive Spells' then
+                tmpTable.compeditive = o
+            end
+        end
+    spells = tmpTable
+
+    local arts = getObjectsWithTag('Cards_Artefact')
+    tmpTable = {}
+        for k, o in pairs(arts) do
+            if o.getName() == 'Artifacts' then
+                tmpTable.arts = o
+                tmpTable.pos = o.getPosition()
+            elseif o.getName() == 'Mysterious Box (Artefact)' then
+                tmpTable.ultimate = o
+            end
+        end
+    arts = tmpTable
+
+    return {silver=silver, gold=gold, aa=aaCards, spells=spells, arts=arts}
+end
+---*****************************************************************************
+---****** Wait Functions *******************************************************
+---*****************************************************************************
+function isSmoothMove_objList(objList)
+    for k, obj in pairs(objList) do
+        if obj then
+            if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+        end
+    end
+    return true
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+return setupScript_setDecks
