@@ -7,6 +7,8 @@ local setup = {}
       setup.proccessTokens = require("/MageKnightV3/setUpScript/setupScript_getTokens")
       setup.proccessDecks = require("/MageKnightV3/setUpScript/setupScript_setDecks")
       setup.shuffle = require("/MageKnightV3/setUpScript/setupScript_shuffleAll")
+      setup.cleanup = require("/MageKnightV3/setUpScript/setupScript_cleanUP")
+      setup.finalise = require("/MageKnightV3/setUpScript/setupScript_finaliseSetUp")
 
 local waitObjects = {}
 
@@ -16,7 +18,9 @@ function runSetUpScript(gameSettings) --saveDataObj
     local drawBags = setup.proccessTokens.fetch(gameSettings)
     waitFor(setup.proccessTokens.wait, setup.proccessDecks.build, gameSettings)
     waitFor(setup.proccessDecks.wait, setup.shuffle.all)
-
+    waitFor(setup.shuffle.wait, setup.cleanup.table, gameSettings)
+    waitFor(setup.cleanup.wait, setup.finalise.setup)
+    --waitFor(setup.cleanup.wait, testWait) finaliseSetUp
     ----------------------------------------------------------------------------
     --dprint('drawBags', drawBags)
     --dprint('setup', setup)

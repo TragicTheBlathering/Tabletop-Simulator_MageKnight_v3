@@ -1,0 +1,68 @@
+local dayNightBaord = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+
+function onLoad()
+    makeButtons()
+end
+
+function f_DayNight()
+    local light = {day={amb=1.29999995231628, main=0.540000021457672},
+                   night={amb=0, main=0.219999060034752},
+                   obj={day={r=255, g=255, b=255}, night={r=166, g=165, b=165}}
+               }
+
+    local mapTiles = getObjectsWithAnyTags({'maptile_Start', 'maptile_CountrySide', 'maptile_Core'})
+
+
+    if Lighting.ambient_intensity == 0 then -- set DAY
+        Lighting.ambient_intensity = light.day.amb
+        Lighting.light_intensity = light.day.main
+        setObjectTint(mapTiles, light.obj.day)
+    else -- set NIGHT
+        Lighting.ambient_intensity = light.night.amb
+        Lighting.light_intensity = light.night.main
+        setObjectTint(mapTiles, light.obj.night)
+    end
+
+    Lighting.apply()
+end
+
+function setObjectTint(mapTiles, light)
+    for k, tile in pairs(mapTiles) do
+        if not tile.hasTag('event_virtualTokenStack') then
+            tile.setColorTint(Color.new(convertRGB(light)) )
+        end
+    end
+end
+
+function convertRGB(v)
+    return v.r/255, v.g/255, v.b/255
+end
+
+function makeButtons(night)
+    local buttons = {}
+
+    if set == nil then
+        button = {
+            click_function = 'f_DayNight',
+            function_owner = self,
+            position = {-2.1, 0, -1.65},
+            rotation = {0, 0, 0},
+            width = 700,
+            height = 350,
+            font_size = 200,
+            scale = {0.8,0.8,0.8},
+            label = 'Day'
+        }
+        if night then
+            button.label = 'Night'
+        end
+        table.insert(buttons, button)
+    end
+ -- Create Buttons
+    for _, button in ipairs(buttons) do
+        self.createButton(button)
+    end
+end
+
+return dayNightBaord

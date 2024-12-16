@@ -1,0 +1,47 @@
+local setupScript_finaliseSetUp = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+
+function setupScript_finaliseSetUp.setup()
+    --dprint('setupScript_drawRoll.finaliseSetUp')
+    local darwCards = getObjectsWithTag('button_setupDraw')
+
+    for k, offer in pairs(darwCards) do
+        offer.call('callTrigger')
+    end
+
+    local dice = getObjectsWithAllTags({'Dice_ManaDie', 'trash_ManaDie'})
+
+    local rollerBag = getObjectsWithTag('setupBag_setupDieRoller')[1]
+    local trash = rollerBag.takeObject({})
+    trash.setLock(true)
+    trash.setPosition(Vector(-4.38, 2.11, -42.40))
+    for k, die in pairs(dice) do
+        trash.putObject(die)
+    end
+    Wait.condition(function() destroyObject(trash) end, function() return trashEmpty(trash) end)
+end
+
+function trashEmpty(trash)
+    if trash then
+        if trash.getQuantity() == 0 then
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
+
+return setupScript_finaliseSetUp
+
+--[[
+button_setupDraw
+button_unitDraw
+button_aaDraw
+button_spellDraw
+button_ArtDraw
+
+{-4.38, 2.11, -42.40}
+setupBag_setUpDieRoller
+]]

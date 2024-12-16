@@ -34,6 +34,11 @@ function b_Function(obj, color, rightClick)
     end
 end
 
+function callTrigger()
+    waitForFunction('allStop')
+    processOffer()
+end
+
 function processOffer()
     setGameState()--print(logString(cardData, '\n--- cardData'))
     if offerRequiresCards(cardData.currentOffer) then

@@ -126,6 +126,11 @@ function b_mainDrawFunction(obj, color, alt_click)
     waitFunc(setButtons.init, 'drawCards')
 end
 
+function callTrigger()
+    waitForFunction('allStop')
+    b_mainDrawFunction()
+end
+
 function setGameState(...)
     if not gameSettings.set or not unitOffer then gameState_init() end
     local keys = {...}

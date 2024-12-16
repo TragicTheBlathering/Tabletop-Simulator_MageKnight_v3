@@ -1,0 +1,98 @@
+local setupScript_cleanUP = {}
+
+local dprint = require("/_libs/debug/dPrint").dprint
+local ShowDebug = false
+local waitObjects = false
+local waitTurn = false
+
+function setupScript_cleanUP.table(gameSettings)
+    local turnOderbag = getObjectsWithTag('playerMarker_TurnOrderBag')[1]
+    local count = {boards=getObjectsWithTag('PlayerBoard')}
+    count.boards = #count.boards
+    count.die = 8 - (count.boards + (gameSettings.blitz and 1 or 0) + (gameSettings.volkare and 1 or 0) + 2)
+
+    Wait.condition(function() cleanUpTable(turnOderbag, count) end, function() return ensrureSetReady(turnOderbag, count.boards) end)
+end
+
+function setupScript_cleanUP.wait()
+    return waitObjects
+end
+---*****************************************************************************
+---****** Clean Up Table Script ************************************************
+---*****************************************************************************
+function drawTurnOrderTokens(bag)
+    waitTurn = {}
+    local pos = Vector(15.27, 2.01, -34.23)-- -36.23
+    local offset = {y=Vector(0,3,0), z=Vector(0,0,-2)}
+    local aboveBag = bag.getPosition()+offset.y
+    bag.shuffle()
+    for i = 1, bag.getQuantity(), 1 do
+        local token = bag.takeObject({})
+        --table.insert(waitTurn, token)
+        token.setPosition(aboveBag)
+        token.setRotation(Vector(0,180,0))
+        token.setPositionSmooth((pos+offset.y)+offset.z, false, false)
+        waitDrop(token, (pos+offset.z))
+        offset.z = offset.z + Vector(0,0,-2)
+    end
+    Wait.condition(function() dprint('LOAD TURN ORDER MENU') end, function() return isSmoothMove_objList(waitTurn) end)
+end
+
+function waitDrop(token, pos)
+    local pug = token
+    table.insert(waitTurn, pug)
+    local position = pos
+    Wait.condition(function()
+        pug.setPositionSmooth(position, false, false)
+    end, function() return isSmooth(pug) end)
+end
+
+function isSmoothMove_objList(objList)
+    if objList == false then
+        return false
+    elseif objList == true then
+        return true
+    else
+        for k, obj in pairs(objList) do
+            if obj then
+                if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+            end
+        end
+    end
+    return true
+end
+
+function cleanUpTable(turnOderbag, count)
+    drawTurnOrderTokens(turnOderbag)
+    local dieOffer = getObjectsWithAllTags({'Dice_ManaDie', 'trash_ManaDie'})
+    local cleanUpList = getObjectsWithAnyTags({'KnightSelect_Pug', 'KnightSelect'})
+
+    for i = 1, count.die, 1 do
+        destroyObject(dieOffer[i])
+    end
+
+    for k, v in pairs(cleanUpList) do
+        destroyObject(v)
+    end
+    Wait.frames(function() waitObjects = true end, 3)
+end
+
+function ensrureSetReady(turnOderbag, playerBoards)
+    if turnOderbag.getQuantity() == playerBoards then
+        return true
+    else
+        return false
+    end
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+
+return setupScript_cleanUP

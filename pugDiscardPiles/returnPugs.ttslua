@@ -1,0 +1,98 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+local bagsList = {}
+
+local drawBag = false
+local tagName = false
+
+function onload()
+    buildVariables()
+    if drawBag or tagName then
+        if drawBag.getQuantity() <= 0 then
+            if self.getQuantity() > 0 then
+                if self.hasTag('eventID_teslaTokenDiscardPile') then
+                    makeButtons('tesla')
+                else
+                    makeButtons()
+                end
+            end
+        end
+    else
+        dprint('ERROR : Has not found the draw bags!')
+    end
+end
+
+function buildVariables()
+    local tagList  = {  'pug_orc', 'pug_Dungeon', 'pug_Keep', 'pug_MageTower', 'pug_Dragon', '', 'pug_Ruin', 'pug_City',
+                        'pug_Tesla_nOrc', 'pug_Tesla_nDungeon', 'pug_Tesla_nDragon', 'pug_Tesla_nItem',
+                        'pug_Tesla_eOrc', 'pug_Tesla_eDungeon', 'pug_Tesla_eDragon', 'pug_Tesla_eItem'}
+
+    local objTags = self.getTags()
+
+    local found = false
+    for k, lt in pairs(tagList) do
+        for w, ot in pairs(objTags) do
+            if string.lower(lt) == string.lower(ot) then
+                tagName = lt
+                drawBag = {}
+                drawBag = getObjectsWithAllTags({'eventID_monsterDrawBag', tagName})[1]
+                if not drawBag then drawBag = getObjectsWithAllTags({'eventID_teslaTokenDrawBag', tagName})[1] end
+                found = true
+                break
+            end
+        end
+        if found then break end
+    end
+
+end
+
+function b_returnPugsToDrawBags() -- {-65.30, 19.82, -51.24}
+    local offset = Vector(0,0,0)
+    for i = 1, self.getQuantity(), 1 do
+        local pug = self.takeObject({})
+        local pos = drawBag.getPosition()+Vector(0,5,0)
+        pug.setPosition(self.getPosition()+Vector(0,5,0))
+
+        pug.setRotationSmooth(Vector(0, 180, 180))
+        pug.setPositionSmooth(pos+offset)
+
+        offset = offset+Vector(0,(pug.getBounds().size.y/2)+0.5,0)
+        Wait.condition(function() drawBag.putObject(pug) end, function() return isSmooth(pug) end)
+    end
+end
+
+function _blank()end
+function makeButtons(switch)
+    self.clearButtons()
+
+    local buttons = {}
+    local button = {
+            click_function = 'b_returnPugsToDrawBags',
+            function_owner = self,
+            label = 'Return',
+            position = {0, 0.2, -1.5},
+            rotation = {0, 0, 0},
+            width = 800,
+            height = 350,
+            font_size = 200,
+            scale={1.5,1.5,1.5}}
+
+    if switch == 'tesla' then
+        button.position = {0, 0.29, -1.51}
+    end
+
+    table.insert(buttons, button)
+ -- Create Buttons
+    for _, button in ipairs(buttons) do
+        self.createButton(button)
+    end
+end
+
+-- obj.isSmoothMoving() shorthand ----------------------------------------------
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end

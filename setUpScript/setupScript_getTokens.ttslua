@@ -61,16 +61,18 @@ end
                         table.insert(waitObjects, pug)
                         for k, tag in pairs(pug.getTags()) do
                             if string.find(tag, 'pug', 1, true) and not string.find(tag, 'trashID', 1, true) then
-                                if not defaultTesla then
-                                    if type == 'tesla' then
-                                        tag = modifyTeslaTags(tag, pug)
+                                if tag ~= "pug_Enemy" then
+                                    if not defaultTesla then
+                                        if type == 'tesla' then
+                                            tag = modifyTeslaTags(tag, pug)
+                                        end
                                     end
+                                    offset, Y =  setOffset(Y, type, tag)
+                                    pug.setPosition(spawnPos[tag])
+                                    pug.setPositionSmooth(drawPos[tag], false, false)
+                                    pug.setPositionSmooth(drawPos[tag]+offset, false, false)
+                                    break
                                 end
-                                offset, Y =  setOffset(Y, type, tag)
-                                pug.setPosition(spawnPos[tag])
-                                pug.setPositionSmooth(drawPos[tag], false, false)
-                                pug.setPositionSmooth(drawPos[tag]+offset, false, false)
-                                break
                             end
                         end
                     end

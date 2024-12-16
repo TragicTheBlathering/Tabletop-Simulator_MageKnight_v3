@@ -1,3 +1,4 @@
+local dprint = require("/_libs/debug/dPrint").dprint
 local ShowCast = false
 local printBug = false
 local wait_ids = {}
@@ -16,6 +17,11 @@ function b_Function(obj, color, rightClick)
         discard_last()
         waitFunc(processOffer, 'discard_last')
     end
+end
+
+function callTrigger()
+    waitForFunction('allStop')
+    processOffer()
 end
 
 function processOffer()
