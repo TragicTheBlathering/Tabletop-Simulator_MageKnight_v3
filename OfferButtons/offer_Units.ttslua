@@ -380,12 +380,14 @@ function drawCards()
                         local prams = {position=data.drawPos[k]+data.offset, rotation=data.rot}
                         if container.type == 'Card' then
                             c = container
+                            enableCollider(c, false)
                             c.setPositionSmooth(prams.position, false, false)
                             c.setRotationSmooth(prams.rotation, false, false)
                         else
                             c = container.takeObject(prams)
+                            enableCollider(c, false)
                         end
-                        Wait.condition(function() c.setPositionSmooth(data.drawPos[k]) end, function() return isSmooth(c) end)
+                        Wait.condition(function() c.setPositionSmooth(data.drawPos[k]); enableCollider(c, true) end, function() return isSmooth(c) end)
                         table.insert(waitCardList, c)
                     end
                     count[type] = count[type] + 1
@@ -406,12 +408,14 @@ function drawCards()
                             local prams = {position=data_AA.offerDrawPos_AA[k]+data.offset, rotation=data.rot}
                             if container.type == 'Card' then
                                 c = container
+                                enableCollider(c, false)
                                 c.setPositionSmooth(prams.position, false, false)
                                 c.setRotationSmooth(prams.rotation, false, false)
                             else
                                 c = container.takeObject(prams)
+                                enableCollider(c, false)
                             end
-                            Wait.condition(function() c.setPositionSmooth(data_AA.offerDrawPos_AA[k]) end, function() return isSmooth(c) end)
+                            Wait.condition(function() c.setPositionSmooth(data_AA.offerDrawPos_AA[k]); enableCollider(c, true) end, function() return isSmooth(c) end)
                             table.insert(waitCardList, c)
                         end
                         count = count + 1
@@ -655,6 +659,15 @@ setButtons.get = function(key)
 --******************************************************************************
 --- Tool Function Definitions --------------------------------------------------
 --******************************************************************************
+
+function enableCollider(obj, action) -- fasle or true
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", action)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", action)
+    end
+end
 
 function setGoldSilver(card)
     if card.hasTag('Cards_UnitSilver') then return 'silver'

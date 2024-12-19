@@ -1,4 +1,4 @@
-local ShowCast = true
+local ShowCast = false
 local printBug = false
 
 cardData = {
@@ -58,8 +58,9 @@ function drawCards()
     local drawnCards = {}
     for i = 1, count do
         local card = draw.takeObject({position=cardData.cardOfferPos[i]+Vector(0,2,0), rotation=cardData.face.up})
+        enableCollider(card, false)
         table.insert(drawnCards, card)
-        Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i])end, function() return isSmooth(card) end)
+        Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i]); enableCollider(card, true) end, function() return isSmooth(card) end)
     end
 
     Wait.condition(function() functionStopped.drawCards = true end, function() return objectsAreMoving(drawnCards) end)
@@ -362,4 +363,13 @@ function isSmooth(obj)
         return true
     end
     return false
+end
+
+function enableCollider(obj, action) -- fasle or true
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", action)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", action)
+    end
 end

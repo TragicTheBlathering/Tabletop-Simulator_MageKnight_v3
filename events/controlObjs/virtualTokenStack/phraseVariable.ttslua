@@ -17,6 +17,7 @@ function phraseVariable.buildVariables(bag, d)
         data.basePos = d.value.basePos
         data.tags = {}
         data.empty = {}
+        data.hardCodedImages = d.type.hardCodedImages
 
         for k, targetTag in pairs(bag.getTags()) do
             for findTag, w in pairs(d.tags) do

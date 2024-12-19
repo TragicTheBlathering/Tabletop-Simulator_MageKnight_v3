@@ -1,19 +1,4 @@
---[[
-cardData = {
-    cardOfferPos = {Vector(56.51, 2.02, -37.98),
-                    Vector(49.51, 2.02, -37.98),
-                    Vector(42.51, 2.02, -37.98)},
-    face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
-    drawDeckPos = Vector(63.38, 2.11, -37.73),
-    discardPilePos = Vector(70.50, 2.04, -38.00),
-    offsetY = Vector(0, 2, 0),
-
-    currentOffer = {false, false, false},
-    newOffer = {count = false, slide = {}},
-    discardCard = false,
-    draw    = false,
-    discard = false
-}]]
+local dprint = require("/_libs/debug/dPrint").dprint
 local ShowCast = false
 local printBug = false
 local wait_ids = {}
@@ -72,6 +57,11 @@ function discard_last()
     if discard then
         pos = pos + Vector(0, discard.getBounds().size.y+0.1, 0)
     end
+
+    local dummy = findDummyBoard() --print(logString(dummy, '\n--- dummy'))
+    if dummy then
+        pos = Vector(89.07, 2.03, -30.00)
+        cardData.discardPilePos = pos end
 
     for i = tableSize(cardData.currentOffer), 1, -1 do
         if cardData.currentOffer[i] then
@@ -173,9 +163,10 @@ function deal(drawcount, card)
                     local card = drawDeck
                     local pos = cardData.cardOfferPos[i]
                     cardData.currentOffer[i] = card
+                    enableCollider(card, false)
                     card.setPositionSmooth(pos+offSet)
                     card.setRotationSmooth(rot)
-                    Wait.condition(function() card.setPositionSmooth(pos) end, function() return not card.isSmoothMoving() end)
+                    Wait.condition(function() card.setPositionSmooth(pos); enableCollider(card, true) end, function() return not card.isSmoothMoving() end)
                     break
                 end
             end
@@ -188,8 +179,9 @@ function deal(drawcount, card)
                     cardDrawnCount = cardDrawnCount + 1
                     local pos = cardData.cardOfferPos[i]
                     local card = drawDeck.takeObject({position=pos+offSet, rotation=rot})
+                    enableCollider(card, false)
                     cardData.currentOffer[i] = card
-                    Wait.condition(function() card.setPositionSmooth(pos) end, function() return not card.isSmoothMoving() end)
+                    Wait.condition(function() card.setPositionSmooth(pos); enableCollider(card, true) end, function() return not card.isSmoothMoving() end)
                 end
                 if cardDrawnCount >= drawcount then break end
             end
@@ -212,7 +204,8 @@ function slideOffer()
             if card then
                 if card ~= cardData.currentOffer[i] then
                     card.setPositionSmooth(cardData.cardOfferPos[i]+Vector(0,2,0))
-                    Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i]) end, function() return isSmooth(card) end)
+                    enableCollider(card, false)
+                    Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i]); enableCollider(card, true) end, function() return isSmooth(card) end)
                 end
             end
         end
@@ -232,7 +225,7 @@ function b_disabled()end -- This is for when the button is disabled. --print('<d
 function setButtonReady()
     waitForFunction('allStop')
     self.clearButtons()
-    local button = {label="Slide\nSpell Card Offer", click_function="b_Function", function_owner=self,
+    local button = {label="Slide\nAdvanced Actions", click_function="b_Function", function_owner=self,
                     position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
                    , scale={0.75,0.75,0.75}
                    --, color='Green', font_color='White',
@@ -242,7 +235,7 @@ end
 
 function setButtonDisabled()
     self.clearButtons()
-    local button = {label="Slide\nSpell Card Offer", click_function="b_disabled", function_owner=self,
+    local button = {label="Slide\nAdvanced Action Offer", click_function="b_disabled", function_owner=self,
                     position={0,0.5,0}, rotation={0,180,0}, height=1200, width=2800, font_size=250
                     , scale={0.75,0.75,0.75}
                     , color='Red', font_color='White',
@@ -264,8 +257,8 @@ function setGameState(...)
                             Vector(49.51, 2.02, -37.98),
                             Vector(42.51, 2.02, -37.98)},
             face = {up = Vector(0, 180, 0), down = Vector(0, 180, 180)},
-            drawDeckPos = Vector(63.38, 2.11, -37.73),
-            discardPilePos = Vector(70.50, 2.04, -38.00),
+            drawDeckPos = Vector(63.51, 2.02, -37.97),
+            discardPilePos = Vector(70.50, 2.01, -38.00),
             offsetY = Vector(0, 2, 0),
 
             currentOffer = {false, false, false},
@@ -438,4 +431,13 @@ function isSmooth(obj)
         return true
     end
     return false
+end
+
+function enableCollider(obj, action) -- fasle or true
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", action)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", action)
+    end
 end

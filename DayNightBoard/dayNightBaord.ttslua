@@ -6,21 +6,26 @@ function onLoad()
 end
 
 function f_DayNight()
-    local light = {day={amb=1.29999995231628, main=0.540000021457672},
-                   night={amb=0, main=0.219999060034752},
+    local light = {day={amb=1.29999995231628, light=0.540000021457672, reflect=1},
+                   night={amb=0.6600000026226044, light=0, reflect=0.144000262022018},
                    obj={day={r=255, g=255, b=255}, night={r=166, g=165, b=165}}
                }
 
     local mapTiles = getObjectsWithAnyTags({'maptile_Start', 'maptile_CountrySide', 'maptile_Core'})
 
+    --print(Lighting.light_intensity)
+    --print(Lighting.ambient_intensity)
+    --print(Lighting.reflection_intensity)
 
-    if Lighting.ambient_intensity == 0 then -- set DAY
+    if Lighting.light_intensity == 0 then -- set DAY
         Lighting.ambient_intensity = light.day.amb
-        Lighting.light_intensity = light.day.main
+        Lighting.light_intensity = light.day.light
+        Lighting.reflection_intensity = light.day.reflect
         setObjectTint(mapTiles, light.obj.day)
     else -- set NIGHT
         Lighting.ambient_intensity = light.night.amb
-        Lighting.light_intensity = light.night.main
+        Lighting.light_intensity = light.night.light
+        Lighting.reflection_intensity = light.night.reflect
         setObjectTint(mapTiles, light.obj.night)
     end
 

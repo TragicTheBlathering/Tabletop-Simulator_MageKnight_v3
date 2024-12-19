@@ -21,6 +21,42 @@ function setBagTextureFromContents.usingTint(bag, bagData, value)
     end
 end
 
+function setBagTextureFromContents.usingHardCodedImages(bag, bagData, value)
+    --dprint('usingHarcCodedURLs(bag, bagData, value)')
+    --dprint('bag', bag)
+    --dprint('bagData', bagData)
+    --dprint('value', value)
+    local contentCount = tool.tablesize(bagData.ContainedObjects)
+    local bagTags = bag.getTags()
+    if contentCount > 0 then
+        local topOBJ = bagData.ContainedObjects[contentCount]
+        local newImage = nil
+
+        for k, v in pairs(topOBJ.Tags) do
+            for q,w in pairs(value.tags) do
+                if string.lower(v) == string.lower(q) then
+                    newImage = w
+                end
+            end
+        end
+
+        bag.setCustomObject({diffuse=newImage})
+        Wait.frames(function() bag.reload() end, 1)
+
+    else
+        local newImage = value.tags[value.tagID[1]]
+        if string.find(string.lower(value.empty), string.lower('http'), 1, true) then
+            newImage = value.empty
+        else
+            bag.setColorTint(hexToRGB(value.empty))
+        end
+        --
+        bag.setCustomObject({diffuse=newImage})
+
+        Wait.frames(function() bag.reload() end, 1)
+    end
+end
+
 function setBagTextureFromContents.usingContentsOfBag(bag, bagData, value)
     --dprint('setBagTextureFromContents.usingContentsOfBag(bag, bagData, value)')
     local contentCount = tool.tablesize(bagData.ContainedObjects)
@@ -55,6 +91,7 @@ function setBagTextureFromContents.usingContentsOfBag(bag, bagData, value)
 end
 
 function setBagTextureFromContents.usingURLs(bag, bagData, value)
+    dprint('setBagTextureFromContents.usingURLs(bag, bagData, value)')
     --dprint('setBagTextureFromContents.usingURLs(bag, bagData, value)')
     --dprint(value.tags)
     local contentCount = tool.tablesize(bagData.ContainedObjects)

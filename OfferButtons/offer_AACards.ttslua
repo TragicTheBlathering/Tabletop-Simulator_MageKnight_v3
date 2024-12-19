@@ -163,9 +163,10 @@ function deal(drawcount, card)
                     local card = drawDeck
                     local pos = cardData.cardOfferPos[i]
                     cardData.currentOffer[i] = card
+                    enableCollider(card, false)
                     card.setPositionSmooth(pos+offSet)
                     card.setRotationSmooth(rot)
-                    Wait.condition(function() card.setPositionSmooth(pos) end, function() return not card.isSmoothMoving() end)
+                    Wait.condition(function() card.setPositionSmooth(pos); enableCollider(card, true) end, function() return not card.isSmoothMoving() end)
                     break
                 end
             end
@@ -178,8 +179,9 @@ function deal(drawcount, card)
                     cardDrawnCount = cardDrawnCount + 1
                     local pos = cardData.cardOfferPos[i]
                     local card = drawDeck.takeObject({position=pos+offSet, rotation=rot})
+                    enableCollider(card, false)
                     cardData.currentOffer[i] = card
-                    Wait.condition(function() card.setPositionSmooth(pos) end, function() return not card.isSmoothMoving() end)
+                    Wait.condition(function() card.setPositionSmooth(pos); enableCollider(card, true) end, function() return not card.isSmoothMoving() end)
                 end
                 if cardDrawnCount >= drawcount then break end
             end
@@ -202,7 +204,8 @@ function slideOffer()
             if card then
                 if card ~= cardData.currentOffer[i] then
                     card.setPositionSmooth(cardData.cardOfferPos[i]+Vector(0,2,0))
-                    Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i]) end, function() return isSmooth(card) end)
+                    enableCollider(card, false)
+                    Wait.condition(function() card.setPositionSmooth(cardData.cardOfferPos[i]); enableCollider(card, true) end, function() return isSmooth(card) end)
                 end
             end
         end
@@ -428,4 +431,13 @@ function isSmooth(obj)
         return true
     end
     return false
+end
+
+function enableCollider(obj, action) -- fasle or true
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", action)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", action)
+    end
 end

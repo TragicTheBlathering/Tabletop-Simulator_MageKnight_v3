@@ -1,6 +1,512 @@
 local dprint = require("/_libs/debug/dPrint").dprint
-local ShowDebug = false
 
-function onLoad(save_state)
-    --print('!!!!!')
+--
+local ShowDebug = true
+
+local destroyList = {}
+
+local button1Data = {{click_function = 'f_randomise', label = 'Random Dummy Mage Knight', width = 3000, height = 350}
+                    ,{click_function = 'f_ProcessDummy_Draw3', label = 'Draw 3 Cards', width = 2000, height = 350}
+                    ,{click_function = 'f_ProcessDummy_Draw1', label = 'Draw 1 Card', width = 1200, height = 350}}
+
+local button2Data = {{click_function = 'f_choose', label = 'Choose Dummy Mage Knight', width = 2800, height = 350}
+                    ,{click_function = 'f_ProcessDummy_Draw1', label = 'Draw 1 Card', width = 1200, height = 350}
+                    ,{click_function = 'f_blank', label = '', width = 0, height = 0}}
+
+local allskills = {on=false, color='Red', textcolor='White', custom={on=false, color='Red', textcolor='White'}}
+
+local officialKnights = {'Select : Norowas', 'Select : Goldyx', 'Select : Tovak', 'Select : Wolfhawk', 'Select : Krang', 'Select : Arythea', 'Select : Braevalar'}
+
+local y = {offset=0, waitID=nil}
+local wait_ids = {}
+
+function updateSave()
+    local data_to_save = {button=b}
+    saved_data = JSON.encode(data_to_save)
+    self.script_state = saved_data
+    --self.script_state = "" -- Clear All Data
+end
+
+
+function onLoad(saved_data)
+    if saved_data ~= "" then
+        dprint('saved_data', saved_data)
+        local loaded_data = JSON.decode(saved_data)
+        b=loaded_data.button
+    else
+        b=1
+    end
+    --b=1;updateSave() -- resetSave
+    makeButtons()
+end
+
+
+function drawCards(count)
+    count = count or 0
+    --print(count)
+    local drawDeck = castZone('draw')
+    local pos = self.getPosition() + Vector(-6.81, 2, -7.5)
+
+    if drawDeck then
+        if drawDeck.type == 'Card' then
+            local offset = Vector(0,y.offset,0)
+            drawDeck.setPositionSmooth(pos+offset)
+            drawDeck.setRotationSmooth(Vector(0,180,0))
+        else
+            local deckSize = drawDeck.getQuantity()
+            --print(deckSize)
+            if count >  deckSize then
+                count = deckSize
+            end
+
+            for i = 1, count do
+                local offset = Vector(0,y.offset,0)
+                local card = drawDeck.takeObject({position=pos+offset, rotation=Vector(0,180,0)})
+                y.offset = y.offset + 0.3
+            end
+        end
+    end-- end IF Deck Exists
+
+    if y.waitID then Wait.stop(y.waitID); y.waitID = nil end
+    y.waitID = Wait.time(function() y.offset = 0 end, 5)
+end
+
+function f_ProcessDummy_Draw1(obj, playerCol, altClick)
+    if not altClick then
+        local count = clickCounter(self,drawCards,0.4)
+        if count then
+            if count > 0 then
+                drawCards(count)
+            end
+        end
+    else
+        resetDeck()
+    end
+end
+
+function clickCounter(obj, func, delay)
+    local delay = delay or 0.8 -- better way of setting default parameters
+    wait_ids[obj] = wait_ids[obj] or { -- just to be sure there's no attempt to index a nil value later we set an empty table first.
+      count = 0, -- We set the count to 0 here when the table is made
+    }
+
+    function delayCall()
+        func(wait_ids[obj].count)
+        wait_ids[obj].waitID = nil -- remove the wait id when the function is called
+        wait_ids[obj].count = 0  -- We set the count to 0 here when the wait has ended due to timeout
+    end
+
+    if wait_ids[obj].waitID then Wait.stop(wait_ids[obj].waitID); wait_ids[obj].waitID = nil end -- end the previous wait if it exists
+    wait_ids[obj].waitID = Wait.time(delayCall, delay) -- make a new wait, but with _no_ count
+
+    wait_ids[obj].count = wait_ids[obj].count + 1 -- finally increment the click amount.
+end
+
+function f_ProcessDummy_Draw3(obj, playerCol, altClick)
+    if not altClick then
+        drawCards(3)
+    else
+        resetDeck()
+    end
+end
+
+function resetDeck()
+    dprint('resetDeck')
+end
+
+
+function f_randomise(obj, playerCol, alt_click)
+    if not alt_click then
+        local existingObjects = castZone('clearBoard')
+        if existingObjects then
+            for k, obj in pairs(existingObjects) do
+                destroyObject(obj)
+            end
+        end
+
+        local setupBag_dummyCards = getObjectsWithTag('setupBag_DummyCards')[1]
+        local deck = setupBag_dummyCards.takeObject({})
+        deck.setPosition(self.getPosition()+Vector(0,2,3.95))
+        deck.setRotation(Vector(0,180,0))
+        deck.randomize()
+    end
+end
+--{18.99, 2.12, -71.79}
+--{18.99, 2.01, -75.75}
+function f_choose(obj, playerCol, alt_click)
+    if not alt_click then
+        local deck = castZone('chooseKnight')
+        if deck then
+            local dummyCard = false
+            if deck.type == 'Deck' then
+                local contents = deck.getObjects()
+                dummyCard = deck.takeObject({rotation=Vector(0,180,0), index=contents[deck.getQuantity()].index})
+                dummyCard.setPosition(self.getPosition()+Vector(0,1.5,3.95))
+                destroyObject(deck)
+            else
+                dummyCard = deck
+            end
+
+            if dummyCard then
+                getCrystals()
+                dummyCard.setLock(true)
+                dummyCard.setPositionSmooth(self.getPosition()+Vector(0,0.11,3.95))
+                fetchObjects(dummyCard)
+            end
+
+        else
+            broadcastToAll('ERROR : You need to select a Dummy Plater First!', 'Red')
+        end
+        Wait.time(function() destroyDrawBags() end, 5)
+    end
+end
+
+function destroyDrawBags()
+    local z = {}
+    for k, obj in pairs(destroyList) do
+        z[obj] = obj
+    end
+
+    for k, obj in pairs(z) do
+        destroyObject(obj)
+    end
+    destroyList = {}
+end
+
+function getCrystals()
+    local setupBag_DummyCrystals = getObjectsWithTag('setupBag_DummyCrystals')[1] --2.55 2.01
+    local bag = setupBag_DummyCrystals.takeObject({}); table.insert(destroyList, bag)
+    bag.setLock(true); enableCollider(bag, false)
+
+    local offset={z=Vector(0,0.54,0)} --{19.37, 2.01, -73.66}
+            offset.Crystal_White=self.getPosition() + Vector(6.58,0,10.93) + offset.z -- {25.95, 2.01, -62.73}
+            offset.Crystal_Blue=self.getPosition() + Vector(6.45,0,9.77) + offset.z -- {25.82, 2.01, -63.89}
+            offset.Crystal_Green=self.getPosition() + Vector(8.2,0,9.45) + offset.z -- {27.57, 2.01, -64.21}
+            offset.Crystal_Red=self.getPosition() + Vector(8.32,0,11.03) + offset.z -- {27.69, 2.01, -62.63}
+            offset.Crystal_Gold=self.getPosition() + Vector(9.84,0,9.54) + offset.z -- {29.21, 2.01, -64.12}
+            offset.Crystal_Black=self.getPosition() + Vector(9.83,0,11.17) + offset.z -- {29.20, 2.01, -62.49}
+
+
+
+    for k, v in pairs(bag.getObjects()) do
+        local obj = bag.takeObject({})
+        obj.setLock(true)
+        obj.setPosition(self.getPosition() + Vector(0,3,0))
+        for tag, pos in pairs(offset) do
+            if obj.hasTag(tag) then
+                obj.setPositionSmooth(pos)
+                break
+            end
+        end
+    end
+
+end
+
+function fetchObjects(dummyCard)
+    self.setLock(true)
+    self.interactable = false
+    self.clearButtons()
+    b=2
+    makeButtons()
+    updateSave()
+
+    local name = dummyCard.getName()
+    local setupBags = getObjectsWithTag('setUpBag_PlayerBoard_Knight')
+    local setupBag = false
+    for k,v in pairs(setupBags) do
+        if string.find(string.lower(v.getName()), string.lower(name), 1, false) then
+            setupBag = v
+        end
+    end
+
+    local bag = setupBag.takeObject({}); table.insert(destroyList, bag)
+    bag.setLock(true); enableCollider(bag, false)
+
+    local skillDex = findSkillBox(bag).index
+    local box = bag.takeObject({index=skillDex})
+    box.setLock(true)
+    box.shuffle()
+
+    Wait.frames(function()
+        local posAbove = self.getPosition()
+        box.setPosition(posAbove+Vector(0,3,0))
+        box.setScale(Vector(1.77, 1.83, 1.87))
+        box.setRotation(Vector(0,180,0))
+        box.setPositionSmooth(posAbove+Vector(-8.19, 0.26, 10.16))
+        box.shuffle()
+
+        local deckDex = findDeck(bag)
+        local deck = bag.takeObject({index=deckDex})
+        deck.setPosition(self.getPosition()+Vector(6.57,2,-7.5))
+        deck.setScale(Vector(2.32, 1.00, 2.32))
+        deck.setRotation(Vector(0,180,180))
+        deck.shuffle()
+        Wait.frames(function()
+            deck.shuffle()
+            Wait.frames(function() deck.shuffle() end, 30)
+        end, 30)
+
+        Wait.condition(function() allSkills(box, setupBags, name, posAbove) end, function() return isSmooth(box) end)
+    end, 3)
+
+
+end
+
+function allSkills(targetBox, setupBags, name, posAbove)
+    local sourceBags = {source = {}, skill = {}}
+    if allskills.on then
+        for k, sourcebag in pairs(setupBags) do
+            if not string.find(string.lower(sourcebag.getName()), string.lower(name), 1, false) then
+                if allskills.custom.on then
+                    local bag = sourcebag.takeObject({}); table.insert(destroyList, bag)
+                    bag.setLock(true); enableCollider(bag, false)
+                    table.insert(sourceBags.source, bag)
+                else
+                    for k, official in pairs(officialKnights) do
+                        if not string.find(string.lower(official), string.lower(name), 1, false) then
+                            if sourcebag.getName() == official then
+                                local bag = sourcebag.takeObject({}); table.insert(destroyList, bag)
+                                bag.setLock(true); enableCollider(bag, false)
+                                table.insert(sourceBags.source, bag)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        for k, bag in pairs(sourceBags.source) do
+            local dex = findSkillBox(bag).index
+            local skillBag = bag.takeObject({index=dex}); table.insert(destroyList, skillBag)
+            skillBag.setLock(true); enableCollider(skillBag, false)
+            table.insert(sourceBags.skill, skillBag)
+        end
+
+        local Y = Vector(0,3,0)
+        for k, bag in pairs(sourceBags.skill) do
+            Wait.frames(function()
+                local contents = bag.getObjects()
+                for k,v in pairs(contents) do
+                    local skill = bag.takeObject({})
+                    skill.setPosition(posAbove+Vector(0,3,0))
+                    skill.setRotation(Vector(0, 180, 0))
+                    skill.setPositionSmooth(targetBox.getPosition()+Y)
+                    Y = Y + Vector(0,0.5,0)
+                end
+            end, 3)
+        end
+
+    end-- if allskills.on then
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+function findDeck(bag)
+    local contents = bag.getData().ContainedObjects
+    local deckDex = false
+    for k, obj in pairs(contents) do
+        if obj.Name == "Deck" then
+            return k-1
+        end
+    end
+    return false
+end
+
+function findSkillBox(bag)
+    local contents = bag.getObjects()
+    local skillBag = {}
+    for k, obj in pairs(contents) do
+        for _, tag in pairs(obj.tags) do
+            if tag == 'PlayerSkill_Token' then
+                skillBag[obj] = true
+            end
+        end
+    end
+
+    for obj,v in pairs(skillBag) do
+        for _, tag in pairs(obj.tags) do
+            if tag == 'Compeditive_SkillToken' or tag == 'CoOp_SkillToken' then
+                skillBag[obj] = false
+            end
+        end
+    end
+
+    for obj,v in pairs(skillBag) do
+        if v then
+            skillBag = obj
+        end
+    end
+    return skillBag
+end
+
+function enableCollider(obj, action) -- fasle or true
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", action)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", action)
+    end
+end
+
+function f_setSkills(obj, playerCol, alt_click)
+    if not alt_click then
+        if allskills.on then --allskills = {on=false, color='Red', textcolor='White'}
+            allskills.on = false
+            allskills.color = 'Red'
+            allskills.textcolor = 'White'
+        else
+            allskills.on = true
+            allskills.color = 'Green'
+            allskills.textcolor = 'White'
+        end
+    end
+    self.clearButtons()
+    makeButtons()
+end
+
+function f_setCustom(obj, playerCol, alt_click)
+    if not alt_click then
+        if allskills.custom.on then --allskills = {on=false, color='Red', textcolor='White'}
+            allskills.custom.on = false
+            allskills.custom.color = 'Red'
+            allskills.custom.textcolor = 'White'
+        else
+            allskills.custom.on = true
+            allskills.custom.color = 'Green'
+            allskills.custom.textcolor = 'White'
+        end
+    end
+    self.clearButtons()
+    makeButtons()
+end
+
+function castZone(switch)
+    switch = switch or false
+    local data = {direction={0,1,0}, type=3, max_distance=0, debug=ShowDebug}
+
+    if switch == 'chooseKnight' then
+        data.offset = Vector(0, 0, 5)
+        data.size = Vector(10,2,10)
+        data.origin = self.getPosition() + data.offset
+        return cast(switch, data)
+
+    elseif switch == 'clearBoard' then
+        data.offset = Vector(0, 1.04, 0)
+        data.size = Vector(21.4,2,23.5) --21.4
+        data.origin = self.getPosition() + data.offset
+        return cast(switch, data)
+
+    elseif switch == 'draw' then
+        data.offset = Vector(6.5, 0, -7.4)
+        data.size = Vector(2,2,2)
+        data.origin = self.getPosition() + data.offset
+        return cast(switch, data)
+    end
+
+end
+
+function cast(switch, data)
+    local zone = Physics.cast(data)
+
+    if switch == 'chooseKnight' then
+        for k, v in pairs(zone) do
+            local obj = v.hit_object
+            if obj.type == 'Deck' or obj.type == 'Card' then
+                return obj
+            end
+        end
+
+    elseif switch == 'clearBoard' then
+        local z = {}
+        for k, v in pairs(zone) do
+            local obj = v.hit_object
+            if not obj.hasTag('PlayerBoard_Dummy') then
+                table.insert(z, obj)
+            end
+        end
+        return z
+
+    elseif switch == 'draw' then
+        for k, v in pairs(zone) do
+            local obj = v.hit_object
+            if obj.type == 'Deck' or obj.type == 'Card' then
+                return obj
+            end
+        end
+    end-- End Cast Switch
+
+end
+
+function f_blank()end
+function makeButtons(set)
+    local buttons = {}
+
+ -- DEFAULT START BUTTONS
+    if set == nil then
+        local button = {
+                click_function = button1Data[b].click_function,
+                function_owner = self,
+                label = button1Data[b].label,
+                position = {0, 0.1, 1},
+                rotation = {0, 0, 0},
+                width = button1Data[b].width,
+                height = button1Data[b].height, --350,
+                font_size = 200,
+                scale = {0.2,0.2,0.2}}
+        table.insert(buttons, button)
+
+        button = {
+                click_function = button2Data[b].click_function,
+                function_owner = self,
+                label = button2Data[b].label,
+                position = {0, 0.1, 1.16},
+                rotation = {0, 0, 0},
+                width = button2Data[b].width,
+                height = button2Data[b].height,-- 350,
+                font_size = 200,
+                scale = {0.2,0.2,0.2}}
+        table.insert(buttons, button)
+
+        if b==1 then
+            button = {
+                    click_function = 'f_setSkills',
+                    function_owner = self,
+                    label = 'use\nAll Skills',
+                    position = {-0.69, 0.2, -0.86},
+                    rotation = {0, 0, 0},
+                    width = 1150,
+                    height = 550,
+                    font_size = 200,
+                    font_color=allskills.textcolor,
+                    color=allskills.color,
+                    scale = {0.18,0.18,0.18}}
+            table.insert(buttons, button)
+            if allskills.on then
+                button = {
+                    click_function = 'f_setCustom',
+                    function_owner = self,
+                    label = 'include\nCustom',
+                    position = {-0.69, 0.2, -0.65},
+                    rotation = {0, 0, 0},
+                    width = 1150,
+                    height = 550,
+                    font_size = 200,
+                    font_color=allskills.custom.textcolor,
+                    color=allskills.custom.color,
+                    scale = {0.14,0.14,0.14}}
+                    table.insert(buttons, button)
+            end
+        end
+    end
+ -- Create Buttons
+    for _, button in ipairs(buttons) do
+        self.createButton(button)
+    end
 end
