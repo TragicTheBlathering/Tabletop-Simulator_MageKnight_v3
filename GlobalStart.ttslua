@@ -33,7 +33,7 @@ end
 function menuControl()
     uiFunc.closeSplash()
     if showSettingsMenu then
-        --uiFunc.openSetupMenu()
+        uiFunc.openSetupMenu()
     end
 end
 

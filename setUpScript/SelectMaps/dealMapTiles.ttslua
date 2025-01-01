@@ -1,0 +1,259 @@
+local dealMapTiles = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+local bags = {pool={}, shuffler={}}
+local wedge = true
+--- Called Function to start Script ----
+    function dealMapTiles.mapPool(count, forceSetting, startTile)
+        bags = setVariables(count, forceSetting)
+        for k, o in pairs(bags.pool) do
+            o.shuffle()
+            Wait.frames(function()
+                o.shuffle()
+                Wait.frames(function()
+                    o.shuffle()
+                end, 1)
+            end, 1)
+        end
+        --print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        --print(startTile.wedge)
+        wedge = startTile.wedge
+        --print(wedge)
+        Wait.frames(function() proccessDraw(count, forceSetting, bags) end, 5)
+    end
+
+function proccessDraw(count, forceSetting, bags)--{Blue=false, Green=false, Red=false, White=false, Camp=false, Mines=false, Dungeons=false, Glades=false}
+    count = drawForced_Cities(count, forceSetting, bags)
+    Wait.frames(function()
+        for key,valid in pairs(forceSetting) do
+            if key == "Blue" or key == "Green" or key == "Red" or key == "White" or key == "Camp" then
+            else
+                if valid then
+                    if key == 'Dungeons' then
+                        count = drawForced_Site('ScenarioDungeonLords', 'Core', count, forceSetting, bags)
+                        count = drawForced_Site(key, 'Core', count, forceSetting, bags)
+                        count = drawForced_Site(key, 'Country', count, forceSetting, bags)
+                    else
+                        count = drawForced_Site(key, 'Country', count, forceSetting, bags)
+                        count = drawForced_Site(key, 'Core', count, forceSetting, bags)
+                    end
+                end
+            end
+        end
+    end, 3)
+
+    Wait.frames(function()
+        fetchRemaining('Country', count)
+        fetchRemaining('Core', count)
+        fetchRemaining('City', count)
+        Wait.frames(function() finalDraw() end, 10)
+    end, 3)
+end
+
+function finalDraw()
+    local gold = bags.shuffler.Core
+    local green = bags.shuffler.Country
+    local stack = bags.mapTileStack
+    gold.shuffle()
+    green.shuffle()
+    Wait.frames(function()
+        gold.shuffle()
+        green.shuffle()
+        Wait.frames(function()
+            gold.shuffle()
+            green.shuffle()
+            Wait.frames(function() buildStack(gold, green, stack) end, 5)
+        end, 1)
+    end, 1)
+end
+
+function buildStack(gold, green, stack)
+    local offset = Vector(0,0,0)
+    local pos = stack.getPosition()+Vector(0,5,0)
+
+    for k, v in pairs(gold.getObjects()) do
+        local tile = gold.takeObject({})
+        tile.setRotation(Vector(0, 180, 180))
+        tile.setPositionSmooth(pos+offset, false, false)
+        offset = offset + Vector(0,1,0)
+    end
+
+    for k, v in pairs(green.getObjects()) do
+        local tile = green.takeObject({})
+        tile.setRotation(Vector(0, 180, 180))
+        tile.setPositionSmooth(pos+offset, false, false)
+        offset = offset + Vector(0,1,0)
+    end
+
+    Wait.frames(function() cleanUp() end, 60)
+end
+
+function cleanUp()
+    print(wedge)
+    local startTile = {}
+    startTile.wedge = getObjectsWithTag('maptile_Wedge')[1]
+    startTile.open = getObjectsWithTag('maptile_Open')[1]
+    if wedge then
+        destroyObject(startTile.open)
+    else
+        destroyObject(startTile.wedge)
+    end
+
+    Wait.frames(function() self.destruct() end, 3)
+end
+
+function setReDex(bag)
+    local z = {}
+    -- Populate the table `z` with the indices
+    for _, obj in pairs(bag.getObjects()) do
+        table.insert(z, obj.index)
+    end
+    -- Sort the table `z` in descending order
+    table.sort(z, function(a, b) return a > b end)
+    return z
+end
+
+function drawForced_Cities(count, forceSetting, bags)
+    local newCount = count
+    local cityList = {}
+    --dprint('newCount', newCount)
+
+    local contents = bags.pool.City.getObjects()
+    local reverseIndex = setReDex(bags.pool.City)
+    for k, rdex in ipairs(reverseIndex) do
+        local obj = contents[rdex+1]
+        for key, isvalid in pairs(forceSetting) do
+            if string.match(obj.description, key) and isvalid then
+                local tile = bags.pool.City.takeObject({rotation=Vector(0, 180, 180), index=rdex})
+                tile.setRotation(Vector(0, 180, 180))
+                bags.shuffler.Core.putObject(tile)
+                newCount.City = newCount.City - 1
+            end
+        end
+
+    end
+
+    if forceSetting.Camp then
+        local tile = bags.pool.Camp.takeObject({rotation=Vector(0, 180, 180)})
+        tile.setRotation(Vector(0, 180, 180))
+        bags.shuffler.Core.putObject(tile)
+        newCount.City = newCount.City - 1
+    end
+
+    return newCount
+end
+
+function fetchRemaining(type, count)
+    if count[type] > 0 then
+        for i = 1, count[type], 1 do
+            local tile = bags.pool[type].takeObject({rotation=Vector(0, 180, 180)})
+            tile.setRotation(Vector(0, 180, 180))
+            bags.shuffler[type].putObject(tile)
+        end
+    end
+
+end
+
+function drawForced_Site(fetchType, pool, count, forceSetting, bags)
+    --dprint('forceSetting', forceSetting)
+    local newCount = count
+    if forceSetting[fetchType] then
+        local poolType = pool
+        if pool == 'Core' and fetchType == "Dungeons" then fetchType = "Tombs" end
+
+        local reverseBagIndexes = setReverseIndex(bags)
+        descType = string.lower(removeTrailingS(fetchType))
+
+        local contents = bags.pool[poolType].getObjects()
+        local breakOut = false
+        local offset = Vector(0,0,0)
+        for key, rdex in pairs(reverseBagIndexes[poolType]) do
+            local desc = string.lower(contents[rdex+1].description)
+            if string.find(desc, descType, 1, true) then
+                --print(descType)
+                if newCount[poolType] <= 0 then
+                    newCount[poolType] = 0
+                    breakOut = true
+                    break
+                else
+                    newCount[poolType] = newCount[poolType] - 1
+                    offset = offset + Vector(0,1,0)
+                    local posAbove = nil
+                    if poolType == 'Core' then
+                        posAbove = bags.pool[poolType].getPosition() + Vector(3.5,2,0) + offset
+
+                    elseif poolType == 'Country' then
+                        posAbove = bags.pool[poolType].getPosition() + Vector(-3.5,2,0) + offset
+
+                    elseif poolType == 'City' then
+                        posAbove = bags.pool[poolType].getPosition() + Vector(3.5,2,0) + offset
+
+                    elseif poolType == 'Camp' then
+                        posAbove = bags.pool[poolType].getPosition() + Vector(3.5,2,0) + offset
+                    end
+
+                    local tile = bags.pool[poolType].takeObject({position=Vector(-44.35, 3, -35.92), rotation=Vector(0, 180, 180), index=rdex})
+                    tile.setRotation(Vector(0, 180, 180))
+                    bags.shuffler[pool].putObject(tile)
+                    --[[
+                    tile.setPositionSmooth(posAbove)
+                    Wait.condition(function()
+                    end, function() return isSmooth(tile) end)
+                    ]]
+                end
+            end
+            if breakOut then break end
+        end
+    end
+    return newCount
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+function removeTrailingS(str)
+    -- Check if the last character is "s" (case-insensitive)
+    if string.lower(string.sub(str, -1)) == "s" then
+        -- Remove the last character
+        return string.sub(str, 1, -2)
+    end
+    return str
+end
+
+function setReverseIndex(bags)
+    local z = {}
+    for type, bag in pairs(bags.pool) do
+        z[type] = {}
+        for q, w in pairs(bag.getObjects()) do
+            table.insert(z[type], w.index)
+        end
+    end
+
+    for k, v in pairs(z) do
+        table.sort(v, function(a,b) return a>b end)
+    end
+    return z
+end
+
+function setVariables()
+    local z = {pool={}, shuffler={}}
+    z.pool.Country = getObjectsWithTag('mapBag_Green')[1]
+    z.pool.Core = getObjectsWithTag('mapBag_Gold')[1]
+    z.pool.City = getObjectsWithTag('mapBag_City')[1]
+    z.pool.Camp = getObjectsWithTag('mapBag_Camp')[1]
+
+    z.shuffler.Country = getObjectsWithTag('mapShuffle_Green')[1]
+    z.shuffler.Core = getObjectsWithTag('mapShuffle_Gold')[1]
+    z.shuffler.City = z.shuffler.Core
+    z.shuffler.Camp = z.shuffler.Core
+
+    z.mapTileStack = getObjectsWithTag('eventID_maptile_DrawBag')[1]
+    return z
+end
+
+return dealMapTiles

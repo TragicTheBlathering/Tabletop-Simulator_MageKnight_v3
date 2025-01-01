@@ -1,0 +1,265 @@
+local ShowDebug = false
+local dprint = require("/_libs/debug/dPrint").dprint
+local fetch = require("/MageKnightV3/setUpScript/SelectMaps/dealMapTiles")
+
+local c = {}
+local count = {Core=0, City=0, Country=0}
+local limits = {Core=0, City=0, Country=0}
+local names = {Core="Core (Gold) : ", City="Cities : ", Country='Countryside (Green) : '}
+local buttonCol = {settings={off="#cccccc|#dddddd|#444444|#00000000", on="#298115|#33a11a|#2a4c0e|#00000000"},
+                   redButton={off="#990000|#ad0000|#6b0000|#00000000", on="#298115|#33a11a|#2a4c0e|#00000000", textColor="white"},
+                   textColor={on='White', off='Black'}
+                  }
+
+local forceSetting = {Blue=false, Green=false, Red=false, White=false, Camp=false, Mines=false, Dungeons=false, Glades=false}
+local startTile = {name='Wedge Start', wedge=true}
+local cityCount = 0
+
+function onload()
+    if ShowDebug then
+        count = {Core=3, City=2, Country=10} -- DEBUG_DEFAULTS
+    end
+    local bag = getObjectsWithTag('mapBag_Green')[1]
+    limits.Country = bag.getQuantity()
+    bag = getObjectsWithTag('mapBag_Gold')[1]
+    limits.Core = bag.getQuantity()
+    bag = getObjectsWithTag('mapBag_City')[1]
+    limits.City = bag.getQuantity()
+end
+
+function setStartTile()
+    if startTile.wedge then
+        startTile.name = "Open Start"
+        self.UI.setAttributes('startTile', {text=startTile.name, colors=buttonCol.redButton.on, textColor="White"})
+        startTile.wedge = false
+    else
+        startTile.name = "Wedge Start"
+        self.UI.setAttributes('startTile', {text=startTile.name, colors=buttonCol.redButton.on, textColor="White"})
+        startTile.wedge = true
+    end
+end
+
+function runSetup(player, leftClick, id)
+    if tonumber(leftClick) == -1 then leftClick = true else leftClick = false end
+    if leftClick and player.admin then
+        infoPannel_Close()
+        fetch.mapPool(count, forceSetting, startTile)
+    end
+end
+
+function runSetupCheck(player, leftClick, id)
+    if tonumber(leftClick) == -1 then leftClick = true else leftClick = false end
+    if leftClick and player.admin then
+        infoPannel_Open() --run_Setup -- onCLick
+        self.UI.setAttributes('run_Setup', {text="Build MapTile Pool", onClick="runSetup", colors=buttonCol.redButton.on, textColor="White"})
+    end
+end
+
+function onMouseEnter(player, leftClick, id)
+    if player.admin then
+        infoPannel_Open()
+    end
+end
+
+function onMouseExit(player, leftClick, id)
+    if player.admin then
+        infoPannel_Close()
+        self.UI.setAttributes('run_Setup', {text="Confirm Settings", onClick="runSetupCheck", colors=buttonCol.redButton.off, textColor="White"})
+    end
+end
+
+function infoPannel_Open()
+    local text = settingsText()
+    --print(text)
+    self.UI.setValue("infoText",text)
+    self.UI.setAttribute('panel_InfoBlock', 'active', 'true')
+end
+
+function infoPannel_Close()
+    self.UI.setAttribute('panel_InfoBlock', 'active', 'false')
+end
+
+function forceComponant(player, leftClick, id)
+    if tonumber(leftClick) == -1 then leftClick = true else leftClick = false end
+    if leftClick and player.admin then
+        local key = id:gsub("^[Ff][Oo][Rr][Cc][Ee]", "")
+        local newData = {textColor="White"}
+        local currentData = self.UI.getAttributes(id)
+        if currentData.colors == buttonCol.redButton.on then
+            forceSetting[key] = false
+
+            if key == 'Blue' or key == 'Green' or key == 'Red' or key == 'White' or key == 'Camp' then
+                setCityCount('force-')
+                self.UI.setAttribute("textCity", 'text', names.City..tostring(count.City))
+            end
+
+            newData.colors = buttonCol.redButton.off
+            self.UI.setAttributes(id, newData)
+        else
+            forceSetting[key] = true
+
+            if key == 'Blue' or key == 'Green' or key == 'Red' or key == 'White' or key == 'Camp' then
+                setCityCount('force+')
+                self.UI.setAttribute("textCity", 'text', names.City..tostring(count.City))
+            end
+
+            newData.colors = buttonCol.redButton.on
+            self.UI.setAttributes(id, newData)
+        end
+    end
+end
+
+function setCityCount(plus) -- cityCount
+    local countSetting = 0
+    -- Calculate countSetting based on forceSetting table
+    if forceSetting.Blue then countSetting = countSetting + 1 end
+    if forceSetting.Green then countSetting = countSetting + 1 end
+    if forceSetting.Red then countSetting = countSetting + 1 end
+    if forceSetting.White then countSetting = countSetting + 1 end
+    if forceSetting.Camp then countSetting = countSetting + 1 end
+
+    -- Increment or decrement cityCount within bounds
+    if plus == '+' then
+        cityCount = cityCount + 1
+        if forceSetting.Camp then
+            if cityCount > 4 then cityCount = 5 end
+        else
+            if cityCount > 4 then cityCount = 4 end
+        end
+
+    elseif plus == '-' then
+        cityCount = cityCount - 1
+        if cityCount < 0 then cityCount = 0 end
+
+    elseif plus == 'force-' then
+        --print('!!!!')
+        cityCount = cityCount - 1; if cityCount < 0 then cityCount = 0 end
+    end
+
+    -- Calculate count.city based on cityCount and countSetting
+    if countSetting > cityCount then
+        count.City = countSetting
+        cityCount = countSetting
+    else
+        count.City = cityCount
+    end
+
+    -- Clamp count.city to a maximum of 5
+    if count.City > 5 then count.City = 5 end
+end
+
+function plusValue(player, leftClick, id)
+    if tonumber(leftClick) == -1 then leftClick = true else leftClick = false end
+    if leftClick and player.admin then
+        local tag = id:gsub("[%+%-]", "")
+        if tag == 'City' then
+            setCityCount('+')
+        else
+            count[tag] = count[tag] + 1; if count[tag] > limits[tag] then  count[tag] = limits[tag] end
+        end
+        self.UI.setAttribute("text"..tag, 'text', names[tag]..tostring(count[tag]))
+    end
+end
+
+function minusValue(player, leftClick, id)
+    if tonumber(leftClick) == -1 then leftClick = true else leftClick = false end
+    if leftClick and player.admin then
+        local tag = id:gsub("[%+%-]", "")
+        if tag == 'City' then
+            setCityCount('-')
+        else
+            count[tag] = count[tag] - 1; if count[tag] < 0 then  count[tag] = 0 end
+        end
+        self.UI.setAttribute("text"..tag, 'text', names[tag]..tostring(count[tag]))
+    end
+end
+
+function settingsText()
+    --forceSetting = {Blue=false, Green=false, Red=false, White=false, Camp=false, Mines=false, Dungeons=false, Glades==false}
+    local col = {}
+          col.c      = [[</textcolor>]]
+          col.teal   = [[<textcolor color="#00f3ff">]]
+          col.green  = [[<textcolor color="#3eff00">]]
+          col.pink   = [[<textcolor color="#ff8dfa">]]
+          col.yellow = [[<textcolor color="#ecff00">]]
+          col.gold   = [[<textcolor color="#ffd700">]]
+          col.orange = [[<textcolor color="#fd9d44">]]
+          col.red    = [[<textcolor color="#ff0000">]]
+          col.blue   = [[<textcolor color="#00bfff">]]
+
+    local text = {}
+    --text.info    = "--== Currently you have chosen these settings ==--\n"
+    text.country = "Map Tiles :"..col.green.." Country : "..count.Country..col.c
+    text.core    = col.gold.."Core : "..count.Core..col.c
+    text.cities  = col.teal.."City : "..count.City..col.c.."\n"
+    text.forced    = "--== Forced Settings ==--\n\nIf any force buttons are green, the script prioritises adding those components to the pool first.\n\n"..col.yellow.."Example:"..col.c.." In the Dungeon Lords Scenario, you must include all dungeon map tiles and the Blue City tile before adding any other map tiles. "..col.teal.."To do this, turn on the Dungeons and the Blue City"..col.c.." as "..col.pink.."this will force those componants to be added to the pool before any others"..col.c..".\n"
+    --text.mines = setFoceCol(forceSetting.Mines, col).."Mines"..col.c
+    text.mines = "Tiles : "..setFoceCol('Mines', col)
+    text.dungeons = setFoceCol('Dungeons', col)
+    text.glades = setFoceCol('Glades', col)
+    text.blue = "Cities : "..setFoceCol('Blue', col)
+    text.green = setFoceCol('Green', col)
+    text.red = setFoceCol('Red', col)
+    text.white = setFoceCol('White', col)
+    text.volk = setFoceCol('Camp', col)
+    text.startTile = "\nThe "..col.yellow..string.upper(startTile.name).." TILE"..col.c.." has been Selected"
+
+    local text = createTextTable(text)
+    text = tableToString(text)
+
+    return text
+end
+
+function setFoceCol(key, col)
+    local txt = key
+    if forceSetting[key] then
+        if key == 'Blue' then
+            return col.blue.."BLUE"..col.c
+        elseif key == 'Green' then
+            return col.green.."GREEN"..col.c
+        elseif key == 'Red' then
+            return col.red.."RED"..col.c
+        elseif key == 'White' then
+            return "WHITE"
+        elseif key == 'Camp' then
+            return "Add : "..col.green.."VOLKARE'S CAMP"..col.c
+        else
+            return col.green..string.upper(txt)..col.c
+        end
+    else
+        if key == 'Camp' then
+            return "Don't add : "..col.orange.."volkare's camp"..col.c
+        else
+            return col.orange..string.lower(txt)..col.c
+        end
+    end
+
+    return col.orange..string.lower(txt)..col.c
+end
+
+function createTextTable(text)
+    local tiles = text.country.." ,  "..text.core.." ,  "..text.cities
+    local sites = text.mines.." : "..text.dungeons.." : "..text.glades
+    local cities = text.blue.." : "..text.green.." : "..text.red.." : "..text.white
+    local t = {}
+        table.insert(t, tiles)
+        table.insert(t, text.forced)
+        table.insert(t, sites)
+        table.insert(t, cities)
+        table.insert(t, text.volk)
+        table.insert(t, text.startTile)
+    return t
+end
+
+function tableToString(tbl)
+    local result = table.concat(tbl, "\n")
+    return result
+end
+
+function tableSize(t)
+    local count = 0
+    if t ~= nil then
+        for key,value in pairs(t) do count = count + 1 end
+    end
+    return count
+end

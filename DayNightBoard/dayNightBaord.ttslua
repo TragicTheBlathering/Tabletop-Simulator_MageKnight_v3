@@ -1,41 +1,73 @@
 local dayNightBaord = {}
 local dprint = require("/_libs/debug/dPrint").dprint
+local tileTags = {'maptile_Start', 'maptile_CountrySide', 'maptile_Core', 'PlayerBoard', 'PlayerBoard_Dummy'}
+local light = {day={amb=1.29999995231628, light=0.540000021457672, reflect=1},
+               night={amb=0.49600021696091, light=0.316000998020172, reflect=0.144000262022018},
+               obj={day={r=255, g=255, b=255}, night={r=125, g=125, b=125}}
+            }
+local board = {day='https://steamusercontent-a.akamaihd.net/ugc/784120584200164450/881F973AE775243D24C43ADBD25FC396DF13D5FB/', night='https://steamusercontent-a.akamaihd.net/ugc/775098948702652459/4612C8FB6565E6BD05CAE184D83E2949431604AA/'}
 
 function onLoad()
     makeButtons()
 end
 
 function f_DayNight()
-    local light = {day={amb=1.29999995231628, light=0.540000021457672, reflect=1},
-                   night={amb=0.6600000026226044, light=0, reflect=0.144000262022018},
-                   obj={day={r=255, g=255, b=255}, night={r=166, g=165, b=165}}
-               }
-
-    local mapTiles = getObjectsWithAnyTags({'maptile_Start', 'maptile_CountrySide', 'maptile_Core'})
-
-    --print(Lighting.light_intensity)
     --print(Lighting.ambient_intensity)
-    --print(Lighting.reflection_intensity)
+    --print(Lighting.light_intensity)
 
-    if Lighting.light_intensity == 0 then -- set DAY
-        Lighting.ambient_intensity = light.day.amb
-        Lighting.light_intensity = light.day.light
-        Lighting.reflection_intensity = light.day.reflect
-        setObjectTint(mapTiles, light.obj.day)
-    else -- set NIGHT
+    if Lighting.ambient_intensity > 1.2 then -- set NIGHT
+        print('Set Night')
         Lighting.ambient_intensity = light.night.amb
         Lighting.light_intensity = light.night.light
         Lighting.reflection_intensity = light.night.reflect
-        setObjectTint(mapTiles, light.obj.night)
+        self.setCustomObject({image=board.night})
+        setObjectTint(light.obj.night)
+    else
+        print('Set DAY')
+        Lighting.ambient_intensity = light.day.amb
+        Lighting.light_intensity = light.day.light
+        Lighting.reflection_intensity = light.day.reflect
+        self.setCustomObject({image=board.day})
+        setObjectTint(light.obj.day)
     end
 
     Lighting.apply()
+    local newBoard = self.reload()
+    newBoard.interactable = false
+
+    --[[
+    if Lighting.ambient_intensity == 0 then -- set DAY
+    else -- set NIGHT
+    end
+    ]]
 end
 
-function setObjectTint(mapTiles, light)
-    for k, tile in pairs(mapTiles) do
-        if not tile.hasTag('event_virtualTokenStack') then
+function setObjectTint(light, obj)
+    if obj then
+        obj.setColorTint(Color.new(convertRGB(light)))
+    else
+        local mapTiles = getObjectsWithAnyTags(tileTags)
+        for k, tile in pairs(mapTiles) do
+            if not tile.hasTag('event_virtualTokenStack') then
+                tile.setColorTint(Color.new(convertRGB(light)) )
+            end
+        end
+        local drawBags = getObjectsWithAnyTags({'eventID_maptile_DrawBag', 'mapShuffle_Green', 'mapShuffle_Gold','mapBag_Green','mapBag_Gold','mapBag_City','mapBag_Camp'})
+        for k, tile in pairs(drawBags) do
             tile.setColorTint(Color.new(convertRGB(light)) )
+        end
+    end
+end
+
+function onObjectSpawn(obj)
+    for k, tag in ipairs(tileTags)  do
+        if obj.hasTag(tag) then
+            if Lighting.ambient_intensity == 0 then
+                setObjectTint(light.obj.night, obj)
+            else
+                setObjectTint(light.obj.day, obj)
+            end
+            break
         end
     end
 end
@@ -46,6 +78,12 @@ end
 
 function makeButtons(night)
     local buttons = {}
+    local buttonData = {name='Day', color='White', font_color="Black"}
+    if Lighting.ambient_intensity == 0 then
+        buttonData.name = 'Night'
+        buttonData.font_color = {147/255,147/255,147/255}
+        buttonData.color = {29/255,41/255,98/255}
+    end
 
     if set == nil then
         button = {
@@ -57,11 +95,10 @@ function makeButtons(night)
             height = 350,
             font_size = 200,
             scale = {0.8,0.8,0.8},
-            label = 'Day'
+            font_color=buttonData.font_color,
+            color = buttonData.color,
+            label = buttonData.name
         }
-        if night then
-            button.label = 'Night'
-        end
         table.insert(buttons, button)
     end
  -- Create Buttons

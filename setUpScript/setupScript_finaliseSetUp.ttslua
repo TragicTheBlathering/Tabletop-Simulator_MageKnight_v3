@@ -4,9 +4,13 @@ local dprint = require("/_libs/debug/dPrint").dprint
 function setupScript_finaliseSetUp.setup()
     --dprint('setupScript_drawRoll.finaliseSetUp')
     local darwCards = getObjectsWithTag('button_setupDraw')
-
     for k, offer in pairs(darwCards) do
         offer.call('callTrigger')
+    end
+
+    local playerDraw =  getObjectsWithTag('tool_DrawPlayerCards')
+    for k, player in pairs(playerDraw) do
+        player.call('b_Draw_HandSize')
     end
 
     local dice = getObjectsWithAllTags({'Dice_ManaDie', 'trash_ManaDie'})

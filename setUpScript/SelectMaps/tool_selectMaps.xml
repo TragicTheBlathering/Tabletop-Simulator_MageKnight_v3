@@ -1,0 +1,94 @@
+<!--
+    <Button class="default_windowControl" width="25" height="25" offsetXY="0 0" colors="#990000|#ad0000|#6b0000|#00000000" textColor="#FFFFFF" onCLick="7656e0/menuAction" />
+
+    <Button class="settingSolo" width="100" height="26" text="placeHolder" textColor="White" colors="#298115|#33a11a|#2a4c0e|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2" onClick="7656e0/menuAction" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" />
+
+    <Button class="settingButton_ON"  width="334" height="25" text="placeHolder" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" textColor="White" colors="#298115|#33a11a|#2a4c0e|#00000000" fontStyle="Bold" onClick="7656e0/menuAction" outLineColor="#111111" outLineSize="2 2 2 2" />
+    <Button class="settingButton_OFF" width="334" height="25" text="placeHolder" onMouseEnter="7656e0/onMouseEnter" onMouseExit="7656e0/onMouseExit" textColor="Black" colors="#cccccc|#dddddd|#444444|#00000000" fontStyle="Bold" onClick="7656e0/menuAction" outLineColor="#111111" outLineSize="2 2 2 2" />
+
+
+offsetXY="-8 -205"
+onMouseEnter="onMouseEnter" onMouseExit="onMouseExit"
+-->
+
+<Defaults>
+    <Panel class="mapSelection" width="434" height="45" color="#dd9b30" rectAlignment="UpperCenter" allowDragging="false" active="true" />
+
+    <Text class="Title" fontSize="30" alignment="Center" font="Fonts/MKCardTittle" color="#FFFFFF" onMouseExit="onMouseExit"/> <!-- fontStyle="Bold" -->
+    <Text class="text_MapTileCount" alignment="Center" fontSize="25" font="Fonts/MKCardText" color="#000000" />
+
+    <Button class="run_fetchMapTiles" fontSize="30" width="434" height="76" text="placeHolder" textColor="White" colors="#990000|#ad0000|#6b0000|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2"/>
+    <Button class="=-" fontSize="30" width="40" height="40" textColor="Black" colors="#CCCCCC|#e7e7e7|#444444|#000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2"/>
+    <Button class="forceToggle" fontSize="15" width="105" height="25" text="Monastery" textColor="White" colors="#990000|#ad0000|#6b0000|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2"/>
+    <Button class="startTile" fontSize="15" width="105" height="25" text="Monastery" textColor="White" colors="#298115|#33a11a|#2a4c0e|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2"/>
+</Defaults>
+
+
+<Panel id="panel_mapSelect" width="456" height="436" color="#000000" alignment="MiddleCenter" active="true" raycastTarget = "true" position="0 -290 -20">
+    <!-- Title -->
+    <Panel offsetXY="-3 -3" width="450" height="40" color="#757575" rectAlignment="UpperRight" allowDragging="false" active="true">
+        <Text id="titleMain" class="Title" text="Select Map Tiles" />
+        <Button id="startTile" class="startTile" text="Wedge Start" offsetXY="-168 0" onClick="setStartTile" />
+    </Panel>
+    <!-- BROWN OUTLINE : Area Under Title -->
+    <Panel offsetXY="-3 -46" width="450" height="387" color="#926a41" rectAlignment="UpperRight" allowDragging="false" active="true" >
+    <!-- GREY BOX : Area Under Title -->
+        <Panel width="444" height="381" color="#4b4b4b" rectAlignment="MiddleCenter" allowDragging="false" active="true" >
+        <!-- Get Countryside -->
+            <Panel class="mapSelection" offsetXY="0 -5" >
+                <Text id="textCountry" class="text_MapTileCount" text="Countryside (Green) : 0" />
+                <Button id="+Country" class="=-" text="+" offsetXY="180 0" onClick="plusValue"/>
+                <Button id="-Country" class="=-" text="-" offsetXY="-180 0" onClick="minusValue"/>
+            </Panel>
+        <!-- Get Cities -->
+            <Panel class="mapSelection" offsetXY="0 -55" >
+                <Text id="textCore" class="text_MapTileCount" text="Core (Gold) : 0" />
+                <Button id="+Core" class="=-" text="+" offsetXY="180 0" onClick="plusValue"/>
+                <Button id="-Core" class="=-" text="-" offsetXY="-180 0" onClick="minusValue"/>
+            </Panel>
+        <!-- Get Cities -->
+            <Panel class="mapSelection" offsetXY="0 -105" >
+                <Text id="textCity" class="text_MapTileCount" text="Cities : 0" />
+                <Button id="+City" class="=-" text="+" offsetXY="180 0" onClick="plusValue"/>
+                <Button id="-City" class="=-" text="-" offsetXY="-180 0" onClick="minusValue"/>
+            </Panel>
+        <!-- Forced Block -->
+            <Panel class="mapSelection" offsetXY="0 -155" width="434" color="#000000" >
+                <Panel width="428" height="40" color="#757575" rectAlignment="MiddleCenter" allowDragging="false" active="true" >
+                    <Text id="titleMain" class="Title" text="Force" onMouseEnter="onMouseEnter"/>
+                </Panel>
+                <Panel offsetXY="0 -50" width="444" height="90" color="#666666" rectAlignment="UpperCenter" allowDragging="false" active="true" >
+                    <Button id="forceMines" class="forceToggle" text="Mines" offsetXY="-148 28" onClick="forceComponant" />
+                    <Button id="forceDungeons" class="forceToggle" text="Dungeons" offsetXY="0 28" onClick="forceComponant" />
+                    <Button id="forceGlades" class="forceToggle" text="Glades" offsetXY="148 28" onClick="forceComponant" />
+
+
+                    <Button id="forceBlue" class="forceToggle" text="Blue City" offsetXY="-165 0" onClick="forceComponant" />
+                    <Button id="forceGreen" class="forceToggle" text="Green City" offsetXY="-55 0" onClick="forceComponant" />
+                    <Button id="forceRed" class="forceToggle" text="Red City" offsetXY="55 0" onClick="forceComponant" />
+                    <Button id="forceWhite" class="forceToggle" text="White City" offsetXY="165 0" onClick="forceComponant" />
+
+                    <Button id="forceCamp" class="forceToggle" text="Volkare Camp as Random City" offsetXY="0 -28" width="250" onClick="forceComponant" />
+                </Panel>
+            </Panel>
+        <!-- Run Setup Button -->
+            <Button id="run_Setup" class="run_fetchMapTiles" text="Confirm Settings" offsetXY="0 -148" onClick="runSetupCheck" onMouseEnter="onMouseEnter" onMouseExit="onMouseExit"/>
+        </Panel>
+    </Panel>
+</Panel>
+
+<Panel id="panel_InfoBlock" width="456" height="436" color="#000000" alignment="MiddleCenter" active="false" raycastTarget = "true" position="-460 -290 -20">
+    <!-- Title -->
+    <Panel offsetXY="-3 -3" width="450" height="40" color="#757575" rectAlignment="UpperRight" allowDragging="false" active="true">
+        <Text id="panel_title" class="Title" text="Current Settings" />
+    </Panel>
+    <!-- BROWN OUTLINE : Area Under Title -->
+    <Panel id="outlineBrown" offsetXY="-3 -46" width="450" height="387" color="#926a41" rectAlignment="UpperRight" allowDragging="false" active="true" >
+    <!-- GREY BOX : Area Under Title -->
+            <Panel id="GreyBox" width="444" height="381" color="#4b4b4b" rectAlignment="MiddleCenter" allowDragging="false" active="true" >
+                <Panel id="infoTextBounds" width="400" height="337" color="#4b4b4b" rectAlignment="MiddleCenter" allowDragging="false" active="true" >
+                    <Text id="infoText" color="White" alignment="UpperLeft" resizeTextForBestFit="true"> New Text </Text>
+                </Panel>
+            </Panel>
+    </Panel>
+</Panel>

@@ -1,5 +1,5 @@
 local dprint = require("/_libs/debug/dPrint").dprint
-local ShowDebug = true -- This will also stop / enable object delete
+local ShowDebug = false -- This will also stop / enable object delete
 function onload()end
 
 function onCollisionEnter(collision_info)
