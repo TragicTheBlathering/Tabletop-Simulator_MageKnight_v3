@@ -23,8 +23,12 @@ local DiceInHand = {}
                 obj, rot, value, pos = objList.obj, objList.rot, objList.rotValue, droppedObject.getPosition()
                 if obj == droppedObject then
                     setDieRotation(droppedObject, rot)
-                    local slide = getObjectFromGUID('a16e5d')
-                    slide.call('slideOffer', justDroppedList)
+                    local source = getObjectFromGUID('466939')
+                    if isInsideBounds(source.getBounds(), droppedObject) then
+                        --print('INSIDE')
+                        local slide = getObjectFromGUID('a16e5d')
+                        slide.call('slideOffer', justDroppedList)
+                    end
                     break
                 end
             end
@@ -34,6 +38,37 @@ local DiceInHand = {}
                 heldList = {}
             end, 1)
         end
+    end
+
+    function isInsideBounds(boxBoundsData, obj)
+        --{-20.25, 2.29, -35.96}
+        --{11.45, 2.29, -48.71}
+        --print(boxBoundsData)
+        --print(obj)
+        -- Get the size and center of the box
+        local size = boxBoundsData.size
+        local center = boxBoundsData.center
+        --print(size)
+        --print(center)
+
+        -- Calculate the bounds of the box on the x and z axes
+        local halfSizeX = size.x / 2
+        local halfSizeZ = size.z / 2
+
+        local minX = center.x - halfSizeX
+        local maxX = center.x + halfSizeX
+        local minZ = center.z - halfSizeZ
+        local maxZ = center.z + halfSizeZ
+
+        -- Get the position of the object
+        local objPos = obj.getPosition()
+
+        -- Check if the object's position is inside the bounds (x and z only)
+        local isInsideX = objPos.x >= minX and objPos.x <= maxX
+        local isInsideZ = objPos.z >= minZ and objPos.z <= maxZ
+
+        -- Return true if inside both x and z bounds, false otherwise
+        return isInsideX and isInsideZ
     end
 
     function positionTest()

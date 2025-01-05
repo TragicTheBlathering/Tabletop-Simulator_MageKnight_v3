@@ -7,13 +7,28 @@ local trash_Tags = {
     discardObject='trash_discardobject', discardTarget='trash_discardtarget', specialCase='trash_specialcase', deleteme='trash_deleteme', manaDie='trash_manadie',
 } --trash_Tags.discardTarget
 
+--math.randomseed(os.time())
 --local tools = require("/MageKnightV3/TrashBags/trashCan_UniqueSettings")
+
+function onload()
+    local seed = generate_robust_seed() --os.time() + tonumber(tostring(os.clock()):reverse())-- + os.getenv("PROCESS_ID")
+    --print(seed)
+    math.randomseed(seed)
+end
+
+function generate_robust_seed()
+    local tbl = tostring({}):gsub("table: ", "")
+    local unique_id = tonumber(tbl, 16)
+
+    --print(tbl.." : "..tostring(unique_id).." : "..tostring(os.time()).." : "..tostring(os.clock()))
+
+    return (os.time() + tonumber(tostring(os.clock()):reverse())) / unique_id
+end
 
 --[[****************************************************************************
 ***** Function Called by Event to Start Trash Cascade **************************
 ********************************************************************************]]
-function callTrash(data)
-    --dprint('---- Clear : callTrash(data)')
+function callTrash(data)    --dprint('---- Clear : callTrash(data)')
     local TrashBag = data.trashBag
     local removedDeckList = nil
 

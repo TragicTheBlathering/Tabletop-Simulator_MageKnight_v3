@@ -60,7 +60,32 @@ function spitDice.returnDie(objInContainer, dex, dieCount, container)
     return dieCount
 end
 
+--[[ -- this code snip manually rotates the die after rolling
+allStopNotStarted = false
+Wait.condition(function()
+    for die, _ in pairs(rollingDie) do
+        die.setValue(math.random(1, 6))
+    end
+    Wait.frames(function()
+        local slide = getObjectFromGUID('a16e5d')
+        slide.call('slideOffer')
+        rollingDie = {}
+        allStopNotStarted = true
+    end, 50)
+end, function() return isAllDieStopped() end)
+]]
+
 function rollDice(die)
+    Wait.condition(function()
+        die.roll()
+        Wait.condition(function()
+            rollingDie[die] = false
+        end, function() return die.resting end)
+    end, function() return die.resting end)
+end
+
+--[[
+function zzzrollDice(die)
     Wait.condition(
         function() -- Executed after our condition is met
             die.roll()
@@ -89,6 +114,7 @@ function rollDice(die)
         end
     )
 end
+]]
 -------------------------------------------------------------
 -- Random Values use when Return Die ------------------------
 function randomRotation()

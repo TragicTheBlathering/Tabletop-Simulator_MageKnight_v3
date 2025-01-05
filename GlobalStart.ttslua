@@ -24,7 +24,7 @@ function onload(saved_data)
     end
 
   menuControl()
-  math.randomseed(os.time())
+  --math.randomseed(os.time())
   tool.onModLoad.MegaFreeze() -- You can also add GUIDs via {'guid1', 'guid2'....}
   tool.onModLoad.FixHandZones(8)
   tool.DiceEffect()
