@@ -211,7 +211,7 @@ function enableCollider(obj, enableCollider)
     if enableCollider == nil then enableCollider=true end
 
     if debug then
-        --print('Debug Enabled : enableCollider(obj, enableCollider)')
+        print('Debug Enabled : enableCollider(obj, enableCollider)')
     else
         if enableCollider then
             --print('enable')

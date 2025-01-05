@@ -138,6 +138,16 @@ function placeOnPlayerBoard(obj, prams, offsetData)
     offset = deepCopy(offsetData)
     if obj.hasTag('SkillCard_C') or obj.hasTag('SkillCard_D') then
         adjust2ndarySkillCardPrams(obj,prams,offset)
+    elseif obj.hasTag('scoreMarker_Rep') or obj.hasTag('scoreMarker_Fame') then
+        disableCollider(obj)
+        obj.setPositionSmooth(prams.pos+Vector(0,3,0), false, false)
+        obj.setRotation(prams.rot)
+        Wait.condition(function()
+            enableCollider(obj)
+            obj.interactable = true
+            obj.setLock(false)
+        end, function() return isSmooth(obj) end)
+
     else
         setSwitched(obj, 'clear')
 
@@ -145,8 +155,14 @@ function placeOnPlayerBoard(obj, prams, offsetData)
             obj.setPositionSmooth(prams.pos+offset.height+offset.board+Vector(0,-2,0), false, false)
             --dprint('tool_DrawPlayerCards', offset.board)
         elseif obj.hasTag('playerMarker_TurnOrder') then
-            offset.board = Vector(0,0,0)
-            obj.setPositionSmooth(prams.pos+offset.height+offset.board, false, false)
+            disableCollider(obj)
+            obj.setPositionSmooth(prams.pos+offset.height, false, false)
+            obj.setRotation(prams.rot)
+            Wait.condition(function()
+                enableCollider(obj)
+                obj.interactable = true
+                obj.setLock(false)
+            end, function() return isSmooth(obj) end)
             --dprint('playerMarker_TurnOrder',offset.board)
         else
             obj.setPositionSmooth(prams.pos+offset.height+offset.board, false, false)

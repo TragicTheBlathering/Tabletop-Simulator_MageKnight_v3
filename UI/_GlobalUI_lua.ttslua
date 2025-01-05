@@ -4,7 +4,12 @@ local globalUI_lua = {}
         UI.hide("panel_splashScreen")
     end
 
-    function globalUI_lua.openSetupMenu()
+    function globalUI_lua.openSetupMenuBar()
+        UI.show("panel_setupMenuBar")
+    end
+
+    function uiOpenMapTileSettings()
+        UI.hide("panel_setupMenuBar")
         UI.show("panel_setupMenu")
     end
 

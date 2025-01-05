@@ -1,0 +1,16 @@
+<Defaults>
+    <Text class="Title_StartBar" fontSize="30" alignment="Center" font="Fonts/MKCardTittle" color="#FFFFFF" /> <!-- fontStyle="Bold" -->
+    <Button class = "OneButton" width="540" height="40" textColor="White" colors="#757575|#9e9696|#605a5a|#00000000" outLineColor="#111111" outLineSize="2 2 2 2" />
+</Defaults>
+
+<Panel id="panel_setupMenuBar" width="556" height="56" color="#000000" rectAlignment="LowerRight" allowDragging="false" active="false">
+    <Panel offsetXY="0 -3" width="550" height="50" color="#926a41" rectAlignment="UpperCenter">
+            <Button class = "OneButton" onClick="7656e0/TMP" />
+            <Text class="Title_StartBar" offsetXY="0 1" text="Open Token and Card Pool Setup" onClick="uiOpenMapTileSettings"/> <!-- 7656e0 -->
+    </Panel>
+</Panel>
+
+<!--
+<Panel id="panel_setupMenuBar" width="550" height="500" color="#FFFFFF" rectAlignment="UpperRight" allowDragging="false" active="true" raycastTarget = "true">
+</Panel>
+-->

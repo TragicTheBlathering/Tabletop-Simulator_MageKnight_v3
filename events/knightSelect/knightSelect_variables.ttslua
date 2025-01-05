@@ -9,8 +9,11 @@ local knightSelect_variables = {}
         eventID_CommandToken={pos=Vector(-109.87, 2.52, -68.39), rot=Vector(0, 180, 0), forzen=true},
         player_ControlMarker={pos=Vector(-107.26, 2.61, -68.35), rot=Vector(0, 180, 0), forzen=true},
         player_QuestMarker={pos=Vector(-110.60, 2.60, -71.16), rot=Vector(0, 180, 0), forzen=true},
-        PlayerSkill_Token={pos=Vector(-108.67, 3.01, -73.77), rot=Vector(0, 180, 0), forzen=true},
+        PlayerSkill_Bag={pos=Vector(-108.67, 3.01, -73.77), rot=Vector(0, 180, 0), forzen=true},
         PlayerBoard={pos=Vector(-98.00, 2.52, -74.62), rot=Vector(0, 180, 180), not_interactive=true},
+
+        scoreMarker_Fame={pos=Vector(20.83, 2.22, 28.27), rot=Vector(0, 180, 0)},
+        scoreMarker_Rep={pos=Vector(59.47, 2.22, 20.46), rot=Vector(0, 180, 0)},
 
         SkillCard_A={pos=Vector(-124.64, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
         SkillCard_B={pos=Vector(-121.29, 2.01, -88.66), rot=Vector(0, 180, 0), forzen=true},
@@ -28,7 +31,7 @@ local knightSelect_variables = {}
         ManaToken_White={pos=Vector(-106.91, 3.07, -63.94), rot=Vector(335.32, 298.03, 56.86), forzen=true},
         ManaToken_Blue={pos=Vector(-106.89, 3.06, -65.91), rot=Vector(22.15, 275.04, 248.77), forzen=true},
 
-        token_ConqueredKeep={pos=Vector(-125.80, 2.58, -85.89), rot=Vector(0,180,0), forzen=true},
+        token_ConqueredKeep={pos=Vector(-126.01, 2.58, -86.05), rot=Vector(0,180,0), forzen=true},
 
         UnitOffer_ExtraDraw={pos=Vector(-71.33, 2.62, -69.24), rot=Vector(0,180,0), forzen=true},
         UnitOffer_ExtraColour={pos=Vector(-71.33, 2.57, -69.24), rot=Vector(0,180,0), not_interactive=true},

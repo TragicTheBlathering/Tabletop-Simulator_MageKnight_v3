@@ -119,13 +119,15 @@ end
 --******************************************************************************
 --- Minimise the entire menu ---------------------------------------------------
 function menuEdit.minMAX()
-    if stringToBool(UI.getAttribute('panel_setupMenu', 'active')) then
+    UI.hide("panel_setupMenu")
+    UI.show("panel_setupMenuBar")
+    --[[if stringToBool(UI.getAttribute('panel_setupMenu', 'active')) then
         UI.hide('panel_setupMenu')
         UI.show("panel_setupMenu_Min")
     else
         UI.hide('panel_setupMenu_Min')
         UI.show("panel_setupMenu")
-    end
+    end]]
 end
 
 function menuEdit.toggleButton(id, key, value) --settings={off="#cccccc|#dddddd|#444444|#00000000", on="#298115|#33a11a|#2a4c0e|#00000000"}

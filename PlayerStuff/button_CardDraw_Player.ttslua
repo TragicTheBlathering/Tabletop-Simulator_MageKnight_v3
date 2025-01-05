@@ -61,17 +61,31 @@ function draw_IndividualCards(clickCount)
         draw.count = count
         if draw.limit == 1 then
             local card = draw.deck
+            enableCollider(card, false)
             card.setPositionSmooth(pos, false, false)
             card.setRotationSmooth(rot.down, false, false)
             addTrashTag(card)
-            Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+                Wait.condition(function()
+                    enableCollider(card, true)
+                    card = card.reload()
+                    card.setRotationSmooth(rot.up, false, false)
+                end, function() return isSmooth(card) end)
         else
             for i = 1, draw.count do
-                pos = pos + Vector(0,0.3,0)
-                local prams = {position=pos, rotation=rot.down}
-                local card = draw.deck.takeObject(prams)
-                addTrashTag(card)
-                Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+                pos = pos + Vector(-1,0.3,0)
+                   local prams = {position=pos, rotation=rot.down}
+                   local card = draw.deck.takeObject(prams)
+                   enableCollider(card, false)
+                   card.setPositionSmooth(pos, false, false) -- drawPosition+ Vector(1,0,0)
+                   addTrashTag(card)
+                   Wait.condition(function()
+                       card.setPositionSmooth(drawPosition, false, false)
+                       Wait.condition(function()
+                           enableCollider(card, true)
+                           card = card.reload()
+                           card.setRotationSmooth(rot.up, false, false)
+                       end, function() return isSmooth(card) end)
+                   end, function() return isSmooth(card) end)
             end
         end
     end
@@ -113,36 +127,88 @@ function autoAdjustHandCount()
 end
 
 function b_Draw_HandSize(obj, color, alt_click)
-    autoAdjustHandCount()
-    local draw = cast(self.getPosition(), 'drawDeck')
-    makeButtons('drawHand')
-    local waitForObjs = {}
-    if draw then
-        local drawData = setbuttonData()
-        draw.maxDraw = drawData.draw.total
-        draw.handSize, draw.count = setHandZoneLimit(draw)
-        if draw.count > 0 then
-            local pos = drawPosition
-            if draw.limit == 1 then
-                local card = draw.deck
-                card.setPositionSmooth(pos, false, false)
-                card.setRotationSmooth(rot.down, false, false)
-                addTrashTag(card)
-                Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
-                table.insert(waitForObjs, card)
-            else
-                for i = 1, draw.count do
-                    pos = pos + Vector(0,0.3,0)
-                    local prams = {position=pos, rotation=rot.down}
-                    local card = draw.deck.takeObject(prams)
-                    addTrashTag(card)
-                    Wait.condition(function() card.setRotationSmooth(rot.up, false, false)end, function() return isSmooth(card) end)
+    if not alt_click then
+        autoAdjustHandCount()
+        local draw = cast(self.getPosition(), 'drawDeck')
+        makeButtons('drawHand')
+        local waitForObjs = {}
+        if draw then
+            local drawData = setbuttonData()
+            draw.maxDraw = drawData.draw.total
+            draw.handSize, draw.count = setHandZoneLimit(draw)
+            if draw.count > 0 then
+                local pos = drawPosition
+                if draw.limit == 1 then
+                    local card = draw.deck
+                        enableCollider(card, false)
+                        card.setPositionSmooth(pos, false, false)
+                        card.setRotationSmooth(rot.down, false, false)
+                        addTrashTag(card)
+                            Wait.condition(function()
+                                enableCollider(card, true)
+                                card = card.reload()
+                                card.setRotationSmooth(rot.up, false, false)
+                            end, function() return isSmooth(card) end)
                     table.insert(waitForObjs, card)
+                else
+                    for i = 1, draw.count do --{32.92, 11.90, 1.28}
+                        pos = pos + Vector(-1,0.3,0)
+                           local prams = {position=pos, rotation=rot.down}
+                           local card = draw.deck.takeObject(prams)
+                           enableCollider(card, false)
+                           card.setPositionSmooth(pos, false, true) -- drawPosition+ Vector(1,0,0)
+                           addTrashTag(card)
+                           Wait.condition(function()
+                               card.setPositionSmooth(drawPosition, false, true)
+                               Wait.condition(function()
+                                   enableCollider(card, true)
+                                   card = card.reload()
+                                   card.setRotationSmooth(rot.up, false, false)
+                               end, function() return isSmooth(card) end)
+                           end, function() return isSmooth(card) end)
+                        table.insert(waitForObjs, card)
+                    end
                 end
             end
         end
+        Wait.condition(function() makeButtons() end, function() return objectsAreMoving(waitForObjs) end)
+    else
+        --dprint('ALT CLICK')
+        local draw = cast(self.getPosition(), 'drawDeckReset')
+        local discard = cast(self.getPosition(), 'discardDeck')
+        if discard then
+            local player = tonumber(self.getDescription())
+            local pos = {Vector(-118.35, 2.53, -82.12),Vector(-50.35, 2.52, -82.12),Vector(17.65, 2.53, -82.12),Vector(85.65, 2.52, -82.12)}
+            discard.setPositionSmooth(pos[player]+Vector(0,3,0), false, false)
+            discard.setRotationSmooth(Vector(0, 180, 180), false, false)
+            if not draw then
+                Wait.condition(function()
+
+                    discard.shuffle()
+                    Wait.frames(function()
+                        discard.shuffle()
+                        Wait.frames(function()
+                            discard.shuffle()
+                        end, 30)
+                    end, 30)
+
+                end, function() return isSmooth(discard) end)
+            else
+                Wait.condition(function()
+                    draw = draw.putObject(discard)
+                    Wait.frames(function()
+                        draw.shuffle()
+                        Wait.frames(function()
+                            draw.shuffle()
+                            Wait.frames(function()
+                                draw.shuffle()
+                            end, 30)
+                        end, 30)
+                    end, 35)
+                end, function() return isSmooth(discard) end)
+            end
+        end
     end
-    Wait.condition(function() makeButtons() end, function() return objectsAreMoving(waitForObjs) end)
 end
 
 function addTrashTag(card)
@@ -229,18 +295,26 @@ function b_setKeepCount(obj, color, alt_click)
     if not alt_click then
         local keeps = cast(self.getPosition(), 'keepCount')
         if keeps then --keepCount = {on=false, count=0, butCol='White', txtCol='Black'}
-            keepCount.on = true
-            keepCount.count = keeps
-            keepCount.butCol = 'Green'
-            keepCount.txtCol = 'White'
+            if keepCount.on then
+                keepCount.on = off
+                keepCount.count = 0
+                keepCount.butCol = 'White'
+                keepCount.txtCol = 'Black'
+            else
+                keepCount.on = true
+                keepCount.count = keeps
+                keepCount.butCol = 'Green'
+                keepCount.txtCol = 'White'
+            end
         else
-            keepCount.on = off
+            keepCount.on = false
             keepCount.count = 0
             keepCount.butCol = 'White'
             keepCount.txtCol = 'Black'
         end
     else
         keepCount.on = false
+        keepCount.count = 0
         keepCount.butCol = 'White'
         keepCount.txtCol = 'Black'
     end
@@ -257,9 +331,21 @@ function cast(castOrigin, switch)
 
    elseif switch == 'drawDeck' then
        zone = Physics.cast({origin=castOrigin + Vector(-20.25,7,-7.5)
-                           ,direction={0,1,0}, type=3, max_distance=0, size=Vector(2,2,2)
+                           ,direction={0,1,0}, type=3, max_distance=0, size=Vector(1,2,1)
                            ,debug=ShowCast})
        return processCast_findDrawDeck(zone)
+
+   elseif switch == 'drawDeckReset' then
+       zone = Physics.cast({origin=castOrigin + Vector(-20.25,7,-7.5)
+                           ,direction={0,1,0}, type=3, max_distance=0, size=Vector(1,2,1)
+                           ,debug=ShowCast})
+       return processCast_findDiscardDeck(zone)
+
+   elseif switch == 'discardDeck' then
+       zone = Physics.cast({origin=castOrigin + Vector(-14.92,7,-7.5)
+                           ,direction={0,1,0}, type=3, max_distance=0, size=Vector(1,2,1)
+                           ,debug=ShowCast})
+       return processCast_findDiscardDeck(zone)
 
    elseif switch == 'shields' then
        --dprint()
@@ -269,6 +355,15 @@ function cast(castOrigin, switch)
 
        return processCast_findShields(zone)
    end
+end
+
+function processCast_findDiscardDeck(zone)
+    for k,v in pairs(zone) do
+        local obj = v.hit_object
+        if obj.type == 'Deck' or obj.type == 'Card' then
+            return obj
+        end
+    end
 end
 
 function processCast_findShields(zone)
@@ -407,4 +502,25 @@ function Wait_countClicks(obj,func,delay)
     wait_ids[obj].waitID = Wait.time(delayCall, delay) -- make a new wait, but with _no_ count
 
     wait_ids[obj].count = wait_ids[obj].count + 1 -- finally increment the click amount.
+end
+
+function enableCollider(obj, enableCollider)
+    if enableCollider == nil then enableCollider=true end
+    if enableCollider then
+        --print('enable')
+        if obj.getComponent("Rigidbody") then
+            obj.getComponent("Rigidbody").set("detectCollisions", true)
+        end
+        if obj.getComponent("BoxCollider") then
+            obj.getComponent("BoxCollider").set("enabled", true)
+        end
+    else
+        --print('disable')
+        if obj.getComponent("Rigidbody") then
+            obj.getComponent("Rigidbody").set("detectCollisions", false)
+        end
+        if obj.getComponent("BoxCollider") then
+            obj.getComponent("BoxCollider").set("enabled", false)
+        end
+    end
 end

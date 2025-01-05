@@ -1,0 +1,57 @@
+local incrementDie = {}
+
+function onload()
+    makeButtons(1)
+end
+
+function f_increment(obj, playCol, alt_click)
+    local n = self.getValue()
+    if not alt_click then
+        n = n +1; if n > 6 then n=1 end
+    else
+        n = n -1; if n < 1 then n=6 end
+    end
+    self.setValue(n)
+    self.clearButtons()
+    makeButtons(n)
+end
+
+function makeButtons(n)
+    local pos = {0, 0, 0} -- -0.3
+    local rot = {180, 0, 90}
+    if n==1 then --1
+        rot = {0, 0, 0}
+    elseif n==2 then --2
+        rot = {90, 0, 90}
+    elseif n==3 then --3
+        rot = {180, 0, 90}
+    elseif n==4 then --4
+        rot = {0, 0, 90}
+    elseif n==5 then --5
+        rot = {-90, 0, 0}
+    elseif n==6 then --6
+        rot = {0, 0, 180}
+    end
+
+    local buttons = {}
+    button = {
+        click_function = 'f_increment',
+        function_owner = self,
+        position = pos,
+        rotation = rot,
+        width = 200,
+        height = 200,
+        font_size = 200,
+        scale = {1,1,1},
+        font_color='Black',
+        color = 'White',
+        label = "X"
+    }
+    table.insert(buttons, button)
+ -- Create Buttons
+    for _, button in ipairs(buttons) do
+        self.createButton(button)
+    end
+end
+
+return incrementDie

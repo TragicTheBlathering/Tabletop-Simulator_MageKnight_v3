@@ -2,28 +2,97 @@ local dayNightBaord = {}
 local dprint = require("/_libs/debug/dPrint").dprint
 local tileTags = {'maptile_Start', 'maptile_CountrySide', 'maptile_Core', 'PlayerBoard', 'PlayerBoard_Dummy'}
 local light = {day={amb=1.29999995231628, light=0.540000021457672, reflect=1},
-               night={amb=0.49600021696091, light=0.316000998020172, reflect=0.144000262022018},
+               night={amb=0.49600021696091, light=0.496000230312347, reflect=0.144000262022018},
                obj={day={r=255, g=255, b=255}, night={r=125, g=125, b=125}}
             }
 local board = {day='https://steamusercontent-a.akamaihd.net/ugc/784120584200164450/881F973AE775243D24C43ADBD25FC396DF13D5FB/', night='https://steamusercontent-a.akamaihd.net/ugc/775098948702652459/4612C8FB6565E6BD05CAE184D83E2949431604AA/'}
+
+local dayTest = 1.2
 
 function onLoad()
     makeButtons()
 end
 
-function f_DayNight()
-    --print(Lighting.ambient_intensity)
-    --print(Lighting.light_intensity)
+function setDie(die)
+    local z = {}
+        z.day = getObjectsWithTag('dieCount_day')[1]
+        z.night = getObjectsWithTag('dieCount_night')[1]
+        z.limitDie = getObjectsWithTag('dieCount_limit')[1]
+        z.limit = z.limitDie.getValue()
 
-    if Lighting.ambient_intensity > 1.2 then -- set NIGHT
-        print('Set Night')
+        z.nightBag = {}
+        z.nightBag.pos=Vector(-9.01, 3.13, -34.47)
+        z.nightBag.container = getObjectsWithTag('dieCount_nightBag')[1]
+
+        z.dayBag = {}
+        z.dayBag.container = getObjectsWithTag('dieCount_dayBag')[1]
+        z.dayBag.pos=Vector(-11.64, 3.13, -34.47)
+    return z
+end
+
+function f_DayNight(obj, playCol, alt_click)
+    local change_toNight = false; if Lighting.ambient_intensity > dayTest then change_toNight = true end
+    print("--------------------")
+    print("--- Lighting.ambient_intensity : "..tostring(Lighting.ambient_intensity))
+    print("--- Lighting.light_intensity : "..tostring(Lighting.light_intensity))
+    print("--- Change from day -> night : "..tostring(change_toNight))
+    print("--------------------\n")
+    local die = setDie()
+
+    if not alt_click then
+        --dprint('LEFT CLICK')
+        if die.day and die.night then
+            if die.day.getValue() == die.limit and die.night.getValue() == die.limit then
+                local p = die.limitDie.getPosition()
+                die.limitDie.setPositionSmooth(p+Vector(0,2,0))
+                Wait.condition(function() die.limitDie.setPositionSmooth(p) end, function() return isSmooth(die.limitDie) end)
+                broadcastToAll("Final Round has been Reached", 'Orange')
+                if not change_toNight then
+                    changeLighting(change_toNight)
+                end
+            else
+                incrementCounter(die, change_toNight)
+                changeLighting(change_toNight)
+            end
+        else
+            incrementCounter(die, change_toNight)
+            changeLighting(change_toNight)
+        end
+    else
+        --dprint('RIGHT CLICK')
+        if not die.night then
+            local o = die.nightBag.container.takeObject({})
+            o.setPosition(die.nightBag.pos)
+            o.setValue(1)
+            o.interactable = false
+            changeLighting(change_toNight)
+            if die.day then destroyObject(die.day) end
+
+        elseif not die.day then
+            local o = die.dayBag.container.takeObject({})
+            o.setPosition(die.dayBag.pos)
+            o.setValue(1)
+            o.interactable = false
+            changeLighting(change_toNight)
+            if die.night then destroyObject(die.night) end
+        else
+            changeLighting(change_toNight)
+        end
+    end
+
+
+end
+
+function changeLighting(change_toNight)
+    if change_toNight then -- set NIGHT
+        --print('Set Night')
         Lighting.ambient_intensity = light.night.amb
         Lighting.light_intensity = light.night.light
         Lighting.reflection_intensity = light.night.reflect
         self.setCustomObject({image=board.night})
         setObjectTint(light.obj.night)
     else
-        print('Set DAY')
+        --print('Set DAY')
         Lighting.ambient_intensity = light.day.amb
         Lighting.light_intensity = light.day.light
         Lighting.reflection_intensity = light.day.reflect
@@ -34,12 +103,45 @@ function f_DayNight()
     Lighting.apply()
     local newBoard = self.reload()
     newBoard.interactable = false
+end
 
-    --[[
-    if Lighting.ambient_intensity == 0 then -- set DAY
-    else -- set NIGHT
+function incrementCounter(die, DayTime)
+    --dprint("FUNC : incrementCounter(die, DayTime)")
+    die.day = getObjectsWithTag('dieCount_day')[1]
+    die.night = getObjectsWithTag('dieCount_night')[1]
+
+    if die.day and not die.night then
+        --dprint('if die.day and not die.night then')
+        local o = die.nightBag.container.takeObject({})
+        o.setPosition(die.nightBag.pos)
+        o.setValue(1)
+        o.interactable = false
+
+    elseif not die.day and die.night then
+        --dprint('if not die.day and die.night then')
+        local o = die.dayBag.container.takeObject({})
+        o.setPosition(die.dayBag.pos)
+        o.setValue(1)
+        o.interactable = false
+
+    elseif die.day and die.night then
+        if DayTime then
+            local n = die.night.getValue()
+            die.night.setValue(n+1)
+        else
+            local n = die.day.getValue()
+            die.day.setValue(n+1)
+        end
     end
-    ]]
+end
+
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
 end
 
 function setObjectTint(light, obj)
@@ -62,10 +164,10 @@ end
 function onObjectSpawn(obj)
     for k, tag in ipairs(tileTags)  do
         if obj.hasTag(tag) then
-            if Lighting.ambient_intensity == 0 then
-                setObjectTint(light.obj.night, obj)
-            else
+            if Lighting.ambient_intensity > dayTest then -- set Tile : Day
                 setObjectTint(light.obj.day, obj)
+            else
+                setObjectTint(light.obj.night, obj)
             end
             break
         end
@@ -75,11 +177,36 @@ end
 function convertRGB(v)
     return v.r/255, v.g/255, v.b/255
 end
+--******************************************************************************
+function f_rerollSource()
+    local dice = getObjectsWithAllTags({'Dice_ManaDie', 'trash_ManaDie'})
+    local rollerBag = getObjectsWithTag('setupBag_setupDieRoller')[1]
+    local trash = rollerBag.takeObject({})
+    trash.setLock(true)
+    trash.setPosition(Vector(-4.38, 2.11, -42.40))
+    for k, die in pairs(dice) do
+        trash.putObject(die)
+    end
+    Wait.condition(function() destroyObject(trash) end, function() return trashEmpty(trash) end)
+end
 
+function trashEmpty(trash)
+    if trash then
+        if trash.getQuantity() == 0 then
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
+
+--******************************************************************************
 function makeButtons(night)
     local buttons = {}
     local buttonData = {name='Day', color='White', font_color="Black"}
-    if Lighting.ambient_intensity == 0 then
+    if Lighting.ambient_intensity < dayTest then
         buttonData.name = 'Night'
         buttonData.font_color = {147/255,147/255,147/255}
         buttonData.color = {29/255,41/255,98/255}
@@ -98,6 +225,22 @@ function makeButtons(night)
             font_color=buttonData.font_color,
             color = buttonData.color,
             label = buttonData.name
+        }
+        table.insert(buttons, button)
+
+        button = {
+            click_function = 'f_rerollSource',
+            function_owner = self,
+            position = {-2.77, 0, -1.65},
+            rotation = {0, 0, 0},
+            --tooltip = "Reroll Entire Source",
+            width = 200,
+            height = 350,
+            font_size = 200,
+            scale = {0.5,0.5,0.5},
+            font_color=buttonData.font_color,
+            color = buttonData.color,
+            label = "x"
         }
         table.insert(buttons, button)
     end

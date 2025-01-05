@@ -51,6 +51,10 @@ function processObjectsIn_Container(uniqueCast, container, removedDeckList)
                 local obj = container.takeObject({index=dex})
                 destroyObject(obj)
 
+            elseif singleTagFoundinTagList(objTags, 'trashID_RemovedFromGame') and singleTagFoundinTagList(objTags, 'Cards_Wound') then --Delete Me Objects
+                local obj = container.takeObject({index=dex})
+                destroyObject(obj)
+
             elseif singleTagFoundinTagList(objTags, trash_Tags.manaDie) then -- Die Objects
                 dieCount = sendDieBackToSource(objInContainer, dex, dieCount, container)
 
@@ -70,8 +74,13 @@ function processObjectsIn_Container(uniqueCast, container, removedDeckList)
                 local objTags = objInContainer.tags
                 if objTags[1] then
                     if singleTagFoundinTagList(objTags, trash_Tags.discardObject) then
-                        --print('GenericDiscardObject')
-                        Y = moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, deck, container)
+                        if singleTagFoundinTagList(objTags, 'trashID_RemovedFromGame') and singleTagFoundinTagList(objTags, 'Cards_Wound') then
+                            local obj = deck.takeObject({index=dex})
+                            destroyObject(obj)
+                        else
+                            --print('GenericDiscardObject')
+                            Y = moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, deck, container)
+                        end
                     else
                         local obj = deck.takeObject({index=dex})
                         destroyObject(obj)

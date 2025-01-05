@@ -33,22 +33,10 @@ end
 function menuControl()
     uiFunc.closeSplash()
     if showSettingsMenu then
-        uiFunc.openSetupMenu()
+        uiFunc.openSetupMenuBar()
     end
 end
 
 function menuHasBeenRun()
     showSettingsMenu = false
 end
-
-
---[[
-function getSetupObj(find)
-    if setupObjects == nil then
-        setupObjects = tool.setupZone.setSetupObjvariable()
-        return tool.setupZone.getSetupObject(find, setupObjects)
-    else
-        return tool.setupZone.getSetupObject(find, setupObjects)
-    end
-end
-]]
