@@ -9,7 +9,7 @@ function setupScript_shuffleAll.all()
     Wait.frames(function()
         shuffleALL()
         Wait.frames(function()
-            shuffleALL()
+            shuffleALL('print')
             Wait.frames(function()
                 finshedRunningScript = true
             end, 30)
@@ -22,9 +22,12 @@ function setupScript_shuffleAll.wait()
     return finshedRunningScript
 end
 
-function shuffleALL()
+function shuffleALL(print)
     local found_ShuffleList = getObjectsWithAnyTags({'Cards_PlayerCard', 'Cards_Units', 'eventID_monsterDrawBag', 'eventID_teslaTokenDrawBag'})
     for k, obj in pairs(found_ShuffleList) do
+        if print then
+            printToAll('Shuffeling : '..obj.getName(), 'Orange')
+        end
         obj.shuffle()
     end
 end

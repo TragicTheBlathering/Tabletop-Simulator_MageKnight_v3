@@ -13,11 +13,34 @@ function b_Function(obj, color, rightClick)
     if not rightClick then
         processOffer()
     else
+        setGameState()
+        if offerRequiresCards(cardData.currentOffer) then
+            setButtonDisabled()
+            slideOffer()
+            waitFunc(resetDeck, 'slideOffer')
+            waitFunc(drawCards, 'resetDeck')
+            waitFunc(resetDeck, 'drawCards')
+            waitFunc(drawCards, 'resetDeck')
+            waitFunc(discard_last, 'drawCards')
+            waitFunc(processOffer, 'discard_last')
+        else
+            setButtonDisabled()
+            discard_last()
+            waitFunc(processOffer, 'discard_last')
+        end
+    end
+end
+--[[
+function b_Function(obj, color, rightClick)
+    if not rightClick then
+        processOffer()
+    else
         setButtonDisabled()
         discard_last()
         waitFunc(processOffer, 'discard_last')
     end
 end
+]]
 
 function callTrigger()
     waitForFunction('allStop')
@@ -48,7 +71,7 @@ end
 function discard_last()
     setGameState()--print(logString(cardData, '\n--- cardData'))
     waitForFunction('allStop')
-    --setGameState('discardDeck')
+    --dprint('cardData', cardData)
     local discard = cardData.discard
     local rot = cardData.face.up
     local offSet = cardData.offsetY

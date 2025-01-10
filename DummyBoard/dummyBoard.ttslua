@@ -1,25 +1,30 @@
 local dprint = require("/_libs/debug/dPrint").dprint
 
 --
-local ShowDebug = true
+local ShowDebug = false
 
 local destroyList = {}
 
-local button1Data = {{click_function = 'f_randomise', label = 'Random Dummy Mage Knight', width = 3000, height = 350}
-                    ,{click_function = 'f_ProcessDummy_Draw3', label = 'Draw 3 Cards', width = 2000, height = 350}
-                    ,{click_function = 'f_ProcessDummy_Draw1', label = 'Draw 1 Card', width = 1200, height = 350}}
-
-local button2Data = {{click_function = 'f_choose', label = 'Choose Dummy Mage Knight', width = 2800, height = 350}
-                    ,{click_function = 'f_ProcessDummy_Draw1', label = 'Draw 1 Card', width = 1200, height = 350}
+local button1Data = {{click_function = 'f_randomise', label = 'Random Dummy', width = 1800, height = 350, pos={-0.2, 0.1, 1.03}}
+                    ,{click_function = 'f_ProcessDummy_Draw3', label = 'Draw 3 Cards', width = 2000, height = 550, pos={0, 0.103, 1.05}}
+                    --,{click_function = 'f_ProcessDummy_Draw1', label = 'Draw 1 Card', width = 1200, height = 350, pos={0, 0.1, 1.19}}}
+                    ,{click_function = 'f_ProcessDummy_Draw1', label = 'Draw 1 Card', width = 2000, height = 550, pos={0, 0.103, 1.05}}}
+--{0, 0.1, 1.16}
+local button2Data = {{click_function = 'f_choose', label = 'Choose Current Dummy', width = 2400, height = 350, pos={-0.2, 0.1, 1.19}} --pos={0, 0.1, 1.19}
+                    ,{click_function = 'f_ProcessDummy_Draw1', label = 'Draw 1 Card', width = 1800, height = 550, pos={0, 0.1, 1.28}}
                     ,{click_function = 'f_blank', label = '', width = 0, height = 0}}
 
-local allskills = {on=false, color='Red', textcolor='White', custom={on=false, color='Red', textcolor='White'}}
+local allskills =  {on=false, color='Red', textcolor='White', custom={on=false, color='Red', textcolor='White'}}
+local addVolkare = {on=false, color='Red', textcolor='White', custom={on=false, color='Red', textcolor='White'}}
 
 local officialKnights = {'Select : Norowas', 'Select : Goldyx', 'Select : Tovak', 'Select : Wolfhawk', 'Select : Krang', 'Select : Arythea', 'Select : Braevalar'}
 
 local y = {offset=0, waitID=nil}
 local wait_ids = {}
 
+--******************************************************************************
+--****** Save and Load Code ****************************************************
+--******************************************************************************
 function updateSave()
     local data_to_save = {button=b}
     saved_data = JSON.encode(data_to_save)
@@ -27,25 +32,344 @@ function updateSave()
     --self.script_state = "" -- Clear All Data
 end
 
+function onSave()
+    local data_to_save = {button=b}
+    saved_data = JSON.encode(data_to_save)
+    self.script_state = saved_data
+    --self.script_state = "" -- Clear All Data
+end
 
 function onLoad(saved_data)
     if saved_data ~= "" then
-        dprint('saved_data', saved_data)
+        --dprint('saved_data', saved_data)
         local loaded_data = JSON.decode(saved_data)
         b=loaded_data.button
     else
         b=1
     end
     --b=1;updateSave() -- resetSave
+    local seed = generate_robust_seed()
+    math.randomseed(seed)
     makeButtons()
 end
 
+function generate_robust_seed()
+    local tbl = tostring({}):gsub("table: ", "")
+    local unique_id = tonumber(tbl, 16)
+    return (os.time() + tonumber(tostring(os.clock()):reverse())) / unique_id
+end
+--******************************************************************************
+--****** Fetch Dummy Player ****************************************************
+--******************************************************************************
+------- Fetch Volkare ----------------------------------------------------------
+local volk = {}
+      volk.Volkare_BoardToken = {p=Vector(0.00, 0.46, 3.66)   , r=Vector(0,180,180), lock=true}
+      volk.Cards_PlayerCard   = {p=Vector(6.57, 0.22, -7.49)  , r=Vector(0,180,180)}
+      volk.event_TrashCan     = {p=Vector(9.60, 0.10, 7.73)   , r=Vector(0,180,0), lock=true}
+      volk.Volkare_Roller     = {p=Vector(7.06, 0.17, 10.24)  , r=Vector(0,180,0), freeze=true}
+      volk.Volkare_Blood      = {p=Vector(9.60, 0.10, 10.24)  , r=Vector(0,0,0), lock=true}
+      volk.Volkare_LevelInfo  = {p=Vector(19.50, 0.15, 0.33)  , r=Vector(0,180,180), freeze=true}
+      volk.Volkare_skillBox   = {p=Vector(0.00, 0.81, 3.66)   , r=Vector(0,180,0)}
+      volk.Volkare_returnCard = {p=Vector(15.23, 0.01, -14.50), r=Vector(0,180,0), lock=true}
+      volk.Volkare_returnMeep = {p=Vector(13.03, 0.18, -15.64), r=Vector(0,180,0)}
+      volk.Volkare_questCard  = {p=Vector(23.98, 0.01, -14.50), r=Vector(0,180,0), lock=true}
+      volk.Volkare_questMeep  = {p=Vector(22.10, 0.17, -13.92), r=Vector(0,180,0)}
 
+local WaitVolk = {}
+
+function chooseVolkare()
+
+    local platforms = getObjectsWithTag('KnightSelect')
+    if #platforms == 0 then
+        b=3; self.clearButtons(); makeButtons(); updateSave()
+        self.interactable = false
+        self.setLock(true)
+        updateSave()
+
+        local existingObjects = castZone('clearBoard')
+        if existingObjects then
+            for k, obj in pairs(existingObjects) do
+                destroyObject(obj)
+            end
+        end
+
+        local sourceBag = getObjectsWithTag('Volkare_ComponantBag')[1]
+        local drawbag = sourceBag.takeObject(sourceBag.getPosition()+Vector(0,0,1.5))
+        enableCollider(drawbag, false)
+        drawbag.setLock(true)
+
+        local boardPos = self.getPosition()
+        for i = 1, drawbag.getQuantity() do
+            local obj = drawbag.takeObject({})
+            for key, v in pairs(volk) do
+                if obj.hasTag(key) then
+                    if volk[key].lock then
+                        obj.setLock(true)
+                    elseif volk[key].freeze then
+                        obj.setLock(true)
+                        obj.interactable = false
+                    end
+                    obj.setPosition(boardPos+Vector(0,5,0))
+                    obj.setRotation(volk[key].r)
+                    obj.setPositionSmooth(boardPos+volk[key].p)
+                    table.insert(WaitVolk, obj)
+                end
+            end
+        end
+        --Wait.frames(function() destroyObject(drawbag) fetchSkills() end, 80)
+        Wait.condition(function() fetchSkills(drawbag) end, function() return objectsAreMoving(WaitVolk) end)
+    else
+        broadcastToAll("["..Color.red:toHex(false).."]ERROR : [-]Run the Token and Card Pool Script First!", 'White')
+    end
+end
+
+function fetchSkills(source_volkBag)
+    destroyObject(source_volkBag)
+    WaitVolk = {}
+    local setupBags = getObjectsWithTag('setupBag_PlayerBoard_Knight')
+    local skillShuffler = getObjectsWithTag('Volkare_skillBox')[1]
+    local pos = skillShuffler.getPosition()
+    local offset = Vector(0,3,0)
+    volk_GetSkills(setupBags, skillShuffler, pos, offset)
+end
+
+function volk_GetSkills(setupBags, skillShuffler, pos, Yoffset)
+    if allskills.on or allskills.custom.on then
+        volkGet_allSkills(setupBags, skillShuffler, pos, Yoffset)
+    else
+        volkGet_skillBoxes(setupBags, skillShuffler, pos, Yoffset)
+    end
+end
+
+function volkGet_allSkills(setupBags, skillShuffler, pos, Yoffset)
+    local aSkills, oSkills, boxName = false, false, ""
+    if allskills.on and not allskills.custom.on then
+        oSkills = true
+        aSkills = false
+        boxName = "All Official Skills"
+    elseif allskills.on and allskills.custom.on then
+        oSkills = true
+        aSkills = true
+        boxName = "All Skills"
+    end
+    local skillBag = getObjectsWithTag('Volkare_skillBox')[1]
+    skillbag_offset = Vector(-8.19, 0.10, 10.16)
+    skillBag.setTags({'PlayerSkill_Bag'})
+    skillBag.setLock(true)
+    skillBag.setScale(Vector(0.92, 0.92, 0.92))
+    skillBag.setName(boxName)
+    skillBag.setDescription('')
+    local pos = self.getPosition()+skillbag_offset
+    skillBag.setPositionSmooth(pos+Vector(0,3,0))
+    Wait.condition(function()
+        skillBag.setPositionSmooth(pos)
+        Wait.condition(function()
+            getVolk_individualSkills(pos, oSkills, aSkills)
+        end, function() return isSmooth(skillBag) end)
+    end, function() return isSmooth(skillBag) end)
+end
+
+function getVolk_individualSkills(pos, oSkills, aSkills)
+    local destroyList = {}
+    local sourceBags = {source = {}, skill = {}}
+    if oSkills then
+        local setupBags = getObjectsWithTag('setUpBag_PlayerBoard_Knight')
+        for k, sourcebag in pairs(setupBags) do
+            if aSkills then
+                local bag = sourcebag.takeObject({}); table.insert(destroyList, bag)
+                bag.setLock(true); enableCollider(bag, false)
+                table.insert(sourceBags.source, bag)
+            else
+                for k, official in pairs(officialKnights) do
+                    if sourcebag.getName() == official then
+                        local bag = sourcebag.takeObject({}); table.insert(destroyList, bag)
+                        bag.setLock(true); enableCollider(bag, false)
+                        table.insert(sourceBags.source, bag)
+                    end
+                end
+            end
+        end
+
+        for k, bag in pairs(sourceBags.source) do
+            local dex = findSkillBox(bag).index
+            local skillBag = bag.takeObject({index=dex}); table.insert(destroyList, skillBag)
+            skillBag.setLock(true); enableCollider(skillBag, false)
+            table.insert(sourceBags.skill, skillBag)
+        end
+
+        local Y = Vector(0,5,0)
+        for k, bag in pairs(sourceBags.skill) do
+            for i = 1, bag.getQuantity() do
+                local skill = bag.takeObject({})
+                skill.setLock(true)
+                --Wait.frames(function()
+                    skill.setRotation(Vector(0, 180, 0))
+                    skill.setPosition(pos+Y)
+                    skill.setLock(false)
+                    Y = Y + Vector(0,0.5,0)
+                --end, 5)
+            end
+        end
+        Wait.frames(function() destroyObjList(destroyList) end, 80)
+    end --- END -- if oSkills then
+end
+
+function volkGet_skillBoxes(setupBags, skillShuffler, pos, Yoffset)
+    local destroyList = {}
+    local knightList = {}
+    local offset = Yoffset + Vector(0,5,0)
+
+    for k, sourceBag in pairs(setupBags) do
+        local source_KnightBag = sourceBag.takeObject(sourceBag.getPosition()+Vector(0,0,1.5))
+        enableCollider(source_KnightBag, false)
+        source_KnightBag.setLock(true)
+        table.insert(destroyList, source_KnightBag)
+        table.insert(knightList, source_KnightBag)
+    end
+
+    local breakOut = false
+    for k, bag in pairs(knightList) do
+        local contents = bag.getObjects()
+        for k, obj in pairs(contents) do
+            if breakOut then break end
+            for k, tag in pairs(obj.tags) do
+                if tag == "PlayerSkill_Bag" then
+                    local box = bag.takeObject({index=obj.index})
+                    box.setPosition(pos+offset)
+                    box.setRotation(Vector(0,180,0))
+                    box.setScale(Vector(1.77, 1.83, 1.87))
+                    box.addTag('trash_DeleteMe')
+                    offset = offset + Vector(0,2.5,0)
+                    --Wait.frames(function() skillShuffler.putObject(box) end, 40)
+                    break
+                end
+            end
+        end
+    end
+    Wait.frames(function() destroyObjList(destroyList) end, 80)
+end
+
+function destroyObjList(list)
+    for k,v in pairs(list) do
+        destroyObject(v)
+    end
+end
+--******************************************************************************
+--****** Load a Random Dummy ***************************************************
+--******************************************************************************
+function f_randomise(obj, playerCol, alt_click)
+    local platforms = getObjectsWithTag('KnightSelect')
+    if #platforms == 0 then
+        if (not altClick) and Player[playerCol].admin then
+            local existingObjects = castZone('clearBoard')
+            if existingObjects then
+                for k, obj in pairs(existingObjects) do
+                    destroyObject(obj)
+                end
+            end
+
+            local selectVolk = false
+            local setupBag_dummyCards = getObjectsWithTag('setupBag_DummyCards')[1]
+            local deck = setupBag_dummyCards.takeObject({})
+            deck.setLock(true)
+
+            if addVolkare.on then
+                local size = deck.getQuantity()+1
+                local volkNum = size
+                local ran = math.random(1, size)
+                if ran == volkNum then selectVolk=true end
+            end
+
+            if selectVolk then
+                local bag = getObjectsWithTag('Volkare_DummySelectBag')[1]
+                local pug = bag.takeObject({})
+                pug.setPosition(self.getPosition()+Vector(0,2,3.95))
+                pug.setRotation(Vector(0,180,0))
+                selectVolk=false
+                destroyObject(deck)
+            else
+                deck.setLock(false)
+                deck.setPosition(self.getPosition()+Vector(0,2,3.95))
+                deck.setRotation(Vector(0,180,0))
+                deck.randomize()
+                selectVolk=true
+            end
+        end
+    else
+        broadcastToAll("["..Color.red:toHex(false).."]ERROR : [-]Run the Token and Card Pool Script First!", 'White')
+    end
+end
+
+function f_chooseVolkare(obj, playerCol, altClick)
+    local platforms = getObjectsWithTag('KnightSelect')
+    if #platforms == 0 then
+        if (not altClick) and Player[playerCol].admin then
+            local existingObjects = castZone('clearBoard')
+            if existingObjects then
+                for k, obj in pairs(existingObjects) do
+                    destroyObject(obj)
+                end
+            end
+
+            local bag = getObjectsWithTag('Volkare_DummySelectBag')[1]
+            local pug = bag.takeObject({})
+            pug.setPosition(self.getPosition()+Vector(0,2,3.95))
+            pug.setRotation(Vector(0,180,0))
+        end
+    else
+        broadcastToAll("["..Color.red:toHex(false).."]ERROR : [-]Run the Token and Card Pool Script First!", 'White')
+    end
+end
+--******************************************************************************
+--****** Chhose a Dummy Player *************************************************
+--******************************************************************************
+function f_choose(obj, playerCol, alt_click)
+    local platforms = getObjectsWithTag('KnightSelect')
+    if #platforms == 0 then
+        if (not altClick) and Player[playerCol].admin then
+            local deck = castZone('chooseKnight')
+            if deck then
+                local dummyCard = false
+                if deck.type == 'Deck' then
+                    local contents = deck.getObjects()
+                    dummyCard = deck.takeObject({rotation=Vector(0,180,0), index=contents[deck.getQuantity()].index})
+                    dummyCard.setPosition(self.getPosition()+Vector(0,1.5,3.95))
+                    destroyObject(deck)
+                else
+                    dummyCard = deck
+                end
+
+                if dummyCard then
+                    getCrystals()
+                    dummyCard.setLock(true)
+                    dummyCard.setPositionSmooth(self.getPosition()+Vector(0,0.11,3.95))
+                    fetchObjects(dummyCard)
+                end
+
+            else
+                local volkPug = getObjectsWithTag('Volkare_BoardToken')
+                if volkPug[1] then
+                    chooseVolkare()
+                else
+                    broadcastToAll('ERROR : You need to select a Dummy Plater First!', 'Red')
+                end
+            end
+            --Wait.time(function() destroyDrawBags() end, 5)
+        end
+    else
+        broadcastToAll("["..Color.red:toHex(false).."]ERROR : [-]Run the Token and Card Pool Script First!", 'White')
+    end
+end
+
+--******************************************************************************
+--****** Process Dummy Player***************************************************
+--******************************************************************************
 function drawCards(count)
     count = count or 0
     --print(count)
     local drawDeck = castZone('draw')
     local pos = self.getPosition() + Vector(-6.81, 2, -7.5)
+    local xOffset = 0
 
     if drawDeck then
         if drawDeck.type == 'Card' then
@@ -61,8 +385,13 @@ function drawCards(count)
 
             for i = 1, count do
                 local offset = Vector(0,y.offset,0)
-                local card = drawDeck.takeObject({position=pos+offset, rotation=Vector(0,180,0)})
+                local card = drawDeck.takeObject({position=pos+offset+Vector(xOffset,0,0), rotation=Vector(0,180,0)})
+                card.setPositionSmooth(pos+offset+Vector(xOffset,0,0))
                 y.offset = y.offset + 0.3
+                xOffset = xOffset + 1.5
+                Wait.condition(function()
+                    card.setPositionSmooth(pos+offset)
+                end, function() return isSmooth(card) end)
             end
         end
     end-- end IF Deck Exists
@@ -110,56 +439,46 @@ function f_ProcessDummy_Draw3(obj, playerCol, altClick)
     end
 end
 
-function resetDeck()
-    dprint('resetDeck')
-end
-
-
-function f_randomise(obj, playerCol, alt_click)
-    if not alt_click then
-        local existingObjects = castZone('clearBoard')
-        if existingObjects then
-            for k, obj in pairs(existingObjects) do
-                destroyObject(obj)
-            end
-        end
-
-        local setupBag_dummyCards = getObjectsWithTag('setupBag_DummyCards')[1]
-        local deck = setupBag_dummyCards.takeObject({})
-        deck.setPosition(self.getPosition()+Vector(0,2,3.95))
-        deck.setRotation(Vector(0,180,0))
-        deck.randomize()
+function resetDeck() -- resetDeck
+    local pos = self.getPosition()+Vector(6.57, 0.11, -7.49)
+    local drawDeck = castZone('draw')
+    local discardDeck = castZone('discard')
+    if drawDeck then
+        discardDeck.setPositionSmooth(pos+Vector(0,3,0))
+        discardDeck.setRotationSmooth(Vector(0,180,180))
+        Wait.condition(function()
+            local posAbove = Vector(0, drawDeck.getBounds().size.y+0.5, 0)
+            discardDeck.setLock(false)
+            discardDeck.setPositionSmooth(pos+posAbove)
+            Wait.condition(function()
+                local deck = drawDeck.putObject(discardDeck)
+                resetShuffle(50, deck)
+            end, function() return isSmooth(discardDeck) end)
+        end, function() return isSmooth(discardDeck) end)
+    else
+        discardDeck.setPositionSmooth(pos+Vector(0,3,0))
+        discardDeck.setRotationSmooth(Vector(0,180,180))
+        Wait.condition(function()
+            resetShuffle(0, discardDeck)
+        end, function() return isSmooth(discardDeck) end)
     end
 end
---{18.99, 2.12, -71.79}
---{18.99, 2.01, -75.75}
-function f_choose(obj, playerCol, alt_click)
-    if not alt_click then
-        local deck = castZone('chooseKnight')
-        if deck then
-            local dummyCard = false
-            if deck.type == 'Deck' then
-                local contents = deck.getObjects()
-                dummyCard = deck.takeObject({rotation=Vector(0,180,0), index=contents[deck.getQuantity()].index})
-                dummyCard.setPosition(self.getPosition()+Vector(0,1.5,3.95))
-                destroyObject(deck)
-            else
-                dummyCard = deck
-            end
 
-            if dummyCard then
-                getCrystals()
-                dummyCard.setLock(true)
-                dummyCard.setPositionSmooth(self.getPosition()+Vector(0,0.11,3.95))
-                fetchObjects(dummyCard)
-            end
-
-        else
-            broadcastToAll('ERROR : You need to select a Dummy Plater First!', 'Red')
-        end
-        Wait.time(function() destroyDrawBags() end, 5)
-    end
+function resetShuffle(pasue, deck)
+    Wait.frames(function()
+    deck.randomize()
+        Wait.frames(function()
+            deck.randomize()
+            Wait.frames(function()
+                deck.randomize()
+            end, 30)
+        end, 30)
+    end, pasue)
 end
+
+--******************************************************************************
+--****** Stuff to Edit and Move ************************************************
+--******************************************************************************
 
 function destroyDrawBags()
     local z = {}
@@ -203,6 +522,7 @@ function getCrystals()
 end
 
 function fetchObjects(dummyCard)
+    --dprint('fetchObjects(dummyCard)')
     self.setLock(true)
     self.interactable = false
     self.clearButtons()
@@ -248,8 +568,6 @@ function fetchObjects(dummyCard)
 
         Wait.condition(function() allSkills(box, setupBags, name, posAbove) end, function() return isSmooth(box) end)
     end, 3)
-
-
 end
 
 function allSkills(targetBox, setupBags, name, posAbove)
@@ -299,6 +617,35 @@ function allSkills(targetBox, setupBags, name, posAbove)
     end-- if allskills.on then
 end
 
+--******************************************************************************
+--****** Tools *****************************************************************
+--******************************************************************************
+
+function objectsAreMoving(...)
+    local args = {...}
+    local objList = {}
+    for k,var in pairs(args) do
+        if type(var) == "table" then
+            for k,v in pairs(var) do
+                if v then
+                    table.insert(objList, v)
+                end
+            end
+        else
+            if var then
+                table.insert(objList, var)
+            end
+        end
+    end
+    --print(logString(objList, '\n---- objList'))
+    for k, obj in pairs(objList) do
+        if obj then
+            if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+        end
+    end
+    return true
+end
+
 function isSmooth(obj)
     if obj == nil then
         return true
@@ -324,26 +671,13 @@ function findSkillBox(bag)
     local skillBag = {}
     for k, obj in pairs(contents) do
         for _, tag in pairs(obj.tags) do
-            if tag == 'PlayerSkill_Token' then
-                skillBag[obj] = true
+            if tag == 'PlayerSkill_Bag' then
+                --skillBag[obj] = true
+                return obj
             end
         end
     end
-
-    for obj,v in pairs(skillBag) do
-        for _, tag in pairs(obj.tags) do
-            if tag == 'Compeditive_SkillToken' or tag == 'CoOp_SkillToken' then
-                skillBag[obj] = false
-            end
-        end
-    end
-
-    for obj,v in pairs(skillBag) do
-        if v then
-            skillBag = obj
-        end
-    end
-    return skillBag
+    return nil
 end
 
 function enableCollider(obj, action) -- fasle or true
@@ -353,38 +687,6 @@ function enableCollider(obj, action) -- fasle or true
     if obj.getComponent("BoxCollider") then
         obj.getComponent("BoxCollider").set("enabled", action)
     end
-end
-
-function f_setSkills(obj, playerCol, alt_click)
-    if not alt_click then
-        if allskills.on then --allskills = {on=false, color='Red', textcolor='White'}
-            allskills.on = false
-            allskills.color = 'Red'
-            allskills.textcolor = 'White'
-        else
-            allskills.on = true
-            allskills.color = 'Green'
-            allskills.textcolor = 'White'
-        end
-    end
-    self.clearButtons()
-    makeButtons()
-end
-
-function f_setCustom(obj, playerCol, alt_click)
-    if not alt_click then
-        if allskills.custom.on then --allskills = {on=false, color='Red', textcolor='White'}
-            allskills.custom.on = false
-            allskills.custom.color = 'Red'
-            allskills.custom.textcolor = 'White'
-        else
-            allskills.custom.on = true
-            allskills.custom.color = 'Green'
-            allskills.custom.textcolor = 'White'
-        end
-    end
-    self.clearButtons()
-    makeButtons()
 end
 
 function castZone(switch)
@@ -408,10 +710,18 @@ function castZone(switch)
         data.size = Vector(2,2,2)
         data.origin = self.getPosition() + data.offset
         return cast(switch, data)
+
+    elseif switch == 'discard' then
+        data.offset = Vector(-6.5, 0, -7.4)
+        data.size = Vector(2,2,2)
+        data.origin = self.getPosition() + data.offset
+        return cast(switch, data)
     end
 
 end
-
+--******************************************************************************
+--****** CAST ******************************************************************
+--******************************************************************************
 function cast(switch, data)
     local zone = Physics.cast(data)
 
@@ -433,7 +743,7 @@ function cast(switch, data)
         end
         return z
 
-    elseif switch == 'draw' then
+    elseif switch == 'draw' or switch == 'discard' then
         for k, v in pairs(zone) do
             local obj = v.hit_object
             if obj.type == 'Deck' or obj.type == 'Card' then
@@ -442,6 +752,54 @@ function cast(switch, data)
         end
     end-- End Cast Switch
 
+end
+
+--******************************************************************************
+--****** Buttons ***************************************************************
+--******************************************************************************
+
+function f_setSkills(obj, playerCol, alt_click)
+    if allskills.on then --allskills = {on=false, color='Red', textcolor='White'}
+        allskills.on = false
+        allskills.color = 'Red'
+        allskills.textcolor = 'White'
+    else
+        allskills.on = true
+        allskills.color = 'Green'
+        allskills.textcolor = 'White'
+    end
+    self.clearButtons()
+    makeButtons()
+end
+
+function f_volkRandom(obj, playerCol, alt_click)
+    if addVolkare.on then --allskills = {on=false, color='Red', textcolor='White'}
+        addVolkare.on = false
+        addVolkare.color = 'Red'
+        addVolkare.textcolor = 'White'
+    else
+        addVolkare.on = true
+        addVolkare.color = 'Green'
+        addVolkare.textcolor = 'White'
+    end
+    self.clearButtons()
+    makeButtons()
+end
+
+function f_setCustom(obj, playerCol, alt_click)
+    if (not altClick) and Player[playerCol].admin then
+        if allskills.custom.on then --allskills = {on=false, color='Red', textcolor='White'}
+            allskills.custom.on = false
+            allskills.custom.color = 'Red'
+            allskills.custom.textcolor = 'White'
+        else
+            allskills.custom.on = true
+            allskills.custom.color = 'Green'
+            allskills.custom.textcolor = 'White'
+        end
+    end
+    self.clearButtons()
+    makeButtons()
 end
 
 function f_blank()end
@@ -454,7 +812,7 @@ function makeButtons(set)
                 click_function = button1Data[b].click_function,
                 function_owner = self,
                 label = button1Data[b].label,
-                position = {0, 0.1, 1},
+                position =  button1Data[b].pos,
                 rotation = {0, 0, 0},
                 width = button1Data[b].width,
                 height = button1Data[b].height, --350,
@@ -466,7 +824,7 @@ function makeButtons(set)
                 click_function = button2Data[b].click_function,
                 function_owner = self,
                 label = button2Data[b].label,
-                position = {0, 0.1, 1.16},
+                position = button2Data[b].pos,
                 rotation = {0, 0, 0},
                 width = button2Data[b].width,
                 height = button2Data[b].height,-- 350,
@@ -475,32 +833,62 @@ function makeButtons(set)
         table.insert(buttons, button)
 
         if b==1 then
-            button = {
+            button = { -- width = 2800, height = 350, pos={0, 0.1, 1.19}}
                     click_function = 'f_setSkills',
                     function_owner = self,
-                    label = 'use\nAll Skills',
-                    position = {-0.69, 0.2, -0.86},
+                    label = 'All Skills',
+                    position = {0.58, 0.1, 1.19}, --0.78
                     rotation = {0, 0, 0},
-                    width = 1150,
-                    height = 550,
+                    width = 950,
+                    height = 350,
                     font_size = 200,
                     font_color=allskills.textcolor,
                     color=allskills.color,
-                    scale = {0.18,0.18,0.18}}
+                    scale = {0.2,0.2,0.2}}
             table.insert(buttons, button)
+
+            button = {
+                    click_function = 'f_volkRandom',
+                    function_owner = self,
+                    label = '+Volkare',
+                    tooltip='Volkare can be randomly chosen.',
+                    position = {0.39, 0.1, 1.03},
+                    rotation = {0, 0, 0},
+                    width = 1000,
+                    height = 350,
+                    font_size = 200,
+                    font_color=addVolkare.textcolor,
+                    color=addVolkare.color,
+                    scale = {0.2,0.2,0.2}}
+            table.insert(buttons, button)
+
+            button = {
+                    click_function = 'f_chooseVolkare',
+                    function_owner = self,
+                    label = 'Set Dummy to Volkare',
+                    position = {0, 0.1, 1.35},
+                    rotation = {0, 0, 0},
+                    width = 2500,
+                    height = 350,
+                    font_size = 200,
+                    font_color='Black',
+                    color='White',
+                    scale = {0.2,0.2,0.2}}
+            table.insert(buttons, button)
+
             if allskills.on then
                 button = {
                     click_function = 'f_setCustom',
                     function_owner = self,
-                    label = 'include\nCustom',
-                    position = {-0.69, 0.2, -0.65},
+                    label = '+Custom',
+                    position = {0.98, 0.1, 1.19},
                     rotation = {0, 0, 0},
-                    width = 1150,
-                    height = 550,
+                    width = 950,
+                    height = 350,
                     font_size = 200,
                     font_color=allskills.custom.textcolor,
                     color=allskills.custom.color,
-                    scale = {0.14,0.14,0.14}}
+                    scale = {0.2,0.2,0.2}}
                     table.insert(buttons, button)
             end
         end

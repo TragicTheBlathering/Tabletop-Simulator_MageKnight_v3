@@ -210,7 +210,7 @@ function clearOffer()
             table.insert(moveTestList, card)
             local type = setGoldSilver(card)
             if type then
-                card.setPositionSmooth(pos[type]+offset[type]+Vector(0,Y[type],0))
+                card.setPositionSmooth(pos[type]+offset[type]+Vector(0,Y[type],0)+Vector(0,2,0))
                 Y[type] = Y[type] + 0.5
                 if not discard[type] then
                     discard[type] = card

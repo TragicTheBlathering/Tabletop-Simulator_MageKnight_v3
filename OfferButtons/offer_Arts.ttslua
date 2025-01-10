@@ -155,11 +155,10 @@ function clearOffer()
         discardPilePos = discard.getPosition()+Vector(0,offset,0)
     end
 
-    --print('TODO : If there is a deck, you need to use PUT-object')
     local Y = 0
     for k,card in ipairs(currentOffer) do
         if card then
-            card.setPositionSmooth(discardPilePos+Vector(0,Y,0))
+            card.setPositionSmooth(discardPilePos+Vector(0,Y,0)+Vector(0,2,0))
             Y = Y + 0.5
             if not discard then
                 discard = card
