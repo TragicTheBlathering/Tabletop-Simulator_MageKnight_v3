@@ -14,32 +14,22 @@ local wedge = true
                 end, 1)
             end, 1)
         end
-        --print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        --print(startTile.wedge)
         wedge = startTile.wedge
-        --print(wedge)
         Wait.frames(function() proccessDraw(count, forceSetting, bags) end, 5)
     end
 
+function generate_robust_seed()
+    local tbl = tostring({}):gsub("table: ", "")
+    local unique_id = tonumber(tbl, 16)
+    return (os.time() + tonumber(tostring(os.clock()):reverse())) / unique_id
+end
+
 function proccessDraw(count, forceSetting, bags)--{Blue=false, Green=false, Red=false, White=false, Camp=false, Mines=false, Dungeons=false, Glades=false}
-    count = drawForced_Cities(count, forceSetting, bags)
-    Wait.frames(function()
-        for key,valid in pairs(forceSetting) do
-            if key == "Blue" or key == "Green" or key == "Red" or key == "White" or key == "Camp" then
-            else
-                if valid then
-                    if key == 'Dungeons' then
-                        count = drawForced_Site('ScenarioDungeonLords', 'Core', count, forceSetting, bags)
-                        count = drawForced_Site(key, 'Core', count, forceSetting, bags)
-                        count = drawForced_Site(key, 'Country', count, forceSetting, bags)
-                    else
-                        count = drawForced_Site(key, 'Country', count, forceSetting, bags)
-                        count = drawForced_Site(key, 'Core', count, forceSetting, bags)
-                    end
-                end
-            end
-        end
-    end, 3)
+    --dprint('forceSetting', forceSetting)
+    math.randomseed(generate_robust_seed())
+    count = drawForced_Cities(count, forceSetting, bags)--; dprint('CITY : Count', count)
+    count = drawForced_ScenarioTomb(count, forceSetting, bags)--; dprint('TOMB : Count', count)
+    count = drawForced_Sites(count, forceSetting, bags)--; dprint('SITES : Count', count)
 
     Wait.frames(function()
         fetchRemaining('Country', count)
@@ -47,6 +37,168 @@ function proccessDraw(count, forceSetting, bags)--{Blue=false, Green=false, Red=
         fetchRemaining('City', count)
         Wait.frames(function() finalDraw() end, 10)
     end, 3)
+end
+
+function drawForced_Sites(count, forceSetting, bags)
+    -- Define the forced categories and their corresponding settings
+    local forced = {
+        Mine = forceSetting.Mines,
+        Dungeon = forceSetting.Dungeons,
+        Tomb = forceSetting.Dungeons,
+        Glade = forceSetting.Glades
+    }
+
+    -- Initialize tables to store matching object indices for Core and Country types
+    local forcedIndex = {Core = {}, Country = {}}
+    local types = {'Core', 'Country'}
+
+    -- Populate forcedIndex with objects that match the forced categories
+    for _, type in ipairs(types) do
+        for _, obj in ipairs(bags.pool[type].getObjects()) do
+            for key, valid in pairs(forced) do
+                if valid and string.find(obj.description, key, 1, true) then
+                    forcedIndex[type][obj.index] = obj.guid
+                end
+            end
+        end
+    end
+
+    -- Create sorted lists of object indices for each type
+    local sort = {Core = {}, Country = {}}
+    for _, type in ipairs(types) do
+        for index in pairs(forcedIndex[type]) do
+            table.insert(sort[type], index)
+        end
+        -- Sort indices in descending order
+        table.sort(sort[type], function(a, b) return a > b end)
+    end
+
+    -- Randomly pick indices based on the count for Core and Country
+    local indexCore = randomPick(count.Core, sort.Core)
+    local indexCountry = randomPick(count.Country, sort.Country)
+
+    -- Process picked indices for Core
+    if count.Core > 0 then
+        local indexCount = 0
+        if indexCore then
+            for _, index in ipairs(indexCore) do
+                if indexCount == count.Core then break end
+                local tile = bags.pool.Core.takeObject({index = index})
+                tile.setRotation(Vector(0, 180, 180))
+                bags.shuffler.Core.putObject(tile)
+                indexCount = indexCount + 1
+            end
+        end
+        count.Core = count.Core - (#indexCore or 0)
+    end
+
+
+    -- Process picked indices for Country
+    if count.Country > 0 then
+        local indexCount = 0
+        if indexCountry then
+            for _, index in ipairs(indexCountry) do
+                if indexCount == count.Country then break end
+                local tile = bags.pool.Country.takeObject({index = index})
+                tile.setRotation(Vector(0, 180, 180))
+                bags.shuffler.Country.putObject(tile)
+                indexCount = indexCount + 1
+            end
+        end
+        count.Country = count.Country - (#indexCountry or 0)
+    end
+
+
+    -- Return the updated count
+    return count
+end
+
+-- Function to randomly pick 'n' unique numbers from a list
+function randomPick(n, tbl)
+    local listLength = #tbl
+
+    if n == 0 then
+        -- If 'n' is 0, return nil
+        return nil
+    elseif n > listLength then
+        -- If 'n' is greater than the list length, return the entire list sorted in descending order
+        table.sort(tbl, function(a, b) return a > b end)
+        return tbl
+    end
+
+    local result = {}
+    local indices = {}
+
+    -- Generate random indices without duplicates
+    while #result < n do
+        local randomIndex = math.random(1, listLength)
+        if not indices[randomIndex] then
+            table.insert(result, tbl[randomIndex])
+            indices[randomIndex] = true
+        end
+    end
+
+    -- Sort the result in descending order
+    table.sort(result, function(a, b) return a > b end)
+
+    return result
+end
+
+function drawForced_ScenarioTomb(count, forceSetting, bags)
+    local drawnCount = 0
+    local newCount = count
+    local dungeonList = {}
+    local dcount = newCount.Core
+
+    if forceSetting.Dungeons and not forceSetting.Mines and not forceSetting.Glades then
+        --dprint('forceSetting.Dungeons')
+        local contents = bags.pool.Core.getObjects()
+        if dcount > 0 then
+            for i, o in pairs(contents) do
+                if string.find(o.description, 'ScenarioDunLords', 1, true) then
+                    local tile = bags.pool.Core.takeObject({index=o.index})
+                    tile.setRotation(Vector(0,180,180))
+                    bags.shuffler.Core.putObject(tile)
+                    drawnCount = drawnCount +1
+                    break
+                end
+            end
+        end -- if forceSetting.Dungeons then
+        newCount.Core = newCount.Core - drawnCount
+        --dprint('newCount',newCount)
+        return newCount
+    end
+    return newCount
+end
+
+function drawForced_Cities(count, forceSetting, bags)
+    local newCount = count
+    local cityList = {}
+
+    local contents = bags.pool.City.getObjects()
+    local reverseIndex = setReDex(bags.pool.City)
+    for k, rdex in ipairs(reverseIndex) do
+        local obj = contents[rdex+1]
+        for key, isvalid in pairs(forceSetting) do
+            --if string.match(obj.description, key) and isvalid then
+            if string.find(obj.description, key, 1, true) and isvalid then
+                local tile = bags.pool.City.takeObject({rotation=Vector(0, 180, 180), index=rdex})
+                tile.setRotation(Vector(0, 180, 180))
+                bags.shuffler.Core.putObject(tile)
+                newCount.City = newCount.City - 1
+            end
+        end
+
+    end
+
+    if forceSetting.Camp then
+        local tile = bags.pool.Camp.takeObject({rotation=Vector(0, 180, 180)})
+        tile.setRotation(Vector(0, 180, 180))
+        bags.shuffler.Core.putObject(tile)
+        newCount.City = newCount.City - 1
+    end
+
+    return newCount
 end
 
 function finalDraw()
@@ -88,7 +240,7 @@ function buildStack(gold, green, stack)
 end
 
 function cleanUp()
-    print(wedge)
+    --print(wedge)
     local startTile = {}
     startTile.wedge = getObjectsWithTag('maptile_Wedge')[1]
     startTile.open = getObjectsWithTag('maptile_Open')[1]
@@ -110,36 +262,6 @@ function setReDex(bag)
     -- Sort the table `z` in descending order
     table.sort(z, function(a, b) return a > b end)
     return z
-end
-
-function drawForced_Cities(count, forceSetting, bags)
-    local newCount = count
-    local cityList = {}
-    --dprint('newCount', newCount)
-
-    local contents = bags.pool.City.getObjects()
-    local reverseIndex = setReDex(bags.pool.City)
-    for k, rdex in ipairs(reverseIndex) do
-        local obj = contents[rdex+1]
-        for key, isvalid in pairs(forceSetting) do
-            if string.match(obj.description, key) and isvalid then
-                local tile = bags.pool.City.takeObject({rotation=Vector(0, 180, 180), index=rdex})
-                tile.setRotation(Vector(0, 180, 180))
-                bags.shuffler.Core.putObject(tile)
-                newCount.City = newCount.City - 1
-            end
-        end
-
-    end
-
-    if forceSetting.Camp then
-        local tile = bags.pool.Camp.takeObject({rotation=Vector(0, 180, 180)})
-        tile.setRotation(Vector(0, 180, 180))
-        bags.shuffler.Core.putObject(tile)
-        newCount.City = newCount.City - 1
-    end
-
-    return newCount
 end
 
 function fetchRemaining(type, count)

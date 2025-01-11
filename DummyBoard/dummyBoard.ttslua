@@ -78,7 +78,7 @@ local volk = {}
 local WaitVolk = {}
 
 function chooseVolkare()
-
+    fetch_DummyTurnOrderToken()
     local platforms = getObjectsWithTag('KnightSelect')
     if #platforms == 0 then
         b=3; self.clearButtons(); makeButtons(); updateSave()
@@ -521,8 +521,21 @@ function getCrystals()
 
 end
 
+function fetch_DummyTurnOrderToken()
+    local bag = getObjectsWithTag('setupBag_DummyTurnOrderToken')[1]
+    local shuffler = getObjectsWithTag('playerMarker_TurnOrderBAG')[1]
+    if bag then
+        local p = Vector(15.27, 2.01, -44.23) + Vector(0,3,0)
+        local r = Vector(0,180,0)
+        local posAbove = shuffler.getPosition() + Vector(0,3,0)
+        local token = bag.takeObject({})
+        token.setPosition(posAbove)
+        token.setRotation(r)
+        token.setPositionSmooth(p)
+    end
+end
+
 function fetchObjects(dummyCard)
-    --dprint('fetchObjects(dummyCard)')
     self.setLock(true)
     self.interactable = false
     self.clearButtons()
@@ -530,6 +543,7 @@ function fetchObjects(dummyCard)
     makeButtons()
     updateSave()
 
+    fetch_DummyTurnOrderToken()
     local name = dummyCard.getName()
     local setupBags = getObjectsWithTag('setUpBag_PlayerBoard_Knight')
     local setupBag = false
