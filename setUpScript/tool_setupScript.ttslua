@@ -19,7 +19,7 @@ function runSetUpScript(gameSettings) --saveDataObj
     waitFor(setup.proccessTokens.wait, setup.proccessDecks.build, gameSettings)
     waitFor(setup.proccessDecks.wait, setup.shuffle.all)
     waitFor(setup.shuffle.wait, setup.cleanup.table, gameSettings)
-    waitFor(setup.cleanup.wait, setup.finalise.setup)
+    waitFor(setup.cleanup.wait, setup.finalise.setup, gameSettings)
     --waitFor(setup.cleanup.wait, testWait) finaliseSetUp
     ----------------------------------------------------------------------------
     --dprint('drawBags', drawBags)

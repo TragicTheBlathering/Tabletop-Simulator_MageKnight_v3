@@ -8,10 +8,11 @@ local waitTurn = false
 function setupScript_cleanUP.table(gameSettings)
     local turnOderbag = getObjectsWithTag('playerMarker_TurnOrderBag')[1]
     local count = {boards=getObjectsWithTag('PlayerBoard')}
+
     count.boards = #count.boards
     count.die = 8 - (count.boards + (gameSettings.blitz and 1 or 0) + (gameSettings.volkare and 1 or 0) + 2)
 
-    Wait.condition(function() cleanUpTable(turnOderbag, count) end, function() return ensrureSetReady(turnOderbag, count.boards) end)
+    Wait.condition(function() cleanUpTable(turnOderbag, count, gameSettings) end, function() return ensrureSetReady(turnOderbag, count.boards) end)
 end
 
 function setupScript_cleanUP.wait()
@@ -35,7 +36,12 @@ function drawTurnOrderTokens(bag)
         waitDrop(token, (pos+offset.z))
         offset.z = offset.z + Vector(0,0,-2)
     end
-    Wait.condition(function() dprint('LOAD TURN ORDER MENU') end, function() return isSmoothMove_objList(waitTurn) end)
+    --Wait.condition(function() loadSoloMod() end, function() return isSmoothMove_objList(waitTurn) end)
+end
+
+function loadSoloMod()
+    dprint()
+    dprint('LOAD TURN ORDER MENU')
 end
 
 function waitDrop(token, pos)
@@ -62,7 +68,7 @@ function isSmoothMove_objList(objList)
     return true
 end
 
-function cleanUpTable(turnOderbag, count)
+function cleanUpTable(turnOderbag, count, gameSettings)
     drawTurnOrderTokens(turnOderbag)
     local dieOffer = getObjectsWithAllTags({'Dice_ManaDie', 'trash_ManaDie'})
     local cleanUpList = getObjectsWithAnyTags({'KnightSelect_Pug', 'KnightSelect'})

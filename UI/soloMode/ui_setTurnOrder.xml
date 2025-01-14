@@ -1,0 +1,27 @@
+<Panel width="190" height="29" color="#000000" rectAlignment="UpperRight" active="false" raycastTarget = "true" id="pannel_Open_SetTurnOrder">
+    <Panel class="panel_brown" width="184" height="23" rectAlignment="MiddleCenter">
+        <Panel class="panel_black" width="178" height="17" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="11" rectAlignment="MiddleCenter">
+                <Button class="but_player" id="but_Open_SetTurnOrder" />
+                <Panel class="panel_grey" width="166" height="5" rectAlignment="MiddleCenter">
+                    <!-- <Text class="text_player" color="#FFFFFF" id="pannel_Open_SetTurnOrder" text="Set Turn Order"/> 12 5 offsetXY="0 -18" -->
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+</Panel>
+
+<!--
+
+<Panel class="panel_brown" offsetXY="0 -50" width="184" height="40" rectAlignment="LowerCenter" active="false" id="pannel_SetTurnOrder">
+    <Panel class="panel_black" width="178" height="34" rectAlignment="MiddleCenter">
+        <Panel class="panel_grey" width="172" height="28" rectAlignment="MiddleCenter">
+            <Button class="but_player" id="but_SetTurnOrder" />
+            <Panel class="panel_grey" width="166" height="22" rectAlignment="MiddleCenter">
+                <Text class="text_player" color="#FFFFFF" id="text_SetTurnOrder" text="Set Turn Order"/>
+            </Panel>
+        </Panel>
+    </Panel>
+</Panel>
+
+-->

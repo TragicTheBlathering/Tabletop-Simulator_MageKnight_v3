@@ -1,3 +1,5 @@
 <Include src="ui_splash.xml"/>
 <Include src="ui_setupMenu.xml"/>
 <Include src="ui_BAR_SetUpMenu.xml"/>
+
+<Include src="soloMode\_solomode.xml"/>

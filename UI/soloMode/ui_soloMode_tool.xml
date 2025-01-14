@@ -1,0 +1,94 @@
+<Defaults>
+    <Text class="Title" fontSize="30" alignment="Center" font="Fonts/MKCardTittle" color="#FFFFFF" /> <!-- fontStyle="Bold" -->
+    <Text class="SettingTitle" alignment="Center" fontSize="22" font="Fonts/MKCardText" color="#000000" />
+
+    <Panel class="panel_white" color="#FFFFFF" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+    <Panel class="panel_grey" color="#757575" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+    <Panel class="panel_brown" color="#926a41" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+    <Panel class="panel_black" color="#000000" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+
+    <Text class="text_player" color="Black" fontStyle="Bold" resizeTextForBestFit="true" text="Default"/>
+    <Button class="but_player" colors="#757575|#dddddd|#444444|#00000000" resizeTextForBestFit="true" font="Fonts/MKCardText" textColor="#FFFFFF" onClick="4d7f8e/b_focusCamera"/>
+</Defaults>
+
+<Panel width="190" height="46" color="#000000" rectAlignment="UpperRight" active="false" raycastTarget="true" allowDragging="true" returnToOriginalPositionWhenReleased="false" id="panel_soloMode_Tool">
+
+    <Panel class="panel_brown" offsetXY="0 -3" width="184" height="40" rectAlignment="UpperCenter" active="false" knight="default" id="player_1">
+        <Panel class="panel_black" width="178" height="34" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="28" rectAlignment="MiddleCenter"  id="pannel_player_1_out">
+                <Button class="but_player" id="but_player_1" />
+                <Panel class="panel_grey" width="166" height="22" rectAlignment="MiddleCenter" id="pannel_player_1_in">
+                    <Text class="text_player" color="#FFFFFF" id="text_player_1"/>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+
+    <Panel class="panel_brown" offsetXY="0 -40" width="184" height="40" rectAlignment="UpperCenter" active="false" knight="default" id="player_2">
+        <Panel class="panel_black" width="178" height="34" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="28" rectAlignment="MiddleCenter"  id="pannel_player_2_out">
+                <Button class="but_player" id="but_player_2" />
+                <Panel class="panel_grey" width="166" height="22" rectAlignment="MiddleCenter" id="pannel_player_2_in">
+                    <Text class="text_player" color="#FFFFFF" id="text_player_2"/>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+
+    <Panel class="panel_brown" offsetXY="0 -77" width="184" height="40" rectAlignment="UpperCenter" active="false" knight="default" id="player_3">
+        <Panel class="panel_black" width="178" height="34" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="28" rectAlignment="MiddleCenter"  id="pannel_player_3_out">
+                <Button class="but_player" id="but_player_3" />
+                <Panel class="panel_grey" width="166" height="22" rectAlignment="MiddleCenter" id="pannel_player_3_in">
+                    <Text class="text_player" color="#FFFFFF" id="text_player_3"/>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+
+    <Panel class="panel_brown" offsetXY="0 -114" width="184" height="40" rectAlignment="UpperCenter" active="false" knight="default" id="player_4">
+        <Panel class="panel_black" width="178" height="34" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="28" rectAlignment="MiddleCenter"  id="pannel_player_4_out">
+                <Button class="but_player" id="but_player_4" />
+                <Panel class="panel_grey" width="166" height="22" rectAlignment="MiddleCenter" id="pannel_player_4_in">
+                    <Text class="text_player" color="#FFFFFF" id="text_player_4"/>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+
+    <Panel class="panel_brown" offsetXY="0 -151" width="184" height="40" rectAlignment="UpperCenter" active="false" knight="default" id="player_5">
+        <Panel class="panel_black" width="178" height="34" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="28" rectAlignment="MiddleCenter"  id="pannel_player_5_out">
+                <Button class="but_player" id="but_player_5" />
+                <Panel class="panel_grey" width="166" height="22" rectAlignment="MiddleCenter" id="pannel_player_5_in">
+                    <Text class="text_player" color="#FFFFFF" id="text_player_5"/>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+
+    <Image image="turnArrow" offsetXY="-50 2" preserveAspect="true" height="50" width="54" rectAlignment="UpperLeft" id="image_Arrow" knightPos="1" onClick="4d7f8e/b_moveTurnMarker"/>
+<!-- Reset Turn Order ============================================================================================================================================ -->
+    <Panel class="panel_brown" offsetXY="0 3" width="184" height="23" rectAlignment="LowerCenter" active="true" id="pannel_Open_SetTurnOrder">
+        <Panel class="panel_black" width="178" height="17" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="11" rectAlignment="MiddleCenter">
+                <Button class="but_player" onClick="4d7f8e/b_TurnOrder_Open" id="but_Open_SetTurnOrder" />
+                <Panel class="panel_grey" width="166" height="5" rectAlignment="MiddleCenter">
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+
+    <Panel class="panel_brown" offsetXY="0 3" width="184" height="30" rectAlignment="LowerCenter" active="false" id="pannel_Run_SetTurnOrder">
+        <Panel class="panel_black" width="178" height="24" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="18" rectAlignment="MiddleCenter">
+                <Button class="but_player" onClick="4d7f8e/b_TurnOrder_Run" id="but_Run_SetTurnOrder" />
+                <Panel class="panel_grey" width="166" height="12" rectAlignment="MiddleCenter">
+                    <Text class="text_player" color="#FFFFFF" text="Set Turn Order"/>
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+<!-- END of Entrtre Pannel -->
+</Panel>

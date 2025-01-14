@@ -1,0 +1,33 @@
+<Defaults>
+    <Text class="Title" fontSize="30" alignment="Center" font="Fonts/MKCardTittle" color="#FFFFFF" /> <!-- fontStyle="Bold" -->
+    <Text class="SettingTitle" alignment="Center" fontSize="22" font="Fonts/MKCardText" color="#000000" />
+
+    <Panel class="panel_white" color="#FFFFFF" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+    <Panel class="panel_grey" color="#757575" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+    <Panel class="panel_brown" color="#926a41" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+    <Panel class="panel_black" color="#000000" offsetXY="0 0" width="50" height="50" rectAlignment="MiddleCenter" />
+</Defaults>
+
+<!-- flexibleWidth="true" flexibleHeight="true" 4d7f8e 757575FF -->
+
+<Panel id="panel_soloMode_Start" width="190" height="200" color="#000000" rectAlignment="UpperRight" active="false" raycastTarget = "true" allowDragging="true" returnToOriginalPositionWhenReleased="false">
+    <Panel class="panel_brown" offsetXY="0 -3" width="184" height="40" rectAlignment="UpperCenter">
+        <Panel class="panel_black" width="178" height="34" rectAlignment="MiddleCenter">
+            <Panel class="panel_grey" width="172" height="28" rectAlignment="MiddleCenter">
+                <Panel class="panel_grey" width="166" height="22" rectAlignment="MiddleCenter">
+                    <Text class="Title" resizeTextForBestFit="true">Solo Mode Tool</Text>
+                </Panel>
+            </Panel>
+        </Panel>
+        <Panel class="panel_brown" offsetXY="0 -40" width="184" height="154" rectAlignment="UpperCenter">
+            <Panel class="panel_black" width="178" height="151" rectAlignment="UpperCenter">
+                <Panel class="panel_grey" width="172" height="145" rectAlignment="MiddleCenter">
+                    <Panel class="panel_grey" width="164" height="139" rectAlignment="MiddleCenter">
+                        <Text color="#FFFFFF" resizeTextForBestFit="true">This tool replaces the standard <textcolor color="#3eff00">HotSeat Mode</textcolor> for <textcolor color="#3eff00">Solo Play</textcolor>. <textcolor color="#f8ff00">Set up your game, </textcolor><textcolor color="#ffac00"><b>THEN</b></textcolor><textcolor color="#f8ff00"> click to initialise</textcolor>. For guidance, watch the video tutorial available on the <textcolor color="#3eff00">Mod Page</textcolor> or find a link to the vdieo in the <textcolor color="#3eff00">Notebook</textcolor>.</Text>
+                    </Panel>
+                    <!-- <Button color="#FFFFFF00" onClick="4d7f8e/init_soloModeUI" /> -->
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+</Panel>

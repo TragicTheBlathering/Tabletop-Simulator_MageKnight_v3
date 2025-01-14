@@ -1,0 +1,336 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+local useSoloMode = false
+local GameState = false
+
+function updateSave()
+    local data_to_save = {soloMode=useSoloMode, xml=UI.getXml()}
+    saved_data = JSON.encode(data_to_save)
+    self.script_state = saved_data
+    --self.script_state = "" -- Clear All Data
+end
+
+function onSave()
+    local data_to_save = {soloMode=useSoloMode, xml=UI.getXml()}
+    saved_data = JSON.encode(data_to_save)
+    self.script_state = saved_data
+    --self.script_state = "" -- Clear All Data
+end
+
+function onLoad(saved_data)
+    --dprint(self.getGUID())
+    if saved_data ~= "" then
+        --dprint('Data : FOUND')
+        local loaded_data = JSON.decode(saved_data)
+        useSoloMode = loaded_data.soloMode
+        UI.setXml(loaded_data.xml)
+    else
+        --dprint('NO Data')
+    end
+
+    if useSoloMode then
+        getGameState()
+        UI.hide("panel_soloMode_Start")
+        UI.show("panel_soloMode_Tool")
+    end
+end
+
+function set_soloMode(value)
+    --print('---------------------------------------------------------------------')
+    --print(value)
+    useSoloMode = value
+end
+
+function get_soloMode()
+    return useSoloMode
+end
+
+function init_soloModeUI()
+    useSoloMode = true
+    --dprint('INIT')
+    getGameState()--; dprint('GameState', GameState)
+    setToolFrames()
+
+    UI.hide("panel_soloMode_Start")
+    UI.show("panel_soloMode_Tool")
+    Wait.frames(function() updateSave() end, 5)
+end
+
+function b_Player1()
+    dprint("playerOne")
+end
+
+function setToolFrames()
+    local butCols = {default={f="#FFFFFF", b="#757575"},
+                     Dummy={f="#FFFFFF", b="#081191"},
+                     Tovak={f="#5581ff", b="#3c3230"},
+                     Goldyx={f="#f1fd8d", b="#069101"},
+                     Norowas={f="#43504f", b="#9dfbff"},
+                     Krang={f="#bcff1b", b="#8f925d"},
+                     Wolfhawk={f="#373737", b="#dadada"},
+                     Arythea={f="#eaeaea", b="#c51d1d"},
+                     Mevok={f="#9cab90", b="#23212c"},
+                     Duscenia={f="#2413a3", b="#0beb00"},
+                     Braevalar={f="#ffea00", b="#458f42"},
+                     Ymirgh={f="#252424", b="#b77a1a"},
+                     Willard={f="#272727", b="#0da7ad"},
+                 }
+
+    local pannelSize = {57,104, 141, 178, 215} -- Original Offset : 36, 83, 120, 157, 194 | Edit Offset : 21
+
+    --UI.setAttribute("pannel_Open_SetTurnOrder", "offsetXY", "0 -"..tostring(pannelSize[GameState.playerCount]-3)) --offsetXY="0 -18"
+    UI.setAttribute("panel_soloMode_Tool", "height", tostring(pannelSize[GameState.playerCount]))
+    local frameID = 'player_'
+    for k,name in pairs(GameState.turnOrder) do
+        local id = tostring(k)
+        local frameID = frameID..id
+        local textID = "text_"..frameID
+        local butID_in = "pannel_"..frameID.."_in"
+        local butID_out = "pannel_"..frameID.."_out"
+
+        --UI.setAttribute(frameID, "active", "true")
+        --UI.setAttribute(frameID, "knight", name)
+        UI.setAttributes(frameID, {active="true", knight=name})
+        UI.setAttribute(textID, "text", name)
+
+        if butCols[name] then
+            UI.setAttribute(textID, "color", butCols[name].f)
+            UI.setAttribute(butID_in, "color", butCols[name].b)
+            UI.setAttribute(butID_out, "color", butCols[name].b)
+        else
+            --broadcastToAll("This should add a default look to any names not found?", "Orange")
+            UI.setAttribute(textID, "color", butCols.default.f)
+            UI.setAttribute(butID_in, "color", butCols.default.b)
+            UI.setAttribute(butID_out, "color", butCols.default.b)
+        end
+
+        UI.show("pannel_Open_SetTurnOrder")
+        UI.hide("pannel_Run_SetTurnOrder")
+    end
+end
+
+function getGameState()
+    GameState = {}
+------- Set Player Names & Player Boards ----------------------------------------
+    GameState.names  = {}
+    GameState.boards = {}
+    local players = getObjectsWithTag('PlayerBoard')
+    local dummy = getObjectsWithTag('PlayerBoard_Dummy')
+
+    if dummy then
+        dummy = dummy[1]
+        table.insert(GameState.names, 'Dummy')
+        GameState.boards['Dummy'] = dummy
+    end
+
+    for k,v in pairs(players) do
+        local name = v.getName()
+        table.insert(GameState.names, name)
+        GameState.boards[name] = v
+    end
+------- Set Player Meeples -----------------------------------------------------
+    local meeples = getObjectsWithTag('Player_Meeple')
+    GameState.meeples = {Dummy=false}
+    for k,v in pairs(meeples) do
+        local name = v.getName()
+        GameState.meeples[name] = v
+    end
+
+------- Find PLayer Turn Tokens & set PlayerCount ------------------------------
+    GameState.turnToken = {}
+    local turnTokens = getObjectsWithTag('PlayerMarker_TurnOrder')
+    GameState.playerCount = #turnTokens
+
+    for k,v in pairs(turnTokens) do
+        GameState.turnToken[v.getName()] = v
+    end
+------- Find PLayer Turn Order- ------- ----------------------------------------
+    setTurnOrder()
+end
+------- Find PLayer Turn Order- ------- ----------------------------------------
+function setTurnOrder()
+    local data = {}
+    for k, o in pairs(GameState.turnToken) do
+        table.insert(data, {pos=o.getPosition().z, name=o.getName()})
+    end
+
+    table.sort(data, function(a, b)
+        return a.pos > b.pos
+    end)
+
+    -- Extract names into a new table
+    local sortedNames = {}
+    for _, entry in ipairs(data) do
+        table.insert(sortedNames, entry.name)
+    end
+
+    GameState.turnOrder = sortedNames
+end
+--********************************************************************************************************************
+--****** UI Buttons **************************************************************************************************
+--********************************************************************************************************************
+--- MOVE TURN MARKER -------------------------------------------------------------------------------------------------
+function b_moveTurnMarker(player, leftClick, id)
+    if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
+    if player.admin then
+        local c = {}
+        c.yellow = '['..Color.yellow:toHex(false)..']'
+        c.close  = '[-]'
+        local offset = {"-50 2","-50 -35","-50 -72","-50 -111","-50 -149"}
+        local current = UI.getAttribute(id, "knightPos")
+        local next = current + 1; if next > GameState.playerCount then next = 1 end
+        local prev = current - 1; if prev < 1 then prev = GameState.playerCount end
+
+        if leftClick then
+            local knight = GameState.turnOrder[next]
+            broadcastToAll("--== "..c.yellow..knight..[['s]]..c.close.." Turn Begins!! ==--", "Orange")
+
+            UI.setAttributes(id, {offsetXY=offset[next], knightPos=next})
+            b_focusCamera({color=player.color,admin=true}, -1, "but_player_"..next)
+        else
+            local knight = GameState.turnOrder[prev]
+            --print(knight)
+            broadcastToAll("--== Going back to "..c.yellow..knight..[['s]]..c.close.." Turn Again!! ==--", "Orange")
+
+            UI.setAttributes(id, {offsetXY=offset[prev], knightPos=prev})
+            b_focusCamera({color=player.color,admin=true}, -1, "but_player_"..prev)
+        end
+    end
+    Wait.frames(function() updateSave() end, 5)
+end
+
+--- FocusCamera -------------------------------------------------------------------------------------------------
+function b_focusCamera(player, leftClick, id)
+    --print(id)
+    local data = setCameraData(id)
+    if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
+    if leftClick then
+        --dprint('------------------ LEFT CLICK ------------------')
+        Player[player.color].lookAt(data.cam.board)
+    else
+        Player[player.color].lookAt(data.cam.meeple)
+        --dprint('RIGHT CLICK')
+    end
+end
+function setCameraData(id) -- using but_player_x as ID
+    local num = tonumber(id:match("%d+"))
+    local name = UI.getAttribute("text_player_"..num, "text")
+
+    local board = GameState.boards[name]--;print(board.getName())
+    local turnToken = GameState.turnToken[name]--;print(turnToken.getName())
+    local meeple = false; if GameState.meeples[name] then meeple = GameState.meeples[name] end--;if meeple then print(meeple.getName()) else print(meeple) end
+    local dummy = false; if not meeple then dummy = true end--;print(dummy)
+
+    --[[
+    local data = {{pitch=65, offset=Vector(0,0,2)};
+                  {pitch=65, offset=Vector(0,0,2)};
+                  {pitch=65, offset=Vector(0,0,2)};
+                  {pitch=65, offset=Vector(0,0,2)};
+                  {pitch=65, offset=Vector(0,0,2)}}
+    ]]
+    local camData = {}
+    camBoardData_pos = {Vector(-98.00, 2.52, -74.62), Vector(-30.00, 2.52, -74.62), Vector(38.00, 2.51, -74.62), Vector(106.00, 2.51, -74.62)}
+    camBoardData_values = {{offset=Vector(0,0,-5.83), distance=30},
+                           {offset=Vector(0,0,-5.83), distance=30},
+                           {offset=Vector(0,0,-5.83), distance=30},
+                           {offset=Vector(0,0,-5.83), distance=30}
+                          }
+
+    if dummy then
+        --print('Dummy 1')
+        camData = {}
+        camData.offset = Vector(0,0,-4.12)
+        camData.distance = 27
+        camData.pitch = 70
+    else
+        --print('Not Dummy 1')
+        camData.pitch = 70
+        for k,vec in pairs(camBoardData_pos) do
+            if Vector.equals(board.getPosition(), vec, 0.01) then
+                camData.distance = camBoardData_values[k].distance
+                camData.offset = camBoardData_values[k].offset
+            end
+        end
+    end
+
+    local cam = {}
+        if dummy then
+            --print('Dummy 2')
+            cam.meeple = {position=board.getPosition()+camData.offset, pitch=camData.pitch, distance=camData.distance, yaw=0}
+            cam.board = {position=board.getPosition()+camData.offset, pitch=camData.pitch, distance=camData.distance, yaw=0}
+        else
+            --print('Not Dummy 2')
+            cam.meeple = {position=meeple.getPosition()+Vector(0,0,1), pitch=65, distance=18, yaw=0}
+            cam.board = {position=board.getPosition()+camData.offset, pitch=camData.pitch, distance=camData.distance, yaw=0}
+        end
+
+    return {num=num, name=name, board=board, meeple=meeple, turnToken=turnToken, cam=cam}
+end
+--- Set Turn Order ---------------------------------------------------------------------------------------------------
+function b_TurnOrder_Open(player, altClick, id)
+    --UI.setAttribute("panel_soloMode_Tool", "height", tostring(pannelSize[GameState.playerCount]))
+    local size = UI.getAttribute("panel_soloMode_Tool", "height")
+    size = tonumber(size)
+    UI.setAttribute("panel_soloMode_Tool", "height", tostring(size+3))
+    UI.hide("pannel_Open_SetTurnOrder")
+    UI.show("pannel_Run_SetTurnOrder")
+end
+
+function b_TurnOrder_Run(player, leftClick, id)
+    if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
+    if leftClick then
+        setTurnOrder()
+        setToolFrames()
+    else
+        local size = UI.getAttribute("panel_soloMode_Tool", "height");size = tonumber(size)
+        UI.setAttribute("panel_soloMode_Tool", "height", tostring(size-3))
+
+        UI.hide("pannel_Run_SetTurnOrder")
+        UI.show("pannel_Open_SetTurnOrder")
+    end
+end
+--- Place Holder ---------------------------------------------------------------------------------------------------
+function b_placeholder()
+    broadcastToAll("Place Holder : Default", "Orange")
+end
+
+
+--[[
+function setEndTurnVars(id) --build a variable of the current turn values
+    local num = {}
+          num.current = tonumber(id:match("%d+"))
+          num.next = tonumber(id:match("%d+")) + 1; if num.next > GameState.playerCount then num.next = 1 end
+          num.prev = tonumber(id:match("%d+")) - 1; if num.prev < 1 then num.prev = GameState.playerCount end
+
+    local ids = {pan={}, but={}, txt={}}
+          ids.pan.current = "player_"..num.current
+          ids.pan.next = "player_"..num.next
+          ids.pan.prev = "player_"..num.prev
+
+          ids.but.current = id
+          ids.but.next = "but_player_"..num.next
+          ids.but.prev = "but_player_"..num.prev
+
+          ids.txt.current = "text_player_"..num.current
+          ids.txt.next = "text_player_"..num.next
+          ids.txt.prev = "text_player_"..num.prev
+
+    local names = {}
+          names.current = UI.getAttribute(ids.txt.current, "text")
+          names.next = UI.getAttribute(ids.txt.next, "text")
+          names.prev = UI.getAttribute(ids.txt.prev, "text")
+
+   local objs = {board={}, meeple={}, turnToken={}}
+
+   for k, name in pairs(names) do
+       objs.board[name] = GameState.boards[name]
+       objs.meeple[name] = GameState.meeples[name]
+       objs.turnToken[name] = GameState.turnToken[name]
+   end
+
+   local image = {}
+         image.id = 'image_Arrow'
+         image.offset = {"-50 2","-50 -35","-50 -72","-50 -111","-50 -149"} --{57,104, 141, 178, 215}
+
+    return {names=names, ids=ids, objs=objs, num=num, img=image}
+end
+]]

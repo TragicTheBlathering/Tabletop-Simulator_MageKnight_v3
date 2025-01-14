@@ -1,7 +1,7 @@
 local setupScript_finaliseSetUp = {}
 local dprint = require("/_libs/debug/dPrint").dprint
 
-function setupScript_finaliseSetUp.setup()
+function setupScript_finaliseSetUp.setup(gameSettings)
     --dprint('setupScript_drawRoll.finaliseSetUp')
     local darwCards = getObjectsWithTag('button_setupDraw')
     for k, offer in pairs(darwCards) do
@@ -22,7 +22,20 @@ function setupScript_finaliseSetUp.setup()
     for k, die in pairs(dice) do
         trash.putObject(die)
     end
-    Wait.condition(function() destroyObject(trash) end, function() return trashEmpty(trash) end)
+    Wait.condition(function()
+        destroyObject(trash)
+        openSoloModeMenu(gameSettings)
+    end, function() return trashEmpty(trash) end)
+end
+
+function openSoloModeMenu(gameSettings)
+    if gameSettings.solo then
+        local ctrlOBJ = getObjectFromGUID('4d7f8e')
+        ctrlOBJ.call("init_soloModeUI")
+    else
+        UI.hide("panel_soloMode_Start")
+        UI.hide("panel_soloMode_Tool")
+    end
 end
 
 function trashEmpty(trash)
@@ -38,14 +51,3 @@ function trashEmpty(trash)
 end
 
 return setupScript_finaliseSetUp
-
---[[
-button_setupDraw
-button_unitDraw
-button_aaDraw
-button_spellDraw
-button_ArtDraw
-
-{-4.38, 2.11, -42.40}
-setupBag_setUpDieRoller
-]]

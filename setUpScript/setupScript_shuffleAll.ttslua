@@ -25,9 +25,9 @@ end
 function shuffleALL(print)
     local found_ShuffleList = getObjectsWithAnyTags({'Cards_PlayerCard', 'Cards_Units', 'eventID_monsterDrawBag', 'eventID_teslaTokenDrawBag'})
     for k, obj in pairs(found_ShuffleList) do
-        if print then
-            printToAll('Shuffeling : '..obj.getName(), 'Orange')
-        end
+        --if print then
+        --    printToAll('Shuffeling : '..obj.getName(), 'Orange')
+        --end
         obj.shuffle()
     end
 end

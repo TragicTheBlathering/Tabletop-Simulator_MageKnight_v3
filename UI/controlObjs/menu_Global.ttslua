@@ -26,6 +26,22 @@ function menuAction(player, leftClick, id)
         elseif id=='set_spells' or id=='set_ultimate' then
             menuEdit.noTutorial(id, key, gameSettings[key])
 
+        elseif id=='set_solo' then
+            menuEdit.toggleButton(id, key, gameSettings[key])
+            local soloCode = getObjectFromGUID('4d7f8e')
+            local solo = soloCode.call('get_soloMode')--setON_soloMode get_soloMode
+            if solo then
+                --print('IF : TRUE')
+                --UI.hide("panel_soloMode_Start")
+                soloCode.call('set_soloMode', false)
+            else
+                --print('IF : FALSE')
+                --UI.show("panel_soloMode_Start")
+                soloCode.call('set_soloMode', true)
+            end
+            --local test = soloCode.call('get_soloMode')
+            --dprint(': new : solo : ')
+            --print(solo)
         else
             menuEdit.toggleButton(id, key, gameSettings[key])
         end
@@ -77,6 +93,7 @@ function menuEdit.button_setupScript() --gameSettings{blitz=false, volkare=false
     checkGameState()
     if gameSettings.allowRun then
         local data = {colors=buttonCol.redButton.on, text="Clean up Table and Apply Settings", onCLick="7656e0/callSetup", textColor=buttonCol.redButton.textColor} --,
+        if gameSettings.solo then UI.show("panel_soloMode_Start") else UI.hide("panel_soloMode_Start") end
         UI.setAttributes('run_Setup', data)
         currentSettingDisplay()
     else
