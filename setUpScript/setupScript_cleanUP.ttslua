@@ -16,6 +16,7 @@ function setupScript_cleanUP.table(gameSettings)
 end
 
 function setupScript_cleanUP.wait()
+    --print(waitObjects)
     return waitObjects
 end
 ---*****************************************************************************

@@ -2,12 +2,14 @@ local dprint = require("/_libs/debug/dPrint").dprint
 local useSoloMode = false
 local GameState = false
 
+--[[
 function updateSave()
     local data_to_save = {soloMode=useSoloMode, xml=UI.getXml()}
     saved_data = JSON.encode(data_to_save)
     self.script_state = saved_data
     --self.script_state = "" -- Clear All Data
 end
+]]
 
 function onSave()
     local data_to_save = {soloMode=useSoloMode, xml=UI.getXml()}
@@ -52,11 +54,11 @@ function init_soloModeUI()
 
     UI.hide("panel_soloMode_Start")
     UI.show("panel_soloMode_Tool")
-    Wait.frames(function() updateSave() end, 5)
+    --Wait.frames(function() updateSave() end, 5)
 end
 
 function b_Player1()
-    dprint("playerOne")
+    --dprint("playerOne")
 end
 
 function setToolFrames()
@@ -71,7 +73,8 @@ function setToolFrames()
                      Mevok={f="#9cab90", b="#23212c"},
                      Duscenia={f="#2413a3", b="#0beb00"},
                      Braevalar={f="#ffea00", b="#458f42"},
-                     Ymirgh={f="#252424", b="#b77a1a"},
+                     Ymirgh={f="#FFFFFF", b="#a15e12"},
+                     Jormund={f="#000000", b="#ff8700"},
                      Willard={f="#272727", b="#0da7ad"},
                  }
 
@@ -115,11 +118,18 @@ function getGameState()
     GameState.boards = {}
     local players = getObjectsWithTag('PlayerBoard')
     local dummy = getObjectsWithTag('PlayerBoard_Dummy')
+    local volk = getObjectsWithTag('Volkare_BoardToken')
 
     if dummy then
         dummy = dummy[1]
-        table.insert(GameState.names, 'Dummy')
-        GameState.boards['Dummy'] = dummy
+        if volk then
+            table.insert(GameState.names, 'Volkare')
+            GameState.boards['Volkare'] = dummy
+        else
+            dummy = dummy[1]
+            table.insert(GameState.names, 'Dummy')
+            GameState.boards['Dummy'] = dummy
+        end
     end
 
     for k,v in pairs(players) do
@@ -133,6 +143,12 @@ function getGameState()
     for k,v in pairs(meeples) do
         local name = v.getName()
         GameState.meeples[name] = v
+    end
+
+    local volkM = getObjectsWithTag('Volkare_Meeple')
+    if volkM then
+        volkM = volkM[1]
+        GameState.meeples['Volkare'] = volkM
     end
 
 ------- Find PLayer Turn Tokens & set PlayerCount ------------------------------
@@ -195,73 +211,90 @@ function b_moveTurnMarker(player, leftClick, id)
             b_focusCamera({color=player.color,admin=true}, -1, "but_player_"..prev)
         end
     end
-    Wait.frames(function() updateSave() end, 5)
+    --Wait.frames(function() updateSave() end, 5)
 end
 
 --- FocusCamera -------------------------------------------------------------------------------------------------
 function b_focusCamera(player, leftClick, id)
     --print(id)
     local data = setCameraData(id)
+    --dprint('data', data)
     if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
     if leftClick then
         --dprint('------------------ LEFT CLICK ------------------')
         Player[player.color].lookAt(data.cam.board)
     else
-        Player[player.color].lookAt(data.cam.meeple)
+        if data.cam.meeple then
+            Player[player.color].lookAt(data.cam.meeple)
+        end
         --dprint('RIGHT CLICK')
     end
 end
 function setCameraData(id) -- using but_player_x as ID
+    --print('CLEAN START')
+    --print(id)
     local num = tonumber(id:match("%d+"))
     local name = UI.getAttribute("text_player_"..num, "text")
+    local board = GameState.boards[name]
+    local turnToken = GameState.turnToken[name]
+    local meeple = false; if GameState.meeples[name] then meeple = GameState.meeples[name] end
+    --print(name); print(board.getName()); print(turnToken.getName()); print(meeple.getName());
 
-    local board = GameState.boards[name]--;print(board.getName())
-    local turnToken = GameState.turnToken[name]--;print(turnToken.getName())
-    local meeple = false; if GameState.meeples[name] then meeple = GameState.meeples[name] end--;if meeple then print(meeple.getName()) else print(meeple) end
-    local dummy = false; if not meeple then dummy = true end--;print(dummy)
+     local camBoardData_pos = {Vector(-98.00, 2.52, -74.62), Vector(-30.00, 2.52, -74.62), Vector(38.00, 2.51, -74.62), Vector(106.00, 2.51, -74.62)}
+     local camBoardData_values = {{offset=Vector(0,0,-5.83), distance=30},
+                                  {offset=Vector(0,0,-5.83), distance=30},
+                                  {offset=Vector(0,0,-5.83), distance=30},
+                                  {offset=Vector(0,0,-5.83), distance=30}
+                                 }
 
-    --[[
-    local data = {{pitch=65, offset=Vector(0,0,2)};
-                  {pitch=65, offset=Vector(0,0,2)};
-                  {pitch=65, offset=Vector(0,0,2)};
-                  {pitch=65, offset=Vector(0,0,2)};
-                  {pitch=65, offset=Vector(0,0,2)}}
-    ]]
-    local camData = {}
-    camBoardData_pos = {Vector(-98.00, 2.52, -74.62), Vector(-30.00, 2.52, -74.62), Vector(38.00, 2.51, -74.62), Vector(106.00, 2.51, -74.62)}
-    camBoardData_values = {{offset=Vector(0,0,-5.83), distance=30},
-                           {offset=Vector(0,0,-5.83), distance=30},
-                           {offset=Vector(0,0,-5.83), distance=30},
-                           {offset=Vector(0,0,-5.83), distance=30}
-                          }
-
-    if dummy then
-        --print('Dummy 1')
-        camData = {}
-        camData.offset = Vector(0,0,-4.12)
-        camData.distance = 27
-        camData.pitch = 70
+    local camBoardData = {}
+    if name == "Volkare" or name == "Dummy" then
+        --print("Volkare")
+        camBoardData = {}
+        camBoardData.offset = Vector(0,0,-4.12)
+        camBoardData.distance = 27
+        camBoardData.pitch = 70
     else
-        --print('Not Dummy 1')
-        camData.pitch = 70
-        for k,vec in pairs(camBoardData_pos) do
-            if Vector.equals(board.getPosition(), vec, 0.01) then
-                camData.distance = camBoardData_values[k].distance
-                camData.offset = camBoardData_values[k].offset
+        if name == "Dummy" then
+            --print("IS DUMMY")
+            camBoardData = {}
+            camBoardData.offset = Vector(0,0,-4.12)
+            camBoardData.distance = 27
+            camBoardData.pitch = 70
+        else
+            camBoardData.pitch = 70
+            local boardPos = board.getPosition()
+            for k,vec in pairs(camBoardData_pos) do
+                if boardPos:equals(vec, 1) then
+                    camBoardData.distance = camBoardData_values[k].distance
+                    camBoardData.offset = camBoardData_values[k].offset
+                end
             end
         end
     end
 
     local cam = {}
-        if dummy then
-            --print('Dummy 2')
-            cam.meeple = {position=board.getPosition()+camData.offset, pitch=camData.pitch, distance=camData.distance, yaw=0}
-            cam.board = {position=board.getPosition()+camData.offset, pitch=camData.pitch, distance=camData.distance, yaw=0}
+    if name == "Volkare" then
+        if meeple ~= false then
+            if meeple.isDestroyed() then
+                cam.meeple = false
+            else
+                cam.meeple = {position=meeple.getPosition()+Vector(0,0,1), pitch=70, distance=18, yaw=0}
+            end
         else
-            --print('Not Dummy 2')
-            cam.meeple = {position=meeple.getPosition()+Vector(0,0,1), pitch=65, distance=18, yaw=0}
-            cam.board = {position=board.getPosition()+camData.offset, pitch=camData.pitch, distance=camData.distance, yaw=0}
+            cam.meeple = false
         end
+        cam.board = {position=board.getPosition()+camBoardData.offset, pitch=camBoardData.pitch, distance=camBoardData.distance, yaw=0}
+    else
+        if name == "Dummy" then
+            local dummy = getObjectsWithTag('PlayerBoard_Dummy')[1]
+            cam.meeple = {position=dummy.getPosition()+camBoardData.offset, pitch=camBoardData.pitch, distance=camBoardData.distance, yaw=0}
+            cam.board = {position=dummy.getPosition()+camBoardData.offset, pitch=camBoardData.pitch, distance=camBoardData.distance, yaw=0}
+        else
+            cam.meeple = {position=meeple.getPosition()+Vector(0,0,1), pitch=65, distance=18, yaw=0}
+            cam.board = {position=board.getPosition()+camBoardData.offset, pitch=camBoardData.pitch, distance=camBoardData.distance, yaw=0}
+        end
+    end
 
     return {num=num, name=name, board=board, meeple=meeple, turnToken=turnToken, cam=cam}
 end
@@ -278,6 +311,8 @@ end
 function b_TurnOrder_Run(player, leftClick, id)
     if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
     if leftClick then
+        getGameState()
+        --dprint('GameState', GameState)
         setTurnOrder()
         setToolFrames()
     else

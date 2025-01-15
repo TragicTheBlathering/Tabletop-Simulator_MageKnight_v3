@@ -14,7 +14,7 @@
 </Defaults>
 <!-- ======================================================================= -->
 <!-- SetUpMenu -->
-<Panel id="panel_setupMenu" width="756" height="436" color="#000000" alignment="MiddleCenter" active="false" raycastTarget = "true">
+<Panel id="panel_setupMenu" width="756" height="436" color="#000000" alignment="MiddleCenter" active="false" raycastTarget="true">
     <!-- Title -->
     <Panel offsetXY="-3 -3" width="750" height="40" color="#757575" rectAlignment="UpperRight" allowDragging="false" active="true">
         <Text class="Title" text="Mage Knight (Tragic Edition v3)" />

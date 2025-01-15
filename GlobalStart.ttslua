@@ -2,7 +2,7 @@ local dprint = require("/_libs/debug/dPrint").dprint
 local uiFunc = require("/MageKnightV3/UI/_GlobalUI_lua")
 local tool = {}
       tool.onModLoad=require("/_libs/onModLoad/onModLoad")
-      --tool.setupZone=require("/_libs/setUpZones/setUpZones")
+      tool.hotkeys=require("/MageKnightV3/hotKeys/hotKeys").build
       tool.DiceEffect=require("/MageKnightV3/events/event_DiceInHand").startTiemr
 
 function onSave()
@@ -27,6 +27,7 @@ function onload(saved_data)
   --math.randomseed(os.time())
   tool.onModLoad.MegaFreeze() -- You can also add GUIDs via {'guid1', 'guid2'....}
   tool.onModLoad.FixHandZones(8)
+  tool.hotkeys()
   tool.DiceEffect()
 end
 

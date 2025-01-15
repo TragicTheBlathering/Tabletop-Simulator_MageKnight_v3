@@ -25,13 +25,14 @@ local wait_ids = {}
 --******************************************************************************
 --****** Save and Load Code ****************************************************
 --******************************************************************************
+--[[
 function updateSave()
     local data_to_save = {button=b}
     saved_data = JSON.encode(data_to_save)
     self.script_state = saved_data
     --self.script_state = "" -- Clear All Data
 end
-
+]]
 function onSave()
     local data_to_save = {button=b}
     saved_data = JSON.encode(data_to_save)
@@ -81,10 +82,10 @@ function chooseVolkare()
     fetch_DummyTurnOrderToken()
     local platforms = getObjectsWithTag('KnightSelect')
     if #platforms == 0 then
-        b=3; self.clearButtons(); makeButtons(); updateSave()
+        b=3; self.clearButtons(); makeButtons(); --updateSave()
         self.interactable = false
         self.setLock(true)
-        updateSave()
+        --updateSave()
 
         local existingObjects = castZone('clearBoard')
         if existingObjects then
@@ -522,8 +523,13 @@ function getCrystals()
 end
 
 function fetch_DummyTurnOrderToken()
-    local bag = getObjectsWithTag('setupBag_DummyTurnOrderToken')[1]
     local shuffler = getObjectsWithTag('playerMarker_TurnOrderBAG')[1]
+    local bag = false
+    if not getObjectsWithTag('Volkare_BoardToken')[1] then
+        bag = getObjectsWithTag('setupBag_DummyTurnOrderToken')[1]
+    else
+        bag = getObjectsWithTag('Volkare_DummyToken')[1]
+    end
     if bag then
         local p = Vector(15.27, 2.01, -44.23) + Vector(0,3,0)
         local r = Vector(0,180,0)
@@ -541,7 +547,7 @@ function fetchObjects(dummyCard)
     self.clearButtons()
     b=2
     makeButtons()
-    updateSave()
+    --updateSave()
 
     fetch_DummyTurnOrderToken()
     local name = dummyCard.getName()

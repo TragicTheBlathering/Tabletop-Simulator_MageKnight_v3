@@ -281,10 +281,12 @@ end
 --******************************************************************************
 --- Mouse Over Text Changes ----------------------------------------------------
 function onMouseEnter(player, value, id)
+    --Player[player.color].clearSelectedObjects()
     menuEdit.onMouseHover(player, id, true)
 end
 
 function onMouseExit(player, value, id)
+    --Player[player.color].clearSelectedObjects()
     menuEdit.onMouseHover(player, id, false)
 end
 

@@ -1,0 +1,259 @@
+local hotkeysSettings = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+local tokenPools = false
+    function hotkeysSettings.build()
+        if not tokenPools then setTokenPools() end--; dprint('tokenPools', tokenPools)
+        addHotkey("MK : Draw Rampage Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Orc') end , false)
+        addHotkey("MK : Draw Dungeon Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Dungeon') end , false)
+        addHotkey("MK : Draw Keep Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Keep') end , false)
+        addHotkey("MK : Draw Mage Tower Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'MageTower') end , false)
+        addHotkey("MK : Draw Dragon Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Dragon') end , false)
+        addHotkey("MK : Draw City Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'City') end , false)
+        addHotkey("MK : Draw Ruin Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Ruin') end , false)
+        addHotkey("MK : Draw Elementalist Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getTeslaToken(playerColor, pointerPosition, 'tesla_E') end , false)
+        addHotkey("MK : Draw Necromancer Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getTeslaToken(playerColor, pointerPosition, 'tesla_N') end , false)
+    end
+
+function HK_getTeslaToken(playerColor, pointerPosition, type)
+    if Player[playerColor].admin then
+        if tokenPools[type].getQuantity() == 0 then
+            broadcastToAll("ERROR : The Faction Token Bag is EMPTY!", 'Red')
+        else
+            local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
+            local pug = tokenPools[type].takeObject({})
+            pug.setRotation(Vector(0,180,180))
+            pug.setPosition(pointPos)
+            pug.setPositionSmooth(pointPos+Vector(0,1,0))
+            Wait.frames(function() pug.setRotationSmooth(Vector(0,180,0)) end, 5)
+        end
+    end
+end
+
+function HK_getToken(playerColor, object, pointerPosition, type)
+    --dprint(playerColor); dprint(object); dprint(pointerPosition); dprint(type)
+    if Player[playerColor].admin then
+        if object then
+            if object.hasTag('maptile_Countryside') or object.hasTag('maptile_Core') then
+                local snaps = object.getSnapPoints()
+                local foundSnaps = {}
+                --dprint('snaps', snaps)
+                for k, snap in ipairs(snaps) do
+                    for k, v in ipairs(snap.tags) do
+                        if v == "pug_Enemy" then
+                            local wpos = object.positionToWorld(Vector(snap.position))
+                            table.insert(foundSnaps, wpos) --Vector(snap.position))
+                        end
+                    end
+                end
+                HK_fetchToken(foundSnaps, pointerPosition, object, type)
+            end
+        end
+    end
+end
+
+function HK_fetchToken(foundSnaps, pointerPosition, object, type)
+    --dprint('foundSnaps', foundSnaps); dprint('pointerPosition', pointerPosition); dprint('object', object); dprint('type', type)
+    --local testOBJ = getObjectFromGUID('f1f3ff')
+    --print(tokenPools[type].getDescription())
+    --print(tokenPools[type].getQuantity())
+    if tokenPools[type].getQuantity() == 0 then
+        broadcastToAll("ERROR : The Enemy Token Bag is EMPTY!", 'Red')
+    else
+        local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
+        local snapPos = HK_findClosest(pointerPosition, foundSnaps)
+        local pug = tokenPools[type].takeObject({})
+
+        pug.setRotation(Vector(0,180,180))
+        pug.setPosition(pointPos)
+        pug.setPositionSmooth(Vector(snapPos.x, 3, snapPos.z))
+    end
+end
+
+function HK_findClosest(target, coordinates)
+    -- Extract the x and z values from the target
+     local targetX, targetZ = target.x, target.z
+     local closestCoord = nil
+     local closestDistance = math.huge -- Start with a very large distance
+
+     for _, coord in ipairs(coordinates) do
+         -- Extract the x and z values from the current coordinate
+         local coordX, coordZ = coord.x, coord.z
+
+         -- Calculate the squared distance (ignoring y)
+         local distanceSquared = (coordX - targetX)^2 + (coordZ - targetZ)^2
+
+         -- Debugging print to see distances
+         --print(string.format("Checking coordinate: {x: %.6f, y: %.6f, z: %.6f}, Distance squared: %.6f", coord.x, coord.y, coord.z, distanceSquared))
+
+         -- Update closest coordinate if this one is closer
+         if distanceSquared < closestDistance then
+             --print(string.format("Updating closest coordinate to: {x: %.6f, y: %.6f, z: %.6f}, New distance: %.6f", coord.x, coord.y, coord.z, distanceSquared))
+             closestDistance = distanceSquared
+             closestCoord = coord
+         end
+     end
+     return closestCoord
+end
+
+function setTokenPools()
+    tokenPools = {}
+    local tags = {'pug_Orc','pug_Dungeon','pug_Keep','pug_MageTower','pug_Dragon','pug_City','pug_Ruin'}
+    local bags = getObjectsWithTag("eventID_monsterDrawBag")
+    --dprint('bags', bags)
+    for k,bag in pairs(bags) do
+        for _, tag in ipairs(tags) do
+            if bag.hasTag(tag) then
+                tokenPools[string.gsub(tag, "^pug_", "")] = bag
+            end
+        end
+    end
+
+    bags = getObjectsWithTag("eventID_teslaTokenDrawBag")
+    for k,bag in pairs(bags) do
+        if bag.hasTag('pug_tesla_nItem') then
+            tokenPools.tesla_N = bag
+        elseif bag.hasTag('pug_tesla_eItem') then
+            tokenPools.tesla_E = bag
+        end
+    end
+end
+
+function testHotKey()
+    dprint("TEST")
+end
+
+return hotkeysSettings
+
+--[[
+
+function BuildHotKeys()
+    addHotkey("Tags_Print",hot_PrintTags , false)
+    addHotkey("Tags_CLEAR",hot_ClearTags , false)
+    addHotkey("Toggle ToolTip",hot_ToggleToolTips , false)
+    addHotkey("Tags_ADD",hot_AddTags , false)
+    addHotkey("Tags_REPLACE",hot_ReplaceTags , false)
+    addHotkey("Tags_REMOVE",hot_RemoveTags , false)
+end
+
+function hot_RemoveTags(playerColor, object, pointerPosition, isKeyUp)
+    local objString = tostring(object)
+    local nameString = object.getName()
+    if nameString == '' then
+        nameString = '<No Name>'
+    end
+    printToAll('\n'..objString,'Orange')
+    printToAll(' Object Name : '..nameString, 'Yellow')
+
+    local type = 'NameTag_Tags'
+    local plat = getObjectsWithTag(type)[1]
+    if plat then
+        local tags = cast(plat, 'noteCard', type)
+        local newTags = tags.TagList.remove
+
+        table.sort(newTags)
+        for k,v in ipairs(newTags) do
+            printToAll(' '..k..' : '..v)
+            object.removeTag(v)
+        end
+    end
+end
+
+function hot_ReplaceTags(playerColor, object, pointerPosition, isKeyUp)
+    local objString = tostring(object)
+    local nameString = object.getName()
+    if nameString == '' then
+        nameString = '<No Name>'
+    end
+    printToAll('\n'..objString,'Orange')
+    printToAll(' Object Name : '..nameString, 'Yellow')
+
+    local type = 'NameTag_Tags'
+    local plat = getObjectsWithTag(type)[1]
+    if plat then
+        local tags = cast(plat, 'noteCard', type)
+        local newTags = tags.TagList.add
+
+        table.sort(newTags)
+        for k,v in ipairs(newTags) do
+            printToAll(' '..k..' : '..v)
+        end
+
+        object.setTags(newTags)
+    end
+end
+
+function hot_AddTags(playerColor, object, pointerPosition, isKeyUp)
+    local objString = tostring(object)
+    local nameString = object.getName()
+    if nameString == '' then
+        nameString = '<No Name>'
+    end
+    printToAll('\n'..objString,'Orange')
+    printToAll(' Object Name : '..nameString, 'Yellow')
+
+    local type = 'NameTag_Tags'
+    local plat = getObjectsWithTag(type)[1]
+    if plat then
+        local tags = cast(plat, 'noteCard', type)
+        local oldTags = object.getTags()
+        local newTags = tags.TagList.add
+
+        table.sort(newTags)
+        for k,v in ipairs(newTags) do
+            printToAll(' '..k..' : '..v)
+        end
+
+        for k, oldTag in pairs(oldTags) do
+            table.insert(newTags, oldTag)
+        end
+        table.sort(newTags)
+        object.setTags(newTags)
+    end
+end
+
+function hot_ClearTags(playerColor, object, pointerPosition, isKeyUp)
+    if object then
+        local name = object.getName()
+        if name == '' then name = tostring(object) end
+        printToAll('\n'..name, 'Orange')
+        printToAll('   Clearing All Tags', 'Red')
+        object.setTags({})
+    else
+        printToAll('ERROR : There is no Object Under the Cursor', 'Red')
+    end
+end
+
+function hot_PrintTags(playerColor, object, pointerPosition, isKeyUp)
+    if object then
+        local objString = tostring(object)
+        local nameString = object.getName()
+        local tags = object.getData().Tags
+
+        if nameString == '' then
+            nameString = '<No Name>'
+        end
+
+        printToAll('\n'..objString,'Orange')
+        printToAll(' Object Name : '..nameString, 'Yellow')
+        if tags then
+            table.sort(tags)
+            for k,v in ipairs(tags) do
+                printToAll(' '..k..' : '..v)
+            end
+        else
+            printToAll(' ERROR : There are no Tags on the object', 'Red')
+        end
+    end
+end
+
+function hot_ToggleToolTips(playerColor, object, pointerPosition, isKeyUp)
+    if object then
+        if object.tooltip == true then
+            object.tooltip = false
+        else
+            object.tooltip = true
+        end
+    end
+end
+
+]]
