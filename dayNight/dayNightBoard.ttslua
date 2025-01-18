@@ -26,13 +26,13 @@ function f_DayNight()
 
 
     if self.getCustomObject().image == nightBMP then -- If it is Night turn to night
-        print("********** Change to DAY **********")
+        --print("********** Change to DAY **********")
         TintMap({r=1, g=1, b=1}, mapTiles)
         changeTexture('day')
         fetchCards(dayZone)
         rotateDie('day')
     elseif  self.getCustomObject().image == dayBMP then -- If it is Day turn to night
-        print("********** Change to NIGHT **********")
+        --print("********** Change to NIGHT **********")
         TintMap({r=0.5, g=0.5, b=0.5}, mapTiles)
         changeTexture('night')
         fetchCards(nightZone)
@@ -120,7 +120,7 @@ function MoveCards(tacticCards, switch)
         sSource = dayBMP
         sZone = getObjectFromGUID(nightZone)
         sTube = getObjectFromGUID(nightTube)
-        print('get NIGHT cards')
+        --print('get NIGHT cards')
     end
 
     if #tacticCards > 0 then

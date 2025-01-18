@@ -1,4 +1,5 @@
 local Showbug = false
+local trashInitiated = true
 local dprint = require("/_libs/debug/dPrint").dprint
 
 local trash_Tags = {
@@ -29,14 +30,16 @@ end
 ***** Function Called by Event to Start Trash Cascade **************************
 ********************************************************************************]]
 function callTrash(data)    --dprint('---- Clear : callTrash(data)')
-    local TrashBag = data.trashBag
-    local removedDeckList = nil
+    if trashInitiated then
+        trashInitiated = false
+        local TrashBag = data.trashBag
+        local removedDeckList = nil
 
-    Wait.frames(function()
-        removedDeckList = removeDecksFormTrash(TrashBag)
-        Wait.frames(function() processAllTrash(TrashBag, removedDeckList) end, 1) -- wait for removed decks to spawn compleatly
-    end, 1)
-
+        Wait.frames(function()
+            removedDeckList = removeDecksFormTrash(TrashBag)
+            Wait.frames(function() processAllTrash(TrashBag, removedDeckList) end, 1) -- wait for removed decks to spawn compleatly
+        end, 1)
+    end
 end
 
 --[[****************************************************************************
@@ -44,8 +47,12 @@ end
 ********************************************************************************]]
 function processAllTrash(TrashBag, removedDeckList)
     local uniqueCastLocatons = setUniqueCastLocations(TrashBag, removedDeckList) --dprint('uniqueCast', uniqueCastLocatons)
+    --dprint('uniqueCastLocatons', uniqueCastLocatons)
     processObjectsIn_Container(uniqueCastLocatons, TrashBag, removedDeckList)
     --dprint('/n---- Clear : processTrashBag(TrashBag, removedDeckList)')
+    Wait.frames(function()
+        trashInitiated = true
+    end, 60)
 end
 
 --trash_Tags.discardObject='trash_discardobject', discardTarget='trash_discardtarget',
@@ -63,17 +70,21 @@ function processObjectsIn_Container(uniqueCast, container, removedDeckList)
         local objTags = objInContainer.tags
         if objTags[1] then
             if singleTagFoundinTagList(objTags, trash_Tags.deleteme) then --Delete Me Objects
+                --dprint('Delete Me')
                 local obj = container.takeObject({index=dex})
                 destroyObject(obj)
 
             elseif singleTagFoundinTagList(objTags, 'trashID_RemovedFromGame') and singleTagFoundinTagList(objTags, 'Cards_Wound') then --Delete Me Objects
+                --dprint('Remove Wounds')
                 local obj = container.takeObject({index=dex})
                 destroyObject(obj)
 
             elseif singleTagFoundinTagList(objTags, trash_Tags.manaDie) then -- Die Objects
+                --dprint('Dice')
                 dieCount = sendDieBackToSource(objInContainer, dex, dieCount, container)
 
             elseif singleTagFoundinTagList(objTags, trash_Tags.discardObject) then -- Most Objects
+                --dprint('Rest')
                 Y = moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, container, container)
             end
         end
@@ -88,6 +99,7 @@ function processObjectsIn_Container(uniqueCast, container, removedDeckList)
                 local objInContainer = containedObjs[dex+1]
                 local objTags = objInContainer.tags
                 if objTags[1] then
+                    --dprint("Deck should not be nil")
                     if singleTagFoundinTagList(objTags, trash_Tags.discardObject) then
                         if singleTagFoundinTagList(objTags, 'trashID_RemovedFromGame') and singleTagFoundinTagList(objTags, 'Cards_Wound') then
                             local obj = deck.takeObject({index=dex})
@@ -121,8 +133,10 @@ function moveObjectToTrashPile(objInContainer, dex, uniqueCast, Y, container, tr
     if not Y[loc] then Y[loc] = Vector(0,1,0) end
 
     local pos = placeTopOrBot_ofObject(uniqueCast[loc],'top')--uniqueCast[loc].getPosition()
+    --dprint("??? - moveObjectToTrashPile")
     --local obj = container.takeObject({position=pos+Y[loc], index=dex})
     local obj = container.takeObject({index=dex})
+    --dprint('!!! - moveObjectToTrashPile"')
     local posAboveTrash = placeTopOrBot_ofObject(trashBag,'top')
     obj.setPosition(posAboveTrash)
     obj.setPositionSmooth(pos+Y[loc], false, false)
@@ -143,18 +157,24 @@ end
 function putObjectIntoDiscard(obj, discardTarget)
     --print(discardTarget.type)
     if discardTarget.type == 'Bag' then
+        --dprint("!!!")
         --print('!!!')
         discardTarget.putObject(obj)
         return discardTarget
 
     elseif discardTarget.type == 'Generic' and obj.type == 'Card' then
+        --dprint("???")
         obj.setPosition(discardTarget.getPosition()+Vector(0,0.05,0))
         return obj
 
     elseif (discardTarget.type == 'Card' or discardTarget.type == 'Deck') and obj.type == 'Card' then
-        --print('###')
-        local newObj = discardTarget.putObject(obj)
-        return newObj
+        if discardTarget.hasTag('trashID_TacticDay') or  discardTarget.hasTag('trashID_TacticNight') then
+            --dprint("###")
+            return discardTarget
+        else
+            local newObj = discardTarget.putObject(obj)
+            return newObj
+        end
     end
 
 end
@@ -261,12 +281,15 @@ end
 ***** Tag Processing and Data Gathering ****************************************
 ********************************************************************************]]
 function setDiscardContainerTargets(obj, TrashBag, objTags)
+    --dprint('objTags', objTags)
     local id = {}
     for k,t in ipairs(objTags) do
         local tag = string.lower(t)
         if tag == trash_Tags.discardObject then
+            --print(tag)
             id.validDiscardObj = true
-        elseif string.find(tag, trash_Tags.trashID_, 1, true) then
+        elseif string.find(string.lower(tag), trash_Tags.trashID_, 1, true) then
+            --print(tag)
             id.trashTarget = t
         end
     end
@@ -294,6 +317,7 @@ function removeDecks_SetPosition(indexesToRemove, TrashBag, debug)
     debug = debug or false; local count = 0
     local z = {}
     local posAbove = placeTopOrBot_ofObject(TrashBag,'top')
+    --dprint("@@@ - removeDecks_SetPosition")
     for i,indexToRemove in ipairs (indexesToRemove) do
         local obj = TrashBag.takeObject({ index = indexToRemove })
             if debug then
@@ -354,12 +378,24 @@ function setDiscardLocationTag(oldTags, playerNum)
         end
         table.insert(tags, 'trashID_PlayerDiscard_p'..playerNum)
     else
+        --- Hack to fix DayNight Cards : (
+        local doNotSkip = true
         for k, t in ipairs(oldTags) do
-            if not string.find(t, 'trashID_', 1, true) then
-                table.insert(tags, t)
+            if t == 'trashID_TacticDay' or t == "trashID_TacticNight" then
+                tags = oldTags
+                doNotSkip = false
+                break
             end
         end
-        table.insert(tags, 'trashID_RemovedFromGame')
+
+        if doNotSkip then
+            for k, t in ipairs(oldTags) do
+                if not string.find(t, 'trashID_', 1, true) then
+                    table.insert(tags, t)
+                end
+            end
+            table.insert(tags, 'trashID_RemovedFromGame')
+        end
     end
 
     return tags
@@ -442,8 +478,8 @@ end
 --- switch == 'bot' -- Just below container
 --- switch == number -- use the number to set Y position
 function placeTopOrBot_ofObject(obj,switch)
+    --print(obj)
     switch = switch or 'top'
-
     if switch == 'top' then
         return obj.getPosition() + Vector(0, obj.getBounds().size.y+0.01, 0)
     elseif switch =='bot' then

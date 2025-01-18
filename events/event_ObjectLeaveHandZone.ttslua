@@ -27,8 +27,8 @@ function event_ObjectLeaveHandZone.tagCard_handZone(zone, card)
         if not card.hasTag(handZone) then
             for k, tag in pairs(handZoneTags) do
                 if card.hasTag(tag) then
-                    print("Tag : "..tag)
-                    print("Discard : "..discardTrashTags[k])
+                    --print("Tag : "..tag)
+                    --print("Discard : "..discardTrashTags[k])
                     card.removeTag(tag)
                     card.removeTag(discardTrashTags[k])
                     break
