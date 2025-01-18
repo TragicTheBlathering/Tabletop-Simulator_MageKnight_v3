@@ -1,8 +1,13 @@
 local hotkeysSettings = {}
 local dprint = require("/_libs/debug/dPrint").dprint
-local tokenPools = false
+local HK_tokenPools = false
     function hotkeysSettings.build()
-        if not tokenPools then setTokenPools() end--; dprint('tokenPools', tokenPools)
+        if not HK_tokenPools then setHK_tokenPools() end--; dprint('HK_tokenPools', HK_tokenPools)
+        addHotkey("MK : End Turn", function(playerColor, object, pointerPosition, isKeyUp) HK_EndTurn(playerColor, object, pointerPosition) end , false)
+
+        addHotkey("MK : Camera to Mat", function(playerColor, object, pointerPosition, isKeyUp) HK_focusCamera(playerColor, object, pointerPosition, "mat") end , false)
+        addHotkey("MK : Camera to Meeple", function(playerColor, object, pointerPosition, isKeyUp) HK_focusCamera(playerColor, object, pointerPosition, "meeple") end , false)
+
         addHotkey("MK : Draw Rampage Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Orc') end , false)
         addHotkey("MK : Draw Dungeon Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Dungeon') end , false)
         addHotkey("MK : Draw Keep Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Keep') end , false)
@@ -10,17 +15,44 @@ local tokenPools = false
         addHotkey("MK : Draw Dragon Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Dragon') end , false)
         addHotkey("MK : Draw City Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'City') end , false)
         addHotkey("MK : Draw Ruin Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getToken(playerColor, object, pointerPosition, 'Ruin') end , false)
+
         addHotkey("MK : Draw Elementalist Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getTeslaToken(playerColor, pointerPosition, 'tesla_E') end , false)
         addHotkey("MK : Draw Necromancer Token", function(playerColor, object, pointerPosition, isKeyUp) HK_getTeslaToken(playerColor, pointerPosition, 'tesla_N') end , false)
     end
 
+function HK_focusCamera(playerColor, pointerPosition, type, switch) --b_focusCamera({color=player.color,admin=true}, -1, "but_player_"..next)
+    local HK_soloMode = {}
+          HK_soloMode.code = getObjectFromGUID('4d7f8e')
+          HK_soloMode.on = HK_soloMode.code.call('get_soloMode')
+
+    if HK_soloMode.on then
+        local prams = {player={color=playerColor, admin=true}, num= -1, id="image_Arrow", switch=switch}
+        HK_soloMode.code.call('hotkeyCall_CamPos', prams)
+    else
+        broadcastToAll("Error : Hotkey only works in Solo Mode", 'Red')
+    end
+end
+
+function HK_EndTurn(playerColor, pointerPosition, type) --b_focusCamera({color=player.color,admin=true}, -1, "but_player_"..next)
+    local HK_soloMode = {}
+          HK_soloMode.code = getObjectFromGUID('4d7f8e')
+          HK_soloMode.on = HK_soloMode.code.call('get_soloMode')
+
+    if HK_soloMode.on then
+        local prams = {player={color=playerColor, admin=true}, num= -1, id="image_Arrow"}
+        HK_soloMode.code.call('hotkeyCall', prams)
+    else
+        broadcastToAll("Error : Hotkey only works in Solo Mode", 'Red')
+    end
+end
+
 function HK_getTeslaToken(playerColor, pointerPosition, type)
     if Player[playerColor].admin then
-        if tokenPools[type].getQuantity() == 0 then
+        if HK_tokenPools[type].getQuantity() == 0 then
             broadcastToAll("ERROR : The Faction Token Bag is EMPTY!", 'Red')
         else
             local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
-            local pug = tokenPools[type].takeObject({})
+            local pug = HK_tokenPools[type].takeObject({})
             pug.setRotation(Vector(0,180,180))
             pug.setPosition(pointPos)
             pug.setPositionSmooth(pointPos+Vector(0,1,0))
@@ -47,6 +79,12 @@ function HK_getToken(playerColor, object, pointerPosition, type)
                 end
                 HK_fetchToken(foundSnaps, pointerPosition, object, type)
             end
+        else
+            local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
+            local pug = HK_tokenPools[type].takeObject({})
+            pug.setRotation(Vector(0,180,180))
+            pug.setPosition(pointPos)
+            pug.setPositionSmooth(pointPos+Vector(0,1,0))
         end
     end
 end
@@ -54,14 +92,14 @@ end
 function HK_fetchToken(foundSnaps, pointerPosition, object, type)
     --dprint('foundSnaps', foundSnaps); dprint('pointerPosition', pointerPosition); dprint('object', object); dprint('type', type)
     --local testOBJ = getObjectFromGUID('f1f3ff')
-    --print(tokenPools[type].getDescription())
-    --print(tokenPools[type].getQuantity())
-    if tokenPools[type].getQuantity() == 0 then
+    --print(HK_tokenPools[type].getDescription())
+    --print(HK_tokenPools[type].getQuantity())
+    if HK_tokenPools[type].getQuantity() == 0 then
         broadcastToAll("ERROR : The Enemy Token Bag is EMPTY!", 'Red')
     else
         local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
         local snapPos = HK_findClosest(pointerPosition, foundSnaps)
-        local pug = tokenPools[type].takeObject({})
+        local pug = HK_tokenPools[type].takeObject({})
 
         pug.setRotation(Vector(0,180,180))
         pug.setPosition(pointPos)
@@ -95,15 +133,15 @@ function HK_findClosest(target, coordinates)
      return closestCoord
 end
 
-function setTokenPools()
-    tokenPools = {}
+function setHK_tokenPools()
+    HK_tokenPools = {}
     local tags = {'pug_Orc','pug_Dungeon','pug_Keep','pug_MageTower','pug_Dragon','pug_City','pug_Ruin'}
     local bags = getObjectsWithTag("eventID_monsterDrawBag")
     --dprint('bags', bags)
     for k,bag in pairs(bags) do
         for _, tag in ipairs(tags) do
             if bag.hasTag(tag) then
-                tokenPools[string.gsub(tag, "^pug_", "")] = bag
+                HK_tokenPools[string.gsub(tag, "^pug_", "")] = bag
             end
         end
     end
@@ -111,9 +149,9 @@ function setTokenPools()
     bags = getObjectsWithTag("eventID_teslaTokenDrawBag")
     for k,bag in pairs(bags) do
         if bag.hasTag('pug_tesla_nItem') then
-            tokenPools.tesla_N = bag
+            HK_tokenPools.tesla_N = bag
         elseif bag.hasTag('pug_tesla_eItem') then
-            tokenPools.tesla_E = bag
+            HK_tokenPools.tesla_E = bag
         end
     end
 end

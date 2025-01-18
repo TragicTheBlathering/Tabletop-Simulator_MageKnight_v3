@@ -18,6 +18,7 @@ end
 
 --- Save and Load Code ---------------------------------------------------------
 function updateSave()
+    self.script_state = "" -- Clear All Data
     local data_to_save = {["data"]=varaibles}
     saved_data = JSON.encode(data_to_save)
     self.script_state = saved_data

@@ -13,7 +13,7 @@ local MKevent = {}
     MKevent.OnDrop_Mana = require("/MageKnightV3/events/event_OnDrop_Mana").DropMana
     -- Select Mage Knight
     --MKevent.ChooseMageKnight = require("/MageKnightV3/events/event_OnCollisionEnter_KnightSelect").chooseKnight
-
+    MKevent.tagCard_handZone = require("/MageKnightV3/events/event_ObjectLeaveHandZone").tagCard_handZone
 
 
 function onLoad(save_state)
@@ -26,6 +26,13 @@ end
 
 function onObjectLeaveContainer(bag, obj)
     tool.virtualTokenStack.VirtualTokenStackEvent(bag, obj, 'event_virtualTokenStack', 'F3')
+end
+
+function onObjectLeaveZone(zone, object)
+    --print("Object " .. object.guid .. " left zone " .. zone.guid)
+    if object.type == "Card" and object.hasTag("Cards_PlayerCard") and zone.type == "Hand" then
+        MKevent.tagCard_handZone(zone, object)
+    end
 end
 
 function onObjectDrop(colorName, object)

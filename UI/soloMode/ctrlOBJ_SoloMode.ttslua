@@ -12,10 +12,17 @@ end
 ]]
 
 function onSave()
-    local data_to_save = {soloMode=useSoloMode, xml=UI.getXml()}
-    saved_data = JSON.encode(data_to_save)
-    self.script_state = saved_data
-    --self.script_state = "" -- Clear All Data
+    if useSoloMode then
+        self.script_state = "" -- Clear All Data
+        local xmlSave = nil
+        xmlSave = UI.getXmlTable()
+        local data_to_save = {soloMode=useSoloMode, xml=xmlSave}
+        saved_data = JSON.encode(data_to_save)
+        self.script_state = saved_data
+        --self.script_state = "" -- Clear All Data
+    else
+        self.script_state = "" -- Clear All Data
+    end
 end
 
 function onLoad(saved_data)
@@ -24,7 +31,9 @@ function onLoad(saved_data)
         --dprint('Data : FOUND')
         local loaded_data = JSON.decode(saved_data)
         useSoloMode = loaded_data.soloMode
-        UI.setXml(loaded_data.xml)
+        UI.setXmlTable(loaded_data.xml)
+        --UI.setXml({})
+        --UI.setXml(loaded_data.xml)
     else
         --dprint('NO Data')
     end
@@ -40,9 +49,11 @@ function set_soloMode(value)
     --print('---------------------------------------------------------------------')
     --print(value)
     useSoloMode = value
+    --dprint("SET : Solo Mode ", useSoloMode)
 end
 
 function get_soloMode()
+    --dprint("GET : Solo Mode ", useSoloMode)
     return useSoloMode
 end
 
@@ -185,6 +196,22 @@ end
 --****** UI Buttons **************************************************************************************************
 --********************************************************************************************************************
 --- MOVE TURN MARKER -------------------------------------------------------------------------------------------------
+function hotkeyCall(prams)--player, leftClick, id)
+    b_moveTurnMarker({color=prams.player.color, admin=prams.player.color}, prams.num, prams.id)
+end
+
+function hotkeyCall_CamPos(prams)
+    local current = "but_player_"..UI.getAttribute(prams.id, "knightPos")
+    print(current)
+    if prams.switch == "mat" then
+        --print("MAT")
+        b_focusCamera({color=prams.player.color,admin=true}, -2, current)
+    elseif prams.switch == "meeple" then
+        --print('MEEP')
+        b_focusCamera({color=prams.player.color,admin=true}, -1, current)
+    end
+end
+
 function b_moveTurnMarker(player, leftClick, id)
     if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
     if player.admin then
@@ -201,14 +228,14 @@ function b_moveTurnMarker(player, leftClick, id)
             broadcastToAll("--== "..c.yellow..knight..[['s]]..c.close.." Turn Begins!! ==--", "Orange")
 
             UI.setAttributes(id, {offsetXY=offset[next], knightPos=next})
-            b_focusCamera({color=player.color,admin=true}, -1, "but_player_"..next)
+            b_focusCamera({color=player.color,admin=true}, -2, "but_player_"..next)
         else
             local knight = GameState.turnOrder[prev]
             --print(knight)
             broadcastToAll("--== Going back to "..c.yellow..knight..[['s]]..c.close.." Turn Again!! ==--", "Orange")
 
             UI.setAttributes(id, {offsetXY=offset[prev], knightPos=prev})
-            b_focusCamera({color=player.color,admin=true}, -1, "but_player_"..prev)
+            b_focusCamera({color=player.color,admin=true}, -2, "but_player_"..prev)
         end
     end
     --Wait.frames(function() updateSave() end, 5)
@@ -220,7 +247,7 @@ function b_focusCamera(player, leftClick, id)
     local data = setCameraData(id)
     --dprint('data', data)
     if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
-    if leftClick then
+    if not leftClick then
         --dprint('------------------ LEFT CLICK ------------------')
         Player[player.color].lookAt(data.cam.board)
     else
@@ -241,10 +268,10 @@ function setCameraData(id) -- using but_player_x as ID
     --print(name); print(board.getName()); print(turnToken.getName()); print(meeple.getName());
 
      local camBoardData_pos = {Vector(-98.00, 2.52, -74.62), Vector(-30.00, 2.52, -74.62), Vector(38.00, 2.51, -74.62), Vector(106.00, 2.51, -74.62)}
-     local camBoardData_values = {{offset=Vector(0,0,-5.83), distance=30},
-                                  {offset=Vector(0,0,-5.83), distance=30},
-                                  {offset=Vector(0,0,-5.83), distance=30},
-                                  {offset=Vector(0,0,-5.83), distance=30}
+     local camBoardData_values = {{offset=Vector(0,0,-5.83), distance=45},
+                                  {offset=Vector(0,0,-5.83), distance=45},
+                                  {offset=Vector(0,0,-5.83), distance=45},
+                                  {offset=Vector(0,0,-5.83), distance=45}
                                  }
 
     local camBoardData = {}

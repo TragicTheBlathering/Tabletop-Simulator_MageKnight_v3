@@ -29,12 +29,18 @@ function setupScript_finaliseSetUp.setup(gameSettings)
 end
 
 function openSoloModeMenu(gameSettings)
+    local ctrlOBJ = getObjectFromGUID('4d7f8e')
     if gameSettings.solo then
         --dprint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        local ctrlOBJ = getObjectFromGUID('4d7f8e')
-        ctrlOBJ.call("init_soloModeUI")
+        local dummy = getObjectsWithTag('PlayerBoard_Dummy')
+        if dummy[1] then
+            ctrlOBJ.call("set_soloMode", true)
+        else
+            ctrlOBJ.call("init_soloModeUI")
+        end
         Hands.hiding = 3
     else
+        ctrlOBJ.call("set_soloMode", false)
         UI.hide("panel_soloMode_Start")
         UI.hide("panel_soloMode_Tool")
     end

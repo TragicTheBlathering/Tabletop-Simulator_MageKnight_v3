@@ -34,10 +34,10 @@ function updateSave()
 end
 ]]
 function onSave()
+    self.script_state = "" -- Clear All Data
     local data_to_save = {button=b}
     saved_data = JSON.encode(data_to_save)
     self.script_state = saved_data
-    --self.script_state = "" -- Clear All Data
 end
 
 function onLoad(saved_data)
@@ -251,8 +251,17 @@ function volkGet_skillBoxes(setupBags, skillShuffler, pos, Yoffset)
 end
 
 function destroyObjList(list)
+    openSoloMode()
     for k,v in pairs(list) do
         destroyObject(v)
+    end
+end
+
+function openSoloMode()
+    local ctrlOBJ = getObjectFromGUID('4d7f8e')
+    local smode = ctrlOBJ.call("get_soloMode")
+    if smode then
+        ctrlOBJ.call("init_soloModeUI")
     end
 end
 --******************************************************************************
@@ -635,6 +644,7 @@ function allSkills(targetBox, setupBags, name, posAbove)
         end
 
     end-- if allskills.on then
+    openSoloMode()
 end
 
 --******************************************************************************

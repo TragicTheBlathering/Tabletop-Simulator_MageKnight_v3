@@ -32,11 +32,11 @@ end
 
 function f_DayNight(obj, playCol, alt_click)
     local change_toNight = false; if Lighting.ambient_intensity > dayTest then change_toNight = true end
-    print("--------------------")
-    print("--- Lighting.ambient_intensity : "..tostring(Lighting.ambient_intensity))
-    print("--- Lighting.light_intensity : "..tostring(Lighting.light_intensity))
-    print("--- Change from day -> night : "..tostring(change_toNight))
-    print("--------------------\n")
+    --print("--------------------")
+    --print("--- Lighting.ambient_intensity : "..tostring(Lighting.ambient_intensity))
+    --print("--- Lighting.light_intensity : "..tostring(Lighting.light_intensity))
+    --print("--- Change from day -> night : "..tostring(change_toNight))
+    --print("--------------------\n")
     local die = setDie()
 
     if not alt_click then

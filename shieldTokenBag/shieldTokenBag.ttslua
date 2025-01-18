@@ -1,0 +1,110 @@
+local scriptStopped = false
+function onload()
+    makeButton()
+end
+
+function b_placeShieldToken(obj, color, rightCLick)
+    if not scriptStopped then
+        scriptStopped = true
+        local meeple = getObjectsWithTag('Player_Meeple')
+        local found = false
+
+        if not rightCLick then
+            if meeple then
+                for k,o in pairs(meeple) do
+                    if o.getName() == self.getGMNotes() then
+                        meeple =  o
+                        found = true
+                    end
+                end
+            end
+        end
+
+        if found then
+            local pos = meeple.getPosition()
+            meeple.setLock(true)
+            enableCollider(meeple, false)
+            local shield = self.takeObject({})
+            shield.setPosition(self.getPosition()+Vector(0,1,0))
+            shield.setPositionSmooth(pos+Vector(0, 5, 0))
+            Wait.condition(function()
+                shield.setPositionSmooth(Vector(pos.x, 2.27, pos.z))
+                meeple.setPositionSmooth(pos+Vector(0, 1.5, 0))
+                Wait.condition(function()
+                    shield.setLock(true)
+                    enableCollider(meeple)
+                    meeple.setLock(false)
+                    Wait.frames(function() scriptStopped = false end, 5)
+                end, function() return not meeple.isSmoothMoving() end)
+            end, function() return not shield.isSmoothMoving() end)
+        else
+            print('not Found')
+            local pos = self.getPosition()
+            local shield = self.takeObject({})
+            shield.setPosition(pos+Vector(0,1,0))
+            shield.setPositionSmooth(pos+Vector(5, 5, -5))
+            Wait.frames(function() scriptStopped = false end, 5)
+        end
+    end
+end
+
+function enableCollider(obj, enableCollider)
+    if enableCollider == nil then enableCollider=true end
+    if enableCollider then
+        --print('enable')
+        if obj.getComponent("Rigidbody") then
+            obj.getComponent("Rigidbody").set("detectCollisions", true)
+        end
+        if obj.getComponent("BoxCollider") then
+            obj.getComponent("BoxCollider").set("enabled", true)
+        end
+    else
+        --print('disable')
+        if obj.getComponent("Rigidbody") then
+            obj.getComponent("Rigidbody").set("detectCollisions", false)
+        end
+        if obj.getComponent("BoxCollider") then
+            obj.getComponent("BoxCollider").set("enabled", false)
+        end
+    end
+end
+
+function b_disabled() end
+function makeButton()
+    local buttons = {}
+
+        local button = {label="", click_function="b_placeShieldToken", function_owner=self,
+                        position={0,0,0}, rotation={0,180,0}, height=700, width=500,
+                        scale={1,1,1}
+        }
+    table.insert(buttons, button)
+        button = {label="", click_function="b_placeShieldToken", function_owner=self,
+                        position={0,0,0.8}, rotation={0,180,0}, height=250, width=250,
+                        scale={1,1,1}--, color="Red"
+        }
+    table.insert(buttons, button)
+        button = {label="", click_function="b_placeShieldToken", function_owner=self,
+                        position={0,0,-0.8}, rotation={0,180,0}, height=250, width=250,
+                        scale={1,1,1}--, color="Red"
+        }
+    table.insert(buttons, button)
+        button = {label="", click_function="b_placeShieldToken", function_owner=self,
+                        position={0.6,0,-0.2}, rotation={0,180,0}, height=450, width=150,
+                        scale={1,1,1}--, color="Red"
+        }
+    table.insert(buttons, button)
+        button = {label="", click_function="b_placeShieldToken", function_owner=self,
+                        position={-0.6,0,-0.2}, rotation={0,180,0}, height=450, width=150,
+                        scale={1,1,1}--, color="Red"
+        }
+    table.insert(buttons, button)
+        button = {label="", click_function="b_placeShieldToken", function_owner=self,
+                        position={0,0,0.8}, rotation={0,180,0}, height=60, width=370,
+                        scale={1,1,1}--, color="Red"
+        }
+    table.insert(buttons, button)
+
+    for k, b in pairs(buttons) do
+        self.createButton(b)
+    end
+end

@@ -67,10 +67,11 @@ function call_saveData(setup) --gameSettings = {unitOfferCount=nil, blitz=nil, p
 end
 
 function updateSave()
+    self.script_state = "" -- Clear All Data
     local data_to_save = {settings=gameSettings, offer=unitOffer}
     saved_data = JSON.encode(data_to_save)
-    self.script_state = saved_data
     --self.script_state = "" -- Clear All Data
+    self.script_state = saved_data
 end
 
 function onload(saved_data)

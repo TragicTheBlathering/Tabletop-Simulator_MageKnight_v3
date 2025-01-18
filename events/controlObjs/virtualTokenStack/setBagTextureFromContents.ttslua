@@ -91,7 +91,7 @@ function setBagTextureFromContents.usingContentsOfBag(bag, bagData, value)
 end
 
 function setBagTextureFromContents.usingURLs(bag, bagData, value)
-    dprint('setBagTextureFromContents.usingURLs(bag, bagData, value)')
+    --dprint('setBagTextureFromContents.usingURLs(bag, bagData, value)')
     --dprint('setBagTextureFromContents.usingURLs(bag, bagData, value)')
     --dprint(value.tags)
     local contentCount = tool.tablesize(bagData.ContainedObjects)

@@ -1,0 +1,65 @@
+local event_ObjectLeaveHandZone = {}
+local dprint = require("/_libs/debug/dPrint").dprint
+
+
+function event_ObjectLeaveHandZone.tagCard_handZone(zone, card)
+    local handZoneTags = {'hand_Player1', 'hand_Player2', 'hand_Player3', 'hand_Player4'}
+    local discardTrashTags = {'trashID_PlayerDiscard_P1', 'trashID_PlayerDiscard_P2', 'trashID_PlayerDiscard_P3', 'trashID_PlayerDiscard_P4'}
+    local removeTag = "trashID_RemovedFromGame"
+    local handZone = false
+    for k, tag in pairs(handZoneTags) do
+        if zone.hasTag(tag) then
+            handZone = tag
+            break
+        end
+    end
+
+    if card.hasTag(removeTag) then
+        for k, tag in pairs(handZoneTags) do
+            if zone.hasTag(tag) then
+                card.removeTag(removeTag)
+                card.addTag(tag)
+                card.addTag(discardTrashTags[k])
+                break
+            end
+        end
+    else
+        if not card.hasTag(handZone) then
+            for k, tag in pairs(handZoneTags) do
+                if card.hasTag(tag) then
+                    print("Tag : "..tag)
+                    print("Discard : "..discardTrashTags[k])
+                    card.removeTag(tag)
+                    card.removeTag(discardTrashTags[k])
+                    break
+                end
+            end
+            for k, tag in pairs(handZoneTags) do
+                if zone.hasTag(tag) then
+                    card.addTag(tag)
+                    card.addTag(discardTrashTags[k])
+                    break
+                end
+            end
+        end
+    end
+
+end
+
+return event_ObjectLeaveHandZone
+
+--[[
+
+if card.hasTag("trashID_RemovedFromGame") then
+    local handZoneTags = {'hand_Player1', 'hand_Player2', 'hand_Player3', 'hand_Player4'}
+    local discardTrashTags = {'trashID_PlayerDiscard_P1', 'trashID_PlayerDiscard_P2', 'trashID_PlayerDiscard_P3', 'trashID_PlayerDiscard_P4'}
+    for k, tag in pairs(handZoneTags) do
+        if zone.hasTag(tag) then
+            card.removeTag('trashID_RemovedFromGame')
+            card.addTag(tag)
+            card.addTag(discardTrashTags[k])
+        end
+    end
+end
+
+]]

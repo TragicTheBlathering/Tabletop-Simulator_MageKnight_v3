@@ -22,7 +22,7 @@ setting.height = 3
 setting.scale = 1
 
 --Maximum dice that can be spawned by this tool (-1 is infinite)
-setting.maxCount = 4
+setting.maxCount = 5
 --Delay (seconds) after a click that the roll is done (0.5 or more)
 setting.rollDelay = 1.2
 --Time before dice are cleaned up (0 is instant, -1 won't clean them)
