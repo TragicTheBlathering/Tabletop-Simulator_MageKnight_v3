@@ -32,12 +32,14 @@ end
 
 function f_DayNight(obj, playCol, alt_click)
     local change_toNight = false; if Lighting.ambient_intensity > dayTest then change_toNight = true end
+    local offerPos = "day"; if change_toNight then offerPos = "night" end
     --print("--------------------")
     --print("--- Lighting.ambient_intensity : "..tostring(Lighting.ambient_intensity))
     --print("--- Lighting.light_intensity : "..tostring(Lighting.light_intensity))
     --print("--- Change from day -> night : "..tostring(change_toNight))
     --print("--------------------\n")
     local die = setDie()
+    local offerButton = getObjectFromGUID('3bd9c7')
 
     if not alt_click then
         --dprint('LEFT CLICK')
@@ -48,13 +50,22 @@ function f_DayNight(obj, playCol, alt_click)
                 Wait.condition(function() die.limitDie.setPositionSmooth(p) end, function() return isSmooth(die.limitDie) end)
                 broadcastToAll("Final Round has been Reached", 'Orange')
                 if not change_toNight then
+                    --print('!!!')
+                    --print(change_toNight)
+                    offerButton.call("setButtons", offerPos)
                     changeLighting(change_toNight)
                 end
             else
+                --print('???')
+                --print(change_toNight)
+                offerButton.call("setButtons", offerPos)
                 incrementCounter(die, change_toNight)
                 changeLighting(change_toNight)
             end
         else
+            --print('@@@')
+            --print(change_toNight)
+            offerButton.call("setButtons", offerPos)
             incrementCounter(die, change_toNight)
             changeLighting(change_toNight)
         end
@@ -64,6 +75,7 @@ function f_DayNight(obj, playCol, alt_click)
             local o = die.nightBag.container.takeObject({})
             o.setPosition(die.nightBag.pos)
             o.setValue(1)
+            offerButton.call("setButtons", 'night')
             o.interactable = false
             changeLighting(change_toNight)
             if die.day then destroyObject(die.day) end
@@ -72,6 +84,7 @@ function f_DayNight(obj, playCol, alt_click)
             local o = die.dayBag.container.takeObject({})
             o.setPosition(die.dayBag.pos)
             o.setValue(1)
+            offerButton.call("setButtons", 'day')
             o.interactable = false
             changeLighting(change_toNight)
             if die.night then destroyObject(die.night) end

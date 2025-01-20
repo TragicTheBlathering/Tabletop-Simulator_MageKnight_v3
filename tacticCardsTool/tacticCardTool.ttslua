@@ -1,0 +1,307 @@
+local dprint = require("/_libs/debug/dPrint").dprint
+local notRunning = true
+local offerDisplayed = false
+local platforms = {day=false, night=false}
+local pos = {plat={day=false, night=false}, cards={}}
+
+function onload()
+    --3bd9c7
+    setVariables()
+    makeButtons(true)
+end
+
+function b_setDayOffer(obj, color, rightClick)
+    processOffer(obj, color, rightClick, 'day', 'night')
+end
+
+function b_setNightOffer(obj, color, rightClick)
+    processOffer(obj, color, rightClick, 'night', 'day')
+end
+
+function processOffer(obj, color, rightClick, display, fetch)
+    if notRunning and Player[color].admin then
+        if not rightClick then
+            if not offerDisplayed then
+                offerDisplayed = true
+                notRunning = false
+                returnCards(fetch)
+                fetchBoard()
+                openOffer(display)
+            else
+                processOffer(obj, color, true, display, fetch)
+            end
+        else
+            local board = getObjectsWithTag("tool_tacticsOffer")
+            if board[1] and offerDisplayed then
+                notRunning = false
+                self.clearButtons()
+                clearBoard()
+                returnCards(display, true)
+                --setButtons(fetch)
+                Wait.frames(function()
+                    notRunning = true
+                    offerDisplayed=false
+                end, 60)
+            end
+        end
+    end
+end
+
+
+function openOffer(switch)
+    deck = getObjectsWithAllTags({"Cards_Tactic_"..switch, "trash_DiscardObject"})[1]
+    local deckpos = deck.getPosition()
+    local deckBoundsY = deck.getBounds().size.y/2
+    local boardpos = pos.board
+    local spread = {}
+
+    for i = 1, deck.getQuantity() do
+        local card = deck.takeObject({})
+        enableCollider(card, false)
+        card.setLock(true)
+        card.setPosition(deck.getPosition()+Vector(0,deckBoundsY+0.5,0))
+        card.setRotation(Vector(0,180,0))
+        card.setPositionSmooth(Vector(deckpos.x, boardpos.y+5, boardpos.z ), false, false)
+        table.insert(spread, card)
+    end
+
+    table.sort(spread, function(a, b)
+                    -- Extract the name strings
+                        local nameA = a.getName()
+                        local nameB = b.getName()
+
+                    -- Extract the numbers at the end of the strings
+                        local numA = tonumber(string.match(nameA, "%((%d+)%)"))
+                        local numB = tonumber(string.match(nameB, "%((%d+)%)"))
+                    -- Sort based on the extracted numbers
+                        return numA < numB -- Ascending order
+                    end)
+
+    for i, card in ipairs(spread) do
+        Wait.condition(function()
+            card.setPositionSmooth(pos.cards[i]+Vector(0,3,0), false, false)
+            Wait.condition(function()
+                enableCollider(card)
+                card.setLock(false)
+            end, function() return isSmooth(card) end)
+        end, function() return isSmooth(card) end)
+    end
+
+    Wait.condition(function()
+        notRunning = true
+    end, function() return objectsAreMoving(spread) end)
+end
+
+function clearBoard()
+    -- CLear Board if existing
+    local board = getObjectsWithTag("tool_tacticsOffer")
+    if board[1] then
+        board = board[1]
+        board.setPositionSmooth(Vector(-3.91,2.19,-43.93), false, false)
+        Wait.condition(function() destroyObject(board) end, function() return isSmooth(board) end)
+    end
+end
+
+function fetchBoard()
+    clearBoard()
+    -- Fetch new Baord
+    local bag = getObjectsWithTag("setupBag_TacticBoard")[1]
+    board = bag.takeObject({})
+    board.setPosition(Vector(-3.91,2.19,-43.93)) -- {-0.77, 2.19, -42.10}
+    board.setScale(Vector(1.43, 1.95, 0.45)) --{1.43, 0.91, 0.45}
+    board.setRotation(Vector(0,180,0))
+    board.setLock(true)
+
+    board.setPositionSmooth(Vector(-3.91,5.71,-43.93)) -- {-3.91, 5.71, -43.93}
+    --board.interactable = false
+    pos.board = board.getPosition()
+end
+
+function returnCards(switch, protectOffer)
+    protectOffer = protectOffer or false
+    local objs = getObjectsWithAllTags({"Cards_Tactic_"..switch, "trash_DiscardObject"})
+
+    local tactics = {decks={}, cards={}}
+    for k,v in pairs(objs) do
+        if Vector.equals(v.getPosition(), pos.plat[switch], 1) then
+            source = v
+        else
+            if v.type == "Card" then
+                if protectOffer then -- -43.93
+                    local posZ = v.getPosition().z
+                    if posZ > -45 and posZ < -42 then
+                        table.insert(tactics.cards, v)
+                    end
+                else
+                    table.insert(tactics.cards, v)
+                end
+            elseif v.type == "Deck" then
+                if protectOffer then
+                    local posZ = v.getPosition().z
+                    if posZ > -45 and posZ < -42 then
+                        table.insert(tactics.cards, v)
+                    end
+                else
+                    table.insert(tactics.decks, v)
+                end
+            end
+        end
+    end
+
+    local source = false
+    local moveList = {}
+    for k, o in pairs(tactics.cards) do
+        table.insert(moveList, o)
+    end
+
+    -- Sort the table based on the number at the end of each string
+    table.sort(moveList, function(a, b)
+                    -- Extract the name strings
+                        local nameA = a.getName()
+                        local nameB = b.getName()
+
+                    -- Extract the numbers at the end of the strings
+                        local numA = tonumber(string.match(nameA, "%((%d+)%)"))
+                        local numB = tonumber(string.match(nameB, "%((%d+)%)"))
+                    -- Sort based on the extracted numbers
+                        return numA < numB -- Ascending order
+                    end)
+
+
+    for k, deck in pairs(tactics.decks) do
+        if deck ~= source then
+            table.insert(moveList, 1, deck)
+        end
+    end
+
+
+----- Moving -------------------------------------------------------------------
+    local offset = {deck=Vector(0,0,0), board=Vector(0,0,0)}
+    for k, o in ipairs(moveList) do
+        if source then
+            o.setPositionSmooth(o.getPosition()+Vector(0,3,0)+offset.board, false, false)
+            offset.board = offset.board + Vector(0,0.4,0)
+            o.setRotationSmooth(Vector(0,180,0), false, false)
+            Wait.condition(function()
+                offset.deck = offset.deck + Vector(0,0.4,0)
+                o.setPositionSmooth(pos.plat[switch]+offset.deck, false, false)
+                --Wait.condition(function()
+                    --source = source.putObject(o)
+                --end, function() return not o.isSmoothMoving() end)
+            end, function() return not o.isSmoothMoving() end)
+        else
+            source = o
+            o.setPositionSmooth(o.getPosition()+Vector(0,3,0), false, false)
+            o.setRotationSmooth(Vector(0,180,0), false, false)
+            Wait.condition(function()
+                o.setPositionSmooth(pos.plat[switch], false, false)
+            end, function() return not o.isSmoothMoving() end)
+        end
+    end
+end
+
+--***** TOOLS  ***********************************************************************************************
+function setVariables()
+    local tagged = getObjectsWithTag("trashID_TacticDay")
+    if tagged then
+        platforms.day = tagged[1]
+    end
+
+    tagged = getObjectsWithTag("trashID_TacticNight")
+    if tagged then
+        platforms.night = tagged[1]
+    end
+
+    tagged = getObjectsWithAllTags({"Cards_Tactic_Night", "trash_DiscardTarget"})
+    if tagged then
+        pos.plat.night = tagged[1].getPosition()+Vector(0,0.03,0)
+    end
+
+    tagged = getObjectsWithAllTags({"Cards_Tactic_Day", "trash_DiscardTarget"})
+    if tagged then
+        pos.plat.day = tagged[1].getPosition()+Vector(0,0.03,0)
+    end
+
+    pos.cards = {Vector(-18.91, 6.88, -43.93), Vector(-12.91, 6.88, -43.93), Vector(-6.92, 6.88, -43.93), Vector(-0.93, 6.88, -43.93), Vector(5.07, 6.88, -43.93), Vector(11.06, 6.88, -43.93)}
+    --dprint(pos)
+end
+
+function enableCollider(obj, action) -- fasle or true
+    action = action or true
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", action)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", action)
+    end
+end
+
+function objectsAreMoving(...)
+    local args = {...}
+    local objList = {}
+    for k,var in pairs(args) do
+        if type(var) == "table" then
+            for k,v in pairs(var) do
+                if v then
+                    table.insert(objList, v)
+                end
+            end
+        else
+            if var then
+                table.insert(objList, var)
+            end
+        end
+    end
+    --print(logString(objList, '\n---- objList'))
+    for k, obj in pairs(objList) do
+        if obj then
+            if not isSmooth(obj) then return false end  -- Return false immediately if any value is false
+        end
+    end
+    return true
+end
+
+-- obj.isSmoothMoving() shorthand ----------------------------------------------
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+--***** BUTTONS ***********************************************************************************************
+function setButtons(fetch)
+    local pos = self.getPosition()
+    if fetch == 'day' then
+        self.setPositionSmooth(pos+Vector(-5.7,0,0), false, false) -- -32.91 -27.21
+        makeButtons(true)
+    else
+        self.setPositionSmooth(pos+Vector(5.7,0,0), false, false)
+        makeButtons(false)
+    end
+end
+function makeButtons(day)
+    self.clearButtons()
+    local buttons = {}
+    local butData = {}
+    if day then
+        data = {label="Choose Tactics", click_function="b_setDayOffer", function_owner=self,
+                position={0,4,0}, rotation={0,180,0}, height=500, width=1800, font_size=250
+               ,scale={0.5,0.5,0.5}
+             --,color='Green', font_color='White',
+                }
+        table.insert(buttons, data)
+    else
+        data = {label="Choose Tactics", click_function="b_setNightOffer", function_owner=self,
+                position={0,4,0}, rotation={0,180,0}, height=500, width=1800, font_size=250
+               ,scale={0.5,0.5,0.5}
+               ,color={29/255,41/255,98/255}, font_color={147/255,147/255,147/255},
+               }
+        table.insert(buttons, data)
+    end
+
+    for _, button in pairs(buttons) do
+        self.createButton(button)
+    end
+end
