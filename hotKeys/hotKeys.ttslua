@@ -1,5 +1,6 @@
 local hotkeysSettings = {}
 local dprint = require("/_libs/debug/dPrint").dprint
+local yHeight = 8
 local HK_tokenPools = false
     function hotkeysSettings.build()
         if not HK_tokenPools then setHK_tokenPools() end--; dprint('HK_tokenPools', HK_tokenPools)
@@ -51,7 +52,7 @@ function HK_getTeslaToken(playerColor, pointerPosition, type)
         if HK_tokenPools[type].getQuantity() == 0 then
             broadcastToAll("ERROR : The Faction Token Bag is EMPTY!", 'Red')
         else
-            local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
+            local pointPos = Vector(pointerPosition.x, yHeight, pointerPosition.z)
             local pug = HK_tokenPools[type].takeObject({})
             pug.setRotation(Vector(0,180,180))
             pug.setPosition(pointPos)
@@ -64,27 +65,31 @@ end
 function HK_getToken(playerColor, object, pointerPosition, type)
     --dprint(playerColor); dprint(object); dprint(pointerPosition); dprint(type)
     if Player[playerColor].admin then
-        if object then
-            if object.hasTag('maptile_Countryside') or object.hasTag('maptile_Core') then
-                local snaps = object.getSnapPoints()
-                local foundSnaps = {}
-                --dprint('snaps', snaps)
-                for k, snap in ipairs(snaps) do
-                    for k, v in ipairs(snap.tags) do
-                        if v == "pug_Enemy" then
-                            local wpos = object.positionToWorld(Vector(snap.position))
-                            table.insert(foundSnaps, wpos) --Vector(snap.position))
+        if HK_tokenPools[type].getQuantity() == 0 then
+            broadcastToAll("ERROR : The Enemy Token Bag is EMPTY!", 'Red')
+        else
+            if object then
+                if object.hasTag('maptile_Countryside') or object.hasTag('maptile_Core') then
+                    local snaps = object.getSnapPoints()
+                    local foundSnaps = {}
+                    --dprint('snaps', snaps)
+                    for k, snap in ipairs(snaps) do
+                        for k, v in ipairs(snap.tags) do
+                            if v == "pug_Enemy" then
+                                local wpos = object.positionToWorld(Vector(snap.position))
+                                table.insert(foundSnaps, wpos) --Vector(snap.position))
+                            end
                         end
                     end
+                    HK_fetchToken(foundSnaps, pointerPosition, object, type)
                 end
-                HK_fetchToken(foundSnaps, pointerPosition, object, type)
+            else
+                local pointPos = Vector(pointerPosition.x, yHeight, pointerPosition.z)
+                local pug = HK_tokenPools[type].takeObject({})
+                pug.setRotation(Vector(0,180,180))
+                pug.setPosition(pointPos)
+                pug.setPositionSmooth(pointPos+Vector(0,1,0))
             end
-        else
-            local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
-            local pug = HK_tokenPools[type].takeObject({})
-            pug.setRotation(Vector(0,180,180))
-            pug.setPosition(pointPos)
-            pug.setPositionSmooth(pointPos+Vector(0,1,0))
         end
     end
 end
@@ -97,13 +102,13 @@ function HK_fetchToken(foundSnaps, pointerPosition, object, type)
     if HK_tokenPools[type].getQuantity() == 0 then
         broadcastToAll("ERROR : The Enemy Token Bag is EMPTY!", 'Red')
     else
-        local pointPos = Vector(pointerPosition.x, 3, pointerPosition.z)
+        local pointPos = Vector(pointerPosition.x, yHeight, pointerPosition.z)
         local snapPos = HK_findClosest(pointerPosition, foundSnaps)
         local pug = HK_tokenPools[type].takeObject({})
 
         pug.setRotation(Vector(0,180,180))
         pug.setPosition(pointPos)
-        pug.setPositionSmooth(Vector(snapPos.x, 3, snapPos.z))
+        pug.setPositionSmooth(Vector(snapPos.x, yHeight, snapPos.z))
     end
 end
 

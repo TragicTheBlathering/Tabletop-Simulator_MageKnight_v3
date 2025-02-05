@@ -25,14 +25,6 @@ local wait_ids = {}
 --******************************************************************************
 --****** Save and Load Code ****************************************************
 --******************************************************************************
---[[
-function updateSave()
-    local data_to_save = {button=b}
-    saved_data = JSON.encode(data_to_save)
-    self.script_state = saved_data
-    --self.script_state = "" -- Clear All Data
-end
-]]
 function onSave()
     self.script_state = "" -- Clear All Data
     local data_to_save = {button=b}
@@ -85,6 +77,7 @@ function chooseVolkare()
         b=3; self.clearButtons(); makeButtons(); --updateSave()
         self.interactable = false
         self.setLock(true)
+        self.setColorTint('Black')
         --updateSave()
 
         local existingObjects = castZone('clearBoard')
@@ -135,7 +128,7 @@ function fetchSkills(source_volkBag)
 end
 
 function volk_GetSkills(setupBags, skillShuffler, pos, Yoffset)
-    if allskills.on or allskills.custom.on then
+    if allskills.on then
         volkGet_allSkills(setupBags, skillShuffler, pos, Yoffset)
     else
         volkGet_skillBoxes(setupBags, skillShuffler, pos, Yoffset)
@@ -553,6 +546,7 @@ end
 function fetchObjects(dummyCard)
     self.setLock(true)
     self.interactable = false
+    self.setColorTint('Black')
     self.clearButtons()
     b=2
     makeButtons()

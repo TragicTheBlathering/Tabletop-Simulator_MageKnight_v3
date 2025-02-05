@@ -44,7 +44,7 @@ function f_DayNight(obj, playCol, alt_click)
     if not alt_click then
         --dprint('LEFT CLICK')
         if die.day and die.night then
-            if die.day.getValue() == die.limit and die.night.getValue() == die.limit then
+            if die.day.getValue() + die.night.getValue() == die.limit then
                 local p = die.limitDie.getPosition()
                 die.limitDie.setPositionSmooth(p+Vector(0,2,0))
                 Wait.condition(function() die.limitDie.setPositionSmooth(p) end, function() return isSmooth(die.limitDie) end)

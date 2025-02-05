@@ -30,17 +30,6 @@ function b_Function(obj, color, rightClick)
         end
     end
 end
---[[
-function b_Function(obj, color, rightClick)
-    if not rightClick then
-        processOffer()
-    else
-        setButtonDisabled()
-        discard_last()
-        waitFunc(processOffer, 'discard_last')
-    end
-end
-]]
 
 function callTrigger()
     waitForFunction('allStop')

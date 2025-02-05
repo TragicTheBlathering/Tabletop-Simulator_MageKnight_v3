@@ -1,0 +1,672 @@
+local ShowDebug = false
+local dprint = require("/_libs/debug/dPrint").dprint
+
+local c = {}
+local knight = {}
+local unfreeze = {}
+local ticked = {toggle_Knowledge=0, toggle_Loot=0, toggle_Leader=0, toggle_Conqueror=0, toggle_Adventurer=0, toggle_Beating=0}
+local sites={toggle_Conqueror=0, toggle_Adventurer=0}
+local shieldMarkers = {}
+local deckData = false
+local finalScore = 0
+
+function onload()
+    c.black  = '['..Color.black:toHex(false)..']'
+    c.blue   = '['..Color.blue:toHex(false)..']'
+    c.brown  = '['..Color.brown:toHex(false)..']'
+    c.green  = '['..Color.green:toHex(false)..']'
+    c.grey   = '['..Color.grey:toHex(false)..']'
+    c.orange = '['..Color.orange:toHex(false)..']'
+    c.pink   = '['..Color.pink:toHex(false)..']'
+    c.purple = '['..Color.purple:toHex(false)..']'
+    c.red    = '['..Color.red:toHex(false)..']'
+    c.teal   = '['..Color.teal:toHex(false)..']'
+    c.white  = '['..Color.white:toHex(false)..']'
+    c.yellow = '['..Color.yellow:toHex(false)..']'
+    c.c  = '[-]'
+end
+
+function ui_b_shield(player, leftClick, id)
+    if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
+    if player.admin then
+        local type, guid = extract_substrings(id)
+        if string.lower(type) == 'c' then
+            sites.toggle_Conqueror = sites.toggle_Conqueror + 2
+            local conqueror = sites.toggle_Conqueror + ticked.toggle_Conqueror
+            self.UI.setValue('display_Conqueror', tostring(conqueror))
+        elseif string.lower(type) == 'a' then
+            sites.toggle_Adventurer = sites.toggle_Adventurer + 2
+            local adventurer = sites.toggle_Adventurer + ticked.toggle_Adventurer
+            self.UI.setValue('display_Adventurer', tostring(adventurer))
+        end
+        local shield = getObjectFromGUID(guid)
+        shield.UI.setXml("")
+        shield.setLock(false)
+    end
+end
+
+
+
+
+
+function extract_substrings(input)
+    local parts = {}
+    for part in input:gmatch("[^_]+") do
+        table.insert(parts, part)
+    end
+    return parts[3], parts[4]
+end
+
+function ui_b_printScore(player, leftClick, id)
+    if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
+    if player.admin then
+        printScoreValues()
+    end
+end
+
+function ui_b_scoreToolStart(player, leftClick, id)
+    if tonumber(leftClick) == -2 and player.admin then leftClick = false elseif player.admin then leftClick = true end
+    if player.admin then
+        knight = cast('self')
+        if knight.meeple then
+            knight.name = knight.meeple.getName()
+            if leftClick then
+                setData(knight.name)
+                setShieldsUP(false)
+                fetchDeck()
+                Wait.frames(function()
+                    Wait.condition(function()
+                        Wait.frames(function() processScore() end, 3)
+                    end, function() return waitForFetch() end)
+                end, 60)
+            else
+                setShieldsUP(false)
+            end
+        else
+            broadcastToAll(c.red..'ERROR :'..c.c..' You have to place your player meeple on the tool!', "Yellow")
+        end
+    end
+end
+
+function ui_toggle_Greatest(player, leftClick, id)
+    if ticked[id] > 0 then
+        ticked[id] = 0
+        self.UI.setAttribute(id, "isOn", false)
+    else
+        ticked[id] = 3
+        self.UI.setAttribute(id, "isOn", true)
+    end
+    processScore(true)
+end
+
+function processScore(toggle)
+    if not toggle then setShieldsUP() end
+    deckData = getDeckData()
+    --dprint('deckData', deckData)
+    --dprint('knight', knight)
+    setValues(deckData)
+    --display_Knowledge
+    self.UI.show('panel_ScoreCard_FinalScore')
+    self.UI.show('panel_ScoreCard_ReadOut')
+    --printOut('name')
+end
+
+function setValues(deckData)
+    local knowledge = deckData.aa.value + deckData.spells.value + ticked.toggle_Knowledge
+    self.UI.setValue('display_Knowledge', tostring(knowledge))
+
+    local loot = deckData.arts.value + #knight.crystals + ticked.toggle_Loot
+    self.UI.setValue('display_loot', tostring(loot))
+
+    local leader = 0
+    for k, v in pairs(knight.units) do
+        leader = leader + v.value
+    end
+    leader = leader + ticked.toggle_Leader
+    self.UI.setValue('display_Leader', tostring(leader))
+
+    local conqueror = sites.toggle_Conqueror + ticked.toggle_Conqueror
+    self.UI.setValue('display_Conqueror', tostring(conqueror))
+
+    local adventurer = sites.toggle_Adventurer + ticked.toggle_Adventurer
+    self.UI.setValue('display_Adventurer', tostring(adventurer))
+
+    local beating = deckData.wounds.value + ticked.toggle_Beating
+    self.UI.setValue('display_Beating', tostring(beating))
+
+    finalScore = knowledge + loot + leader + conqueror + adventurer - beating
+    self.UI.setValue('display_FinalScore', tostring(finalScore))
+end
+
+function printScoreValues()
+    printOut('name')
+    Wait.frames(function()
+        printOut('The Greatest Knowledge')
+        printToAll("")
+    end, 1)
+
+    Wait.frames(function()
+        printOut("The Greatest Loot")
+        printToAll("")
+    end, 2)
+
+    Wait.frames(function()
+        printOut("The Greatest Leader")
+        printToAll("")
+    end, 3)
+
+    Wait.frames(function()
+        printOut("The Greatest Conqueror")
+        printToAll("")
+    end, 4)
+
+    Wait.frames(function()
+        printOut("The Greatest Adventurer")
+        printToAll("")
+    end, 5)
+
+    Wait.frames(function()
+        printOut("The Greatest Beating")
+    end, 6)
+
+    Wait.frames(function()
+        printOut('name')
+        printOut("Final Score")
+        printToAll("")
+    end, 7)
+end
+
+function printOut(switch, ...) --ticked = {toggle_Knowledge=0, toggle_Loot=0, toggle_Leader=0, toggle_Conqueror=0, toggle_Adventurer=0, toggle_Beating=0}
+    setData(knight.name)
+    if switch == 'name' then
+        printToAll(c.orange.."------====== "..c.c..knight.name..c.orange.." ======------")
+--------------------------------------------------------------------------------------------------------------------------------
+    elseif switch == 'The Greatest Knowledge' then
+        printToAll(c.yellow.."--- The Greatest Knowledge : "..c.c..c.orange..deckData.spells.value+deckData.aa.value+ticked.toggle_Knowledge)
+
+        printToAll(c.pink.."Advanced Acrtion Cards : "..c.c..c.green..deckData.aa.num..c.c)
+        for k,v in ipairs(deckData.aa.list) do
+            printToAll("  : "..v)
+        end
+
+        printToAll(c.pink.."Spells : "..c.c..c.green..deckData.spells.num..c.c)
+        for k,v in ipairs(deckData.spells.list) do
+            printToAll("  : "..v)
+        end
+        printToAll(c.pink.."Advanced Action Cards : "..c.c..c.green..deckData.aa.num.." * 1 == "..c.c..c.orange..deckData.aa.value..c.c)
+        printToAll(c.pink.."Spell Cards : "..c.c..c.green..deckData.spells.num.." * 2 == "..c.c..c.orange..deckData.spells.value..c.c)
+
+        local tickBox = c.red.."Not Ticked"..c.c; if ticked.toggle_Knowledge > 0 then tickBox = c.green.."Ticked"..c.c end
+        printToAll(c.pink.."Tick Box : "..c.c..tickBox..c.pink.." : "..c.c..c.orange..ticked.toggle_Knowledge..c.c)
+
+        printToAll(c.pink.."Total : "..c.green..deckData.aa.value.." + "..deckData.spells.value.." + "..ticked.toggle_Knowledge.." == "..c.c..c.orange..deckData.spells.value+deckData.aa.value+ticked.toggle_Knowledge..c.c)
+--------------------------------------------------------------------------------------------------------------------------------
+    elseif switch == 'The Greatest Loot' then
+        local cris = #knight.crystals
+        printToAll(c.yellow.."--- The Greatest Loot : "..c.c..c.orange..deckData.arts.value+cris+ticked.toggle_Loot)
+        printToAll(c.pink.."Artefacts : "..c.c..c.orange..deckData.arts.num..c.c)
+        for k,v in ipairs(deckData.arts.list) do
+            printToAll("  : "..v)
+        end
+        printToAll(c.pink.."Artefacts Cards : "..c.c..c.green..deckData.arts.num.." * 2 == "..c.c..c.orange..deckData.arts.value..c.c)
+        printToAll(c.pink.."Crystals Count : "..c.c..c.orange..cris..c.c)
+
+        local tickBox = c.red.."Not Ticked"..c.c; if ticked.toggle_Loot > 0 then tickBox = c.green.."Ticked"..c.c end
+        printToAll(c.pink.."Tick Box : "..c.c..tickBox..c.pink.." : "..c.c..c.orange..ticked.toggle_Loot..c.c)
+        printToAll(c.pink.."Total : "..c.green..deckData.arts.value.." + "..cris.." + "..ticked.toggle_Loot.." == "..c.c..c.orange..deckData.arts.value+cris+ticked.toggle_Loot..c.c)
+--------------------------------------------------------------------------------------------------------------------------------
+    elseif switch == 'The Greatest Leader' then
+        printToAll(c.yellow.."--- The Greatest Leader"..c.c)
+        local uc = #knight.units
+        local total = 0
+        printToAll(c.pink.."Units : "..c.c..c.orange..uc..c.c)
+        sort_units_by_name(knight)
+        -- Print Gold Units
+        for k,v in ipairs(knight.units) do
+            local name, type, level = v.unit:match("^(.-)%s*%((.-)%)%s*%{(.-)%}$")
+            local ucol = '[b3b3b3]'; if type == 'Gold Unit' then ucol=c.yellow end
+
+            if type == "Gold Unit" and not v.wounded then
+                total = total + v.value
+                printToAll("  : "..name..ucol.." "..c.orange..level..c.c.." "..type..c.c.." : ("..v.value..")")
+            end
+        end
+        -- Print Silver Units
+        for k,v in ipairs(knight.units) do
+            local name, type, level = v.unit:match("^(.-)%s*%((.-)%)%s*%{(.-)%}$")
+            local ucol = '[b3b3b3]'; if type == 'Gold Unit' then ucol=c.yellow end
+
+            if type == "Silver Unit" and not v.wounded then
+                total = total + v.value
+                printToAll("  : "..name..ucol.." "..c.orange..level..c.c.." "..type..c.c.." : ("..v.value..")")
+            end
+        end
+        -- Print Wounded Units
+        for k,v in ipairs(knight.units) do
+            local name, type, level = v.unit:match("^(.-)%s*%((.-)%)%s*%{(.-)%}$")
+            local ucol = '[b3b3b3]'; if type == 'Gold Unit' then ucol=c.yellow end
+
+            if type == "Gold Unit" and v.wounded then
+                total = total + v.value
+                printToAll("  : "..c.red.."Wounded"..c.c.." : "..name..ucol.." : "..c.orange..level..c.c.." "..type..c.c.." : ("..v.value..")")
+            end
+            --..c.red.."Wounded"..c.c..
+        end
+        for k,v in ipairs(knight.units) do
+            local name, type, level = v.unit:match("^(.-)%s*%((.-)%)%s*%{(.-)%}$")
+            local ucol = '[b3b3b3]'; if type == 'Gold Unit' then ucol=c.yellow end
+
+            if type == "Silver Unit" and v.wounded then
+                total = total + v.value
+                printToAll("  : "..c.red.."Wounded"..c.c.." : "..name..ucol.." "..c.orange..level..c.c.." "..type..c.c.." : ("..v.value..")")
+            end
+        end
+        local tickBox = c.red.."Not Ticked"..c.c; if ticked.toggle_Leader > 0 then tickBox = c.green.."Ticked"..c.c end
+        printToAll(c.pink.."Tick Box : "..c.c..tickBox..c.pink.." : "..c.c..c.orange..ticked.toggle_Leader..c.c)
+        printToAll(c.pink.."Total : "..c.c..c.green..total.." + "..ticked.toggle_Leader.." == "..c.orange..total+ticked.toggle_Leader)
+    --------------------------------------------------------------------------------------------------------------------------------
+    elseif switch == 'The Greatest Conqueror' then
+        local sites = sites.toggle_Conqueror
+        printToAll(c.yellow.."--- The Greatest Conqueror : "..c.c..c.orange..sites+ticked.toggle_Conqueror)
+        --printToAll("  : Total Conquered : "..c.c..c.orange..sites/2)
+        printToAll(c.pink.."Total Conquered : "..c.c..c.orange..(sites/2)..c.c)
+
+        local tickBox = c.red.."Not Ticked"..c.c; if ticked.toggle_Conqueror > 0 then tickBox = c.green.."Ticked"..c.c end
+        printToAll(c.pink.."Tick Box : "..c.c..tickBox..c.pink.." : "..c.c..c.orange..ticked.toggle_Conqueror..c.c)
+        printToAll(c.pink.."Total : "..c.c..c.green..sites.." + "..ticked.toggle_Conqueror.." == "..c.orange..sites+ticked.toggle_Conqueror)
+    --------------------------------------------------------------------------------------------------------------------------------
+    elseif switch == 'The Greatest Adventurer' then
+        local sites = sites.toggle_Adventurer
+        printToAll(c.yellow.."--- The Greatest Adventurer : "..c.c..c.orange..sites+ticked.toggle_Conqueror)
+        printToAll(c.pink.."Total Adventurer Sites Cleared : "..c.c..c.orange..(sites/2)..c.c)
+
+        local tickBox = c.red.."Not Ticked"..c.c; if ticked.toggle_Adventurer > 0 then tickBox = c.green.."Ticked"..c.c end
+        printToAll(c.pink.."Tick Box : "..c.c..tickBox..c.pink.." : "..c.c..c.orange..ticked.toggle_Adventurer..c.c)
+        printToAll(c.pink.."Total : "..c.c..c.green..sites.." + "..ticked.toggle_Adventurer.." == "..c.orange..sites+ticked.toggle_Adventurer)
+
+    elseif switch == 'The Greatest Beating' then
+        printToAll(c.yellow.."--- The Greatest Beating : "..c.c..c.orange..0-(deckData.wounds.value+ticked.toggle_Beating))
+        printToAll(c.pink.."Total Wounds : "..c.c..c.orange..deckData.wounds.num)
+
+        local tickBox = c.red.."Not Ticked"..c.c; if ticked.toggle_Beating > 0 then tickBox = c.green.."Ticked"..c.c end
+        printToAll(c.pink.."Tick Box : "..c.c..tickBox..c.pink.." : "..c.c..c.orange..ticked.toggle_Beating..c.c)
+        printToAll(c.pink.."Total : "..c.c..c.green.."("..deckData.wounds.num.." * 2) + "..ticked.toggle_Beating.." == "..c.orange..0-(deckData.wounds.value+ticked.toggle_Beating))
+
+    elseif switch == 'Final Score' then
+        printToAll(c.yellow.."Final Score : "..c.c..c.orange..finalScore..c.c)
+    end
+end
+
+
+function extract_unit_name(unit_string)
+    return unit_string:match("^(.-)%s*%(") or unit_string -- Extracts name before `(` or returns original string
+end
+
+function sort_units_by_name(tbl)
+    if tbl.units then
+        table.sort(tbl.units, function(a, b)
+            return extract_unit_name(a.unit) < extract_unit_name(b.unit)
+        end)
+    end
+end
+
+function setShieldsUP(setUP)
+    if setUP == nil then setUP = true end
+    local shields = getObjectsWithAllTags({"Player_ControlMarker","trash_DeleteMe"})
+    if setUP then
+        for k,s in pairs(shields) do
+            if string.find(string.lower(s.getName()), string.lower(knight.name), 1, true) then
+                table.insert(shieldMarkers, s)
+                s.setLock(true)
+                local pos = s.getPosition()
+                s.setPositionSmooth(pos+Vector(0,12,0))
+            end
+        end
+        addButtonsToShields()
+    else
+        for k,s in pairs(shields) do
+            shieldMarkers={}
+            --if string.find(string.lower(s.getName()), string.lower(knight.name), 1, true) then
+                s.setLock(true)
+                local pos = s.getPosition()
+                if pos.y > 5 then
+                    s.setPositionSmooth(pos-Vector(0,12,0))
+                end
+            --end
+        end
+    end
+end
+
+function addButtonsToShields()
+    if shieldMarkers ~= {} then
+        for k, s in pairs(shieldMarkers) do
+            local xmlString = [[
+            <Panel width="60" height="60" alignment="MiddleCenter" color="#000000" active="true" position="60 0 1465"> <!-- Black -->
+                <Panel color="#926a41" width="54" height="54" rectAlignment="UpperCenter"  offsetXY="0 -3"> <!-- Brown -->
+                    <Panel color="#4b4b4b" width="46" height="46" rectAlignment="UpperCenter" offsetXY="0 -4" padding="3 3 3 3"> <!-- Grey -->
+                        <Button rotation="0 0 180" id="b_shield_C_]]..s.getGUID()..[[" onCLick="]]..self.getGUID()..[[/ui_b_shield" text="C" resizeTextForBestFit="true" textColor="Black" colors="#cccccc|#dddddd|#444444|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2" rectAlignment="MiddleCenter"/>
+                    </Panel>
+                </Panel>
+            </Panel>
+
+            <Panel width="60" height="60" alignment="MiddleCenter" color="#000000" active="true" position="-60 0 1465"> <!-- Black -->
+                <Panel color="#926a41" width="54" height="54" rectAlignment="UpperCenter"  offsetXY="0 -3"> <!-- Brown -->
+                    <Panel color="#4b4b4b" width="46" height="46" rectAlignment="UpperCenter" offsetXY="0 -4" padding="3 3 3 3"> <!-- Grey -->
+                        <Button rotation="0 0 180" id="b_shield_A_]]..s.getGUID()..[[" onCLick="]]..self.getGUID()..[[/ui_b_shield" text="A" resizeTextForBestFit="true" textColor="Black" colors="#cccccc|#dddddd|#444444|#00000000" fontStyle="Bold" outLineColor="#111111" outLineSize="2 2 2 2" rectAlignment="MiddleCenter"/>
+                    </Panel>
+                </Panel>
+            </Panel>
+            ]]
+            s.UI.setXml(xmlString)
+        end
+    end
+end
+
+function getDeckData()
+    local data = cast('self')
+    local z = {}
+          z.arts = {list={}, num=0, value=0}
+          z.spells = {list={}, num=0, value=0}
+          z.aa = {list={}, num=0, value=0}
+          z.wounds = {num=0, value=0}
+
+    for k, c in pairs(data.targetDeck.getObjects()) do
+        local name = string.gsub(c.name, "%b()", "")
+        name = string.gsub(name, "%b{}", "")
+        if string.find(string.lower(c.name), "wound", 1, true) then
+            z.wounds.num = z.wounds.num + 1
+
+        elseif string.find(string.lower(c.name), "aa", 1, true) then
+            table.insert(z.aa.list, name)
+            z.aa.num = z.aa.num + 1
+
+        elseif string.find(string.lower(c.name), "spell", 1, true) then
+            table.insert(z.spells.list, name)
+            z.spells.num = z.spells.num + 1
+
+        elseif string.find(string.lower(c.name), "artefact", 1, true) then
+            table.insert(z.arts.list, name)
+            z.arts.num = z.arts.num + 1
+        end
+    end
+
+    z.arts.value = z.arts.num * 2
+    z.spells.value = z.spells.num * 2
+    z.aa.value = z.aa.num
+    z.wounds.value = z.wounds.num * 2
+
+    return z
+end
+
+function waitForFetch()
+    local zone = Physics.cast({ origin=self.getPosition() + Vector(0,5,0),
+            direction={0,1,0},
+            type=3,
+            max_distance=0,
+            size=Vector(6,10,11.7),
+            debug=false})
+
+    local found = {}
+    for k,v in pairs(zone) do
+        local o = v.hit_object
+        if o.type == "Card" or o.type == "Deck" then
+            table.insert(found, o)
+        end
+    end
+
+    if #found == 1 then return true end
+    return false
+end
+
+
+function fetchDeck()
+    local foundDeck = nil
+    local newDeck = nil
+    if not knight.targetDeck then
+        if #knight.decks > 0 then
+            newDeck = knight.decks[1]
+        else
+            newDeck = knight.cards[1]
+        end
+    end
+
+    local dropPos = nil
+    if knight.targetDeck then
+        newDeck = knight.targetDeck
+        dropPos = self.getPosition()+Vector(0.02, 0.13, 1.67)+Vector(0,newDeck.getBounds().size.y/2,0)+Vector(0,0.5,0)
+        newDeck.setRotation(Vector(0, 180, 0))
+    else
+        dropPos = self.getPosition()+Vector(0.02, 0.13, 1.67)+Vector(0,newDeck.getBounds().size.y/2,0)+Vector(0,0.5,0)
+        newDeck.setPosition(dropPos)
+        newDeck.setRotation(Vector(0, 180, 0))
+    end
+
+    local offset = Vector(0,0,0)
+    for k,v in pairs(knight.decks) do
+        if v ~= newDeck then
+            table.insert(unfreeze, v)
+            v.setLock(true)
+            v.setPositionSmooth(Vector(dropPos+offset), false, false)
+            v.setRotationSmooth(Vector(0, 180, 0), false, false)
+            offset = offset + Vector(0,0.5,0) + Vector(0,v.getBounds().size.y/2,0)
+        end
+    end
+
+    for k,v in pairs(knight.cards) do
+        if v ~= newDeck then
+            table.insert(unfreeze, v)
+            v.setLock(true)
+            v.use_hands = false
+            v.setPositionSmooth(Vector(dropPos+offset), false, false)
+            offset = offset + Vector(0,0.5,0) + Vector(0,v.getBounds().size.y/2,0)
+        end
+    end
+
+    for k, v in ipairs(unfreeze) do
+        Wait.condition(function()
+            Wait.frames(function()
+                v.use_hands = true
+                v.setLock(false)
+            end, k*4)
+        end, function() return isSmooth(v) end)
+    end
+
+end
+
+-- obj.isSmoothMoving() shorthand ----------------------------------------------
+function isSmooth(obj)
+    if obj == nil then
+        return true
+    --elseif obj.getVelocity():magnitude() > 0 then
+        --return true
+    elseif not obj.isSmoothMoving() then
+        return true
+    end
+    return false
+end
+
+function waitForAll(tbl)
+    local value = false
+    if not table or table == {} then
+        value = false
+    else
+        for k,v in pairs(tbl) do
+            if v.getVelocity():magnitude() > 0 then
+                print(v.getGUID())
+            end
+        end
+    end
+
+    --print(value)
+    return value
+end
+
+function enableCollider(obj, action) -- fasle or true
+    --action = action or true
+    if obj.getComponent("Rigidbody") then
+        obj.getComponent("Rigidbody").set("detectCollisions", action)
+    end
+    if obj.getComponent("BoxCollider") then
+        obj.getComponent("BoxCollider").set("enabled", action)
+    end
+end
+
+function setData(name)
+    local boards = getObjectsWithAllTags({"PlayerBoard", "PlayerBoard_DropManaCrystal"})
+    for k, v in pairs(boards) do
+        if v.getName() == knight.name then
+            knight.playerBoard = v
+        end
+    end
+    if knight.playerBoard then
+        local found = cast('board')
+        for k,v in pairs(found) do
+            knight[k] = v
+        end
+    end
+end
+
+
+--******************************************************************************
+---- Cast ----------------------------------------------------------------------
+function cast(switch, obj)
+    local zone = {}
+    if switch == 'self' then
+        zone = Physics.cast({ origin=self.getPosition() + Vector(0,1,0),
+               direction={0,1,0},
+               type=3,
+               max_distance=0,
+               size=Vector(6,2,11.7),
+               debug=ShowDebug})
+        return processCast(zone, switch)
+
+    elseif switch == 'board' then
+        local sizeSet = Vector(8,0,10)
+        local offset = Vector(sizeSet.x/2, sizeSet.y ,-sizeSet.z/2)
+        --local offset = 8
+        local bounds = knight.playerBoard.getBounds().size
+        bounds = Vector(bounds.x, 10, bounds.z) + sizeSet
+        zone = Physics.cast({ origin=knight.playerBoard.getPosition() + offset,
+               direction={0,1,0},
+               type=3,
+               max_distance=0,
+               size=bounds,--Vector(6,2,11.7),
+               debug=ShowDebug})
+        return processCast(zone, switch)
+
+    elseif switch == 'units' then
+        local bounds = obj.getBounds().size
+        bounds = Vector(bounds.x, 1, bounds.z)
+        zone = Physics.cast({ origin=obj.getPosition(),
+               direction={0,1,0},
+               type=3,
+               max_distance=0,
+               size=bounds,--Vector(6,2,11.7),
+               debug=false})
+        return processCast(zone, switch, obj)
+    end
+end
+
+function processCast(zone, switch, obj)
+    local z = {}
+    if switch == 'self' then
+        for k,v in pairs(zone) do
+            local obj = v.hit_object
+            if obj.type == "Deck" or obj.type == "Card" then
+                z.targetDeck = obj
+            elseif obj.hasTag('Player_Meeple') then
+                z.meeple = obj
+            end
+        end
+
+    elseif switch == 'board' then
+        z.decks = {}
+        z.cards = {}
+        z.units = {}
+        z.crystals = {}
+        local foundUnits = {wounded=false, units={}}
+        for k,v in pairs(zone) do
+            local obj = v.hit_object
+            if obj.hasTag('Cards_PlayerCard') then
+                if obj.type == 'Deck' then
+                    table.insert(z.decks, obj)
+                elseif obj.type == 'Card' then
+                    table.insert(z.cards, obj)
+                end
+
+            elseif obj.hasTag('Cards_Units') then
+                table.insert(foundUnits.units, obj)
+
+            elseif obj.hasTag('ManaCrystal') then
+                table.insert(z.crystals, obj)
+
+            elseif obj.hasTag('player_UnitWounds') and obj.hasTag('trash_DeleteMe') then
+                foundUnits.wounded = true
+            end
+        end
+
+        --if foundUnits.units and foundUnits.wounded  then
+        if foundUnits.units then
+            for k,v in pairs(foundUnits.units) do
+                --local found = cast('units', v)
+                table.insert(z.units, cast('units', v))
+            end
+        end
+
+    elseif switch == 'units' then
+        local tmpUnits = {}
+        for k,v in pairs(zone) do
+            local o = v.hit_object
+            if o.hasTag('player_UnitWounds') and o.hasTag('trash_DeleteMe') then
+                tmpUnits[obj] = true
+            else
+                if not tmpUnits[obj] then
+                    tmpUnits[obj] = false
+                end
+            end
+        end
+
+        for unit, wounded in pairs(tmpUnits) do
+            if unit == obj then
+                local num = getUnitLevel(unit.getName())
+                if wounded then num = math.floor(num / 2) end
+                return {unit=unit.getName(), value=num, wounded=wounded}
+            end
+        end
+
+    end
+    return z
+end
+
+
+-- Function to convert Roman numerals to numbers
+function romanToNumber(roman)
+    local romanValues = {
+        I = 1, V = 5, X = 10, L = 50, C = 100, D = 500, M = 1000
+    }
+    local total = 0
+    local prevValue = 0
+
+    for i = #roman, 1, -1 do
+        local char = roman:sub(i, i)
+        local value = romanValues[char]
+        if value < prevValue then
+            total = total - value
+        else
+            total = total + value
+        end
+        prevValue = value
+    end
+
+    return total
+end
+
+-- Function to extract and convert Roman numeral in a single pair of square brackets
+function getUnitLevel(input)
+    local match = input:match("%{(.-)%}") -- Extract content inside square brackets
+    if match then
+        return romanToNumber(match)
+    else
+        return nil -- No square brackets found
+    end
+end

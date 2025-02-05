@@ -18,8 +18,6 @@ local cityCount = 0
 function onload()
     if ShowDebug then
         count = {Core=3, City=2, Country=12} -- DEBUG_DEFAULTS
-        --forceSetting.Dungeons = true
-        --forceSetting.Blue = true
     end
     local bag = getObjectsWithTag('mapBag_Green')[1]
     limits.Country = bag.getQuantity()
